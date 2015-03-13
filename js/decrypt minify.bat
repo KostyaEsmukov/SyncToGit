@@ -1,0 +1,1 @@
+uglifyjs decrypt.js -mco decrypt.min.js

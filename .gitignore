@@ -1,0 +1,6 @@
+*.pyc
+
+/evernote-sdk-python
+/.idea
+
+config.ini
