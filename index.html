@@ -1,72 +1,272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>SyncToGit by kostya0shift</title>
+    <meta name="description" content="SyncToGit : Syncs Evernote® notes to git repository in HTML.">
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>SyncToGit</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">SyncToGit</h1>
-        <p class="header">Syncs Evernote(c) notes to git repository in HTML.</p>
 
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/kostya0shift/SyncToGit/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/kostya0shift/SyncToGit/tarball/master">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/kostya0shift/SyncToGit">View On GitHub</a></li>
-        </ul>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/kostya0shift/SyncToGit">View on GitHub</a>
 
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/kostya0shift">kostya0shift</a></p>
+          <h1 id="project_title">SyncToGit</h1>
+          <h2 id="project_tagline">Syncs Evernote® notes to git repository in HTML.</h2>
 
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/kostya0shift/SyncToGit/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/kostya0shift/SyncToGit/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
 
-      </header>
-      <section>
-        <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h2>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>This is a lightweight backup solution for your Evernote® stuff. It syncs your notes with their resources to the git repository in HTML format.</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<p>Say, you have the following in your Evernote:
+<img src="http://kostya0shift.github.io/SyncToGit/images/ev.png" alt="Evernote screenshot"></p>
+
+<p>This is a tree of resulting git repository:  </p>
+
+<pre><code>├── index.html
+├── Notes
+│   ├── dsf
+│   │   └── First Notebook
+│   │       ├── Encrypted example.d9c1deac-2d62-405d-a5fc-26599e4e6a51.html
+│   │       ├── fd _002f _005c _0022 _0027 пва .txt.ab05137e-5788-47ed-831f-6af475b94ad5.html
+│   │       ├── Getting Started.6f5d93dd-4db9-4b0d-a343-c0d4eb5ed35b.html
+│   │       ├── Δ_002c Й_002c ק_002c م_002c _0e57_002c あ_002c 叶_002c 葉_002c and 말..211590e3-98bc-46bc-bfa9-d52da889514b.html
+│   │       ├── Δ_002c Й_002c ק_002c م_002c _0e57_002c あ_002c 叶_002c 葉_002c and 말..7b7a3ab8-f458-4163-98b4-e6ad5c8d20c1.html
+│   │       └── ТУДУ.6cab5a3c-abcc-4457-80e6-211388093bec.html
+│   └── отрипмакпенр арв
+│       └── ваат.da8d3c90-8f0b-440f-9b46-3c748f1bef65.html
+└── Resources
+    ├── 6f5d93dd-4db9-4b0d-a343-c0d4eb5ed35b
+    │   ├── 0e2d61050811670832d80ed457203343.png
+    │   ├── 4914ced8925f9adcc1c58ab87813c81f.png
+    │   ├── 53df38a9b4999d2f9ababedaae41d3b0.png
+    │   ├── 836fc57702fc08596a5b6d74e54b33cc.png
+    │   ├── 908ca278561900d6620da9a8b06ecbaf.png
+    │   ├── 950bf3517b1e7f23bc40066853a23f7e.png
+    │   ├── bb54c12582d7d1793fb860ae27fe9daa.png
+    │   ├── c7dbb1ce10ff3dfe7c0a485d904d0d23.png
+    │   └── e9a7b8ccbfaeca2feebc51ccb1faa2b6.png
+    ├── ab05137e-5788-47ed-831f-6af475b94ad5
+    │   ├── c1506a96c01707c542581221e63e7bb8.mpeg
+    │   └── f1f8a2cf00c9b9765f30ca904281290e.pdf
+    └── da8d3c90-8f0b-440f-9b46-3c748f1bef65
+        └── d2a99d1e273b2fc81b32c4d0fa3216ad.png
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>Git log:<br>
+<img src="http://kostya0shift.github.io/SyncToGit/images/git.png" alt="Git log screenshot">  </p>
 
 <h3>
-<a id="designer-templates" class="anchor" href="#designer-templates" aria-hidden="true"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<a id="see-the-result-online" class="anchor" href="#see-the-result-online" aria-hidden="true"><span class="octicon octicon-link"></span></a><a href="http://kostya0shift.github.io/SyncToGit/example/">See the result online</a>
+</h3>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<h2>
+<a id="how-to-install" class="anchor" href="#how-to-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>How To Install:</h2>
 
-<h3>
-<a id="rather-drive-stick" class="anchor" href="#rather-drive-stick" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<ol>
+<li>You should have <code>git</code> installed.<br>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<ul>
+<li>Windows:<br>
+<a href="http://git-scm.com/download/win">http://git-scm.com/download/win</a>
+</li>
+<li>Debian\Ubuntu:<br>
+# <code>apt-get install git</code>
+</li>
+</ul>
+</li>
+<li>Make sure you have Python 2.7 installed with virtualenv extension.<br>
 
-<h3>
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<ul>
+<li>Windows:<br>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<ul>
+<li>Download installer from <a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a> , install it.<br>
+</li>
+<li>Open cmd  (Win+R, cmd, Enter)<br>
+</li>
+<li>&gt; <code>cd \Python27\Scripts</code><br>
+</li>
+<li>&gt; <code>pip install virtualenv</code><br>
+</li>
+</ul>
+</li>
+<li>Debian\Ubuntu:<br>
 
-<h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<ul>
+<li># <code>apt-get install python python-virtualenv</code>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Create a directory anywhere you like for this program.<br>
+Examples: <code>/opt/synctogit</code> (Linux); <code>%USERPROFILE%\synctogit</code> (Windows).</li>
+<li>
+<p>Set up a virtual environment and install required dependencies:  </p>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="https://help.github.com/pages">https://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<ul>
+<li>Windows:<br>
+
+<ul>
+<li>&gt; <code>cd %USERPROFILE%\synctogit</code><br>
+</li>
+<li>&gt; <code>C:\Python27\Scripts\virtualenv.exe . --no-site-packages --setuptools</code><br>
+</li>
+<li>&gt; <code>Scripts\activate</code><br>
+</li>
+</ul>
+</li>
+<li>Linux:<br>
+
+<ul>
+<li>$ <code>cd /opt/evernotetogit</code><br>
+</li>
+<li>$ <code>virtualenv . --no-site-packages --setuptools</code><br>
+</li>
+<li>$ <code>. ./bin/activate</code><br>
+</li>
+</ul>
+</li>
+<li>Both:<br>
+
+<ul>
+<li>
+<code>pip install oauth2 GitPython defusedxml regex</code><br>
+</li>
+<li>
+<code>deactivate</code><br>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code>git clone https://github.com/kostya0shift/SyncToGit.git</code></p></li>
+<li><code>cd SyncToGit</code></li>
+<li>
+<p>Create a new file in this folder: <code>config.ini</code></p>
+
+<div class="highlight highlight-ini"><pre><span class="pl-en">[git]</span>
+<span class="pl-k">repo_dir</span> = /home/user/EvernoteBackup
+<span class="pl-k">push</span> = false</pre></div>
+
+<p><code>repo_dir</code> - absolute path to the directory where you would like to keep your target git repository with synced notes. This folder must exist (and should be empty).<br>
+<code>push</code> - should program push changes to remotes?  </p>
+</li>
+<li>
+<p>You are all set. Run the program:  </p>
+
+<ul>
+<li>Windows:<br>
+
+<ul>
+<li>&gt; <code>..\Scripts\python main.py config.ini</code><br>
+</li>
+</ul>
+</li>
+<li>Linux:<br>
+
+<ul>
+<li>$ <code>../bin/python main.py config.ini</code><br>
+</li>
+</ul>
+</li>
+</ul>
+
+<p>Git repository will be initialized and you will be guided through authorization steps. After it initial sync will be performed. Authorization token will be saved in <code>config.ini</code>, so keep this file secure!<br>
+Following syncs will use that token until it is expired or revoked.
+You can run the sync this way:  </p>
+
+<ul>
+<li>Windows:<br>
+
+<ul>
+<li>&gt; <code>..\Scripts\python main.py config.ini -b</code><br>
+</li>
+</ul>
+</li>
+<li>Linux:<br>
+
+<ul>
+<li>$ <code>../bin/python main.py config.ini -b</code><br>
+</li>
+</ul>
+</li>
+</ul>
+
+<p>Notice the <code>-b</code> key - this means never prompt anything - so-called batch mode.</p>
+</li>
+<li>Now you can add remotes to your git repository if you want. Just cd to it and add remotes as usual. Make sure to set <code>push = true</code> in the <code>config.ini</code> file.</li>
+<li>Create a sheduler task, so syncs are performed automatically.
+
+<ul>
+<li>Linux:
+
+<ul>
+<li>$ <code>crontab -e</code>
+</li>
+<li>Add new line: <code>*/10 * * * * /opt/synctogit/SyncToGit/sync.sh</code>
+</li>
+<li>All errors occured during syncs will be mailed to your account by cron. Please refer to its manual.</li>
+</ul>
+</li>
+<li>Windows:<br>
+
+<ul>
+<li>Create new task:<br>
+&gt; <code>Schtasks /Create /TN synctogit /SC DAILY /TR "%USERPROFILE%\synctogit\SyncToGit\NoShell.vbs %USERPROFILE%\synctogit\SyncToGit\sync.bat" /RI 10</code>
+</li>
+<li>you may want to adjust it. Navigate to <strong>Control Panel</strong> -&gt; <strong>Task Sheduler</strong> -&gt; <strong>synctogit</strong>
+</li>
+<li>All errors occured during syncs will be saved in <code>%USERPROFILE%\synctogit\SyncToGit\errors.out</code> file. Make sure to check it sometimes.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+<h2>
+<a id="known-problems" class="anchor" href="#known-problems" aria-hidden="true"><span class="octicon octicon-link"></span></a>Known problems:</h2>
+
+<ul>
+<li>IE has problems with opening notes containing non-latin (unicode) chars. Google Chrome and Mozilla Firefox hasn't.</li>
+<li>Some Evernote clients (ex. ios) make note's html look ugly. This makes diff harder to read. Not a big deal.</li>
+</ul>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>MIT</p>
       </section>
-      <footer>
-        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">SyncToGit maintained by <a href="https://github.com/kostya0shift">kostya0shift</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		
+
+    
+
   </body>
 </html>
