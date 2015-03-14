@@ -71,11 +71,14 @@ class GitTransaction:
 
 	def _scan_get_notes_metadata(self):
 
-		def _rem(f):
+		def _rem(f, d=None):
 			logging.warning("Corrupted note is going to be removed: %s" % f)
 			_rmfile(f)
+			if d:
+				self._remove_dirs_until_not_empty(["Notes"] + d)
 	
 		metadata = {}
+		corrupted = {}
 
 		for root, dirs, files in os.walk(self._abspath(["Notes"])):
 			for fn in files:
@@ -86,24 +89,23 @@ class GitTransaction:
 				
 				cur = {
 					'file': fn,
-					'dir': root.split(os.path.sep)
+					'dir': root.split(os.path.sep),
+					'fp': os.path.join(root, fn)
 				}
 
 				while cur['dir'] and cur['dir'][0] != "Notes":
 					cur['dir'] = cur['dir'][1:]
 
-				fp = os.path.join(root, fn)
-
 				if not (2 <= len(cur['dir']) <= 3):
-					_rem(fp)
+					_rem(cur['fp'])
 					continue
 
 				cur['dir'] = cur['dir'][1:]
 
 				try:
 					# guid, updateSequenceNum
-					with open(fp, "r") as f:
-						while len(cur) != 4:
+					with open(cur['fp'], "r") as f:
+						while len(cur) != 5:
 							l = f.readline()
 
 							if l is '':
@@ -125,14 +127,22 @@ class GitTransaction:
 				except Exception as e:
 					logging.warn("Unable to parse the note. Discarding it. %s", repr(e))
 
-				if len(cur) != 4:
-					_rem(fp)
+				if len(cur) != 5:
+					_rem(cur['fp'], cur['dir'])
 					continue
 
-				metadata[cur['guid']] = cur
+				if cur['guid'] in metadata:
+					_rem(cur['fp'], cur['dir'])
+					_rem(metadata[cur['guid']]['fp'], metadata[cur['guid']]['dir'])
+					del metadata[cur['guid']]
+					corrupted[cur['guid']] = True
+				elif cur['guid'] in corrupted:
+					_rem(cur['fp'], cur['dir'])
+				else:
+					metadata[cur['guid']] = cur
 
 		self._delete_non_existing_resources(metadata)
-		
+
 		return metadata
 
 	def _stash(self):
