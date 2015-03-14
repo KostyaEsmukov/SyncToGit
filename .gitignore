@@ -1,4 +1,6 @@
+
 *.pyc
+*.out
 
 /evernote-sdk-python
 /.idea
