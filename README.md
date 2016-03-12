@@ -11,7 +11,7 @@
 This is a lightweight backup solution for your Evernote® stuff. It syncs your notes with their resources to the git repository in HTML format.
 
 Say, you have the following in your Evernote:
-![Evernote screenshot](http://kostya0shift.github.io/SyncToGit/images/ev.png)
+![Evernote screenshot](http://KostyaEsmukov.github.io/SyncToGit/images/ev.png)
 
 This is a tree of resulting git repository:  
 ```
@@ -45,8 +45,8 @@ This is a tree of resulting git repository:
         └── d2a99d1e273b2fc81b32c4d0fa3216ad.png
 ```
 Git log:  
-![Git log screenshot](http://kostya0shift.github.io/SyncToGit/images/git.png)  
-###[See the result online](http://kostya0shift.github.io/SyncToGit/example/)  
+![Git log screenshot](http://KostyaEsmukov.github.io/SyncToGit/images/git.png)  
+###[See the result online](http://KostyaEsmukov.github.io/SyncToGit/example/)  
 
 ## How To Install:
 1. You should have `git` installed.  
@@ -77,7 +77,7 @@ Git log:
         * `pip install oauth2 GitPython defusedxml regex`  
         * `deactivate`  
 
-1. `git clone https://github.com/kostya0shift/SyncToGit.git`
+1. `git clone https://github.com/KostyaEsmukov/SyncToGit.git`
 1. `cd SyncToGit`
 1. Create a new file in this folder: `config.ini`
 
