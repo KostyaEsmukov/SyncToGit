@@ -21,7 +21,7 @@ Table of contents
 
 1. `Introduction <#introduction>`__
 2. `How To Install <#how-to-install>`__
-3. `Known problems <#known-problems>`__
+3. `Known problems and limitations <#known-problems-and-limitations>`__
 4. `License <#license>`__
 
 Introduction
@@ -66,7 +66,9 @@ This is a tree of resulting git repository:
             └── d2a99d1e273b2fc81b32c4d0fa3216ad.png
 
 
-Git log: |Git log screenshot|
+Git log:
+
+|Git log screenshot|
 
 `See the result online <http://KostyaEsmukov.github.io/SyncToGit/example/>`__
 
@@ -74,16 +76,17 @@ How To Install:
 ---------------
 
 1. Installation
-    - Windows:
-        - ``git``: http://git-scm.com/download/win
-        - ``python 2.7``: https://www.python.org/downloads/
-        - Ensure that your PATH variable includes ``C:\Python27\Scripts`` and ``C:\Python27``
-        -  Open cmd (Win+R, cmd, Enter)
-        -  > ``pip install synctogit``
 
-    - Debian/Ubuntu:
-        - ``# apt-get install git python python-pip``
-        - ``# pip install synctogit``
+- Windows:
+    - ``git``: http://git-scm.com/download/win
+    - ``python 2.7``: https://www.python.org/downloads/
+    - Ensure that your PATH variable includes ``C:\Python27\Scripts`` and ``C:\Python27``
+    -  Open cmd (Win+R, cmd, Enter)
+    -  > ``pip install synctogit``
+
+- Debian/Ubuntu:
+    - # ``apt-get install git python python-pip``
+    - # ``pip install synctogit``
 
 2.  Create a new file ``config.ini`` somewhere (for example: ``~/.synctogit/config.ini``):
 
@@ -121,24 +124,23 @@ How To Install:
 
 5. Create a scheduler task, so syncs are performed automatically.
 
-    -  Linux:
+-  Linux:
 
-       -  $ ``crontab -e``
-       -  Add new line:
-          ``*/10 * * * * synctogit ~/.synctogit/config.ini -bq``
-       -  All errors occurred during syncs will be mailed to your account
-          by cron. Please refer to its manual.
+   -  $ ``crontab -e``
+   -  Add new line:
+      ``*/10 * * * * synctogit ~/.synctogit/config.ini -bq``
+   -  All errors occurred during syncs will be mailed to your account
+      by cron. Please refer to its manual.
 
-    -  Windows:
+-  Windows:
 
-       -  Create new task:
-          >
-          ``Schtasks /Create /TN synctogit /SC DAILY /TR "C:\Python27\Lib\site-packages\synctogit\NoShell.vbs cmd /C """synctogit %USERPROFILE%\.synctogit\config.ini -bq ^>^> %USERPROFILE%\.synctogit\errors.log 2^>^&1"""" /RI 10``
-       -  you may want to adjust it. Navigate to **Control Panel** ->
-          **Task Sheduler** -> **synctogit**
-       -  All errors occurred during syncs will be saved in
-          the ``%USERPROFILE%\.synctogit\errors.log`` file. Make
-          sure to check it sometimes.
+   -  Create new task:
+      > ``Schtasks /Create /TN synctogit /SC DAILY /TR "C:\Python27\Lib\site-packages\synctogit\NoShell.vbs cmd /C """synctogit %USERPROFILE%\.synctogit\config.ini -bq ^>^> %USERPROFILE%\.synctogit\errors.log 2^>^&1"""" /RI 10``
+   -  you may want to adjust it. Navigate to **Control Panel** ->
+      **Task Sheduler** -> **synctogit**
+   -  All errors occurred during syncs will be saved in
+      the ``%USERPROFILE%\.synctogit\errors.log`` file. Make
+      sure to check it sometimes.
 
 Known problems and limitations:
 -------------------------------
