@@ -8,7 +8,7 @@ CHANGELOG
 * TBD
 
 
-\* (2015-03-14)
+0.0.0 (unreleased)
 ------------------
 
 * Initial working version

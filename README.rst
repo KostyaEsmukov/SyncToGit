@@ -73,53 +73,19 @@ This is a tree of resulting git repository:
 How To Install:
 ---------------
 
-1.  You should have ``git`` installed.
+1. Installation
+    - Windows:
+        - ``git``: http://git-scm.com/download/win
+        - ``python 2.7``: https://www.python.org/downloads/
+        -  Open cmd (Win+R, cmd, Enter)
+        -  > ``cd \Python27\Scripts``
+        -  > ``pip install synctogit``
 
-    -  Windows:
-       http://git-scm.com/download/win
-    -  Debian:raw-latex:`\Ubuntu`:
-       # ``apt-get install git``
+    - Debian/Ubuntu:
+        - ``# apt-get install git python python-pip``
+        - ``# pip install synctogit``
 
-2.  Make sure you have Python 2.7 installed with virtualenv extension.
-
-    -  Windows:
-
-       -  Download installer from https://www.python.org/downloads/ ,
-          install it.
-       -  Open cmd (Win+R, cmd, Enter)
-       -  > ``cd \Python27\Scripts``
-       -  > ``pip install virtualenv``
-
-    -  Debian:raw-latex:`\Ubuntu`:
-
-       -  # ``apt-get install python python-virtualenv``
-
-3.  Create a directory anywhere you like for this program.
-    Examples: ``/opt/synctogit`` (Linux); ``%USERPROFILE%\synctogit``
-    (Windows).
-4.  Set up a virtual environment and install required dependencies:
-
-    -  Windows:
-
-       -  > ``cd %USERPROFILE%\synctogit``
-       -  >
-          ``C:\Python27\Scripts\virtualenv.exe . --no-site-packages --setuptools``
-       -  > ``Scripts\activate``
-
-    -  Linux:
-
-       -  $ ``cd /opt/evernotetogit``
-       -  $ ``virtualenv . --no-site-packages --setuptools``
-       -  $ ``. ./bin/activate``
-
-    -  Both:
-
-       -  ``pip install oauth2 GitPython defusedxml regex``
-       -  ``deactivate``
-
-5.  ``git clone https://github.com/KostyaEsmukov/SyncToGit.git``
-6.  ``cd SyncToGit``
-7.  Create a new file in this folder: ``config.ini``
+2.  Create a new file somewhere (for example: ``~/.synctogit/config.ini``): ``config.ini``
 
     .. code:: ini
 
@@ -131,15 +97,9 @@ How To Install:
     to keep your target git repository with synced notes. This folder
     must exist (and should be empty).
     ``push`` - should program push changes to remotes?
-8.  You are all set. Run the program:
+3.  You are all set. Run the program:
 
-    -  Windows:
-
-       -  > ``..\Scripts\python main.py config.ini``
-
-    -  Linux:
-
-       -  $ ``../bin/python main.py config.ini``
+    -  > ``synctogit ~/.synctogit/config.ini``
 
     Git repository will be initialized and you will be guided through
     authorization steps. After it initial sync will be performed.
@@ -148,20 +108,14 @@ How To Install:
     Following syncs will use that token until it is expired or revoked.
     You can run the sync this way:
 
-    -  Windows:
-
-       -  > ``..\Scripts\python main.py config.ini -b``
-
-    -  Linux:
-
-       -  $ ``../bin/python main.py config.ini -b``
+    -  > ``synctogit ~/.synctogit/config.ini -b``
 
     Notice the ``-b`` key - this means never prompt anything - so-called
     batch mode.
-9.  Now you can add remotes to your git repository if you want. Just cd
+4.  Now you can add remotes to your git repository if you want. Just cd
     to it and add remotes as usual. Make sure to set ``push = true`` in
     the ``config.ini`` file.
-10. Create a sheduler task, so syncs are performed automatically.
+5. Create a scheduler task, so syncs are performed automatically.
 
     -  Linux:
 
