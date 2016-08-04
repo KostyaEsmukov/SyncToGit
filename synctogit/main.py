@@ -27,7 +27,7 @@ def _pathRelToThis(p):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="EvernoteToGit. Sync your Evernote to local git repository")
+    parser = argparse.ArgumentParser(description="SyncToGit. Sync your Evernote to local git repository")
     parser.add_argument('-b', '--batch', action='store_true', help='Non-interactive mode')
     parser.add_argument('-f', '--force-update', action='store_true', help='Force download all notes')
     parser.add_argument('config', help='Path to config file')

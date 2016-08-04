@@ -164,7 +164,7 @@ class GitTransaction:
         self.git.index.commit("Sync at " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def _lockfile_location(self):
-        return self._abspath([".evernotetogit.lockfile"])
+        return self._abspath([".synctogit.lockfile"])
 
     def _lockfile_create(self):
         with open(self._lockfile_location(), "wb") as f:

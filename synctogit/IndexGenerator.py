@@ -11,7 +11,7 @@ _index_html = """
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>EvernoteToGit index</title>
+<title>SyncToGit index</title>
 
 <style>
 html, body {
