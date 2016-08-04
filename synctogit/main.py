@@ -22,10 +22,6 @@ _CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==')
 _CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
 
 
-def _pathRelToThis(p):
-    return os.path.dirname(os.path.realpath(__file__)) + os.sep + u'' + p
-
-
 def main():
     parser = argparse.ArgumentParser(description="SyncToGit. Sync your Evernote to local git repository")
     parser.add_argument('-b', '--batch', action='store_true', help='Non-interactive mode')
@@ -43,8 +39,7 @@ def main():
         'push': config.get_boolean('git', 'push', False)
     }
     git = Git(**gc)
-    evernote = Evernote.Evernote(_pathRelToThis('evernote-sdk-python'),
-                                 config.get_boolean('evernote', 'sandbox', False))
+    evernote = Evernote.Evernote(config.get_boolean('evernote', 'sandbox', False))
 
     while _sync(git, evernote, config, pargs):
         pass

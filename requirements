@@ -1,0 +1,5 @@
+oauth2==1.9.0.post1
+GitPython==2.0.8
+defusedxml==0.4.1
+regex==2016.7.21
+evernote==1.25.2

@@ -8,11 +8,16 @@ import urlparse
 
 import regex  # \p{L}
 import git
+from evernote.api.client import EvernoteClient
+import evernote.edam as Edam
+import evernote.edam.limits.constants as Constants
+import evernote.edam.error.constants as Errors
+# import evernote.edam.userstore.constants as UserStoreConstants
+# import evernote.edam.type.ttypes as Types
 
 import EvernoteNoteParser
 from Git import gitRepo
 
-_EVERNOTE_SDK_URL = 'https://github.com/evernote/evernote-sdk-python.git'
 _RETRIES = 10
 _MAXLEN_TITLE_FILENAME = 30
 
@@ -20,52 +25,6 @@ _MAXLEN_TITLE_FILENAME = 30
 # required API permissions:
 # Read existing notebooks
 # Read existing notes
-
-
-def _init_update_sdk_repo(sdk_dir):
-    if not os.path.isdir(sdk_dir):
-        os.makedirs(sdk_dir)
-
-    try:
-        r = gitRepo(sdk_dir)
-        r.git.reset('--hard')
-        logging.info("Updating Evernote SDK...")
-        r.remotes.origin.pull()
-    except Exception, e:
-        if len(os.listdir(sdk_dir)) > 0:
-            raise Exception("SDK is corrupted: %s. Try to remove %s folder." % (e, sdk_dir))
-        else:
-            logging.info("Downloading Evernote SDK...")
-            git.Repo.clone_from(_EVERNOTE_SDK_URL, sdk_dir)
-
-
-_EvernoteClient = None
-_Edam = None
-_Constants = None
-_Errors = None
-
-
-def _get_EvernoteClient(sdk_dir):
-    global _EvernoteClient, _Edam, _Constants, _Errors
-
-    d = os.path.join(sdk_dir, "lib")
-    d = os.path.abspath(d)
-
-    if d not in sys.path:
-        sys.path.append(d)
-
-    from evernote.api.client import EvernoteClient
-    import evernote.edam as Edam
-    # import evernote.edam.userstore.constants as UserStoreConstants
-    # import evernote.edam.type.ttypes as Types
-
-    import evernote.edam.limits.constants as Constants
-    import evernote.edam.error.constants as Errors
-
-    _EvernoteClient = EvernoteClient
-    _Edam = Edam
-    _Constants = Constants
-    _Errors = Errors
 
 
 def _normalize_filename(fn):
@@ -101,16 +60,16 @@ def _IORetry(f):
             except (socketerror, EOFError) as e:
                 logging.warning("IO failure: %d/%d: %s" % (i + 1, _RETRIES, repr(e)))
                 ee = e
-            except _Errors.EDAMSystemException as e:
-                if e.errorCode == _Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
+            except Errors.EDAMSystemException as e:
+                if e.errorCode == Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
                     s = e.rateLimitDuration + 1
                     logging.warning("Rate limit reached. Waiting %d seconds..." % s)
                     sleep(s)
                     ee = e
                 else:
                     raise
-            except _Errors.EDAMUserException as e:
-                if e.errorCode == _Errors.EDAMErrorCode.AUTH_EXPIRED or e.errorCode == _Errors.EDAMErrorCode.BAD_DATA_FORMAT:
+            except Errors.EDAMUserException as e:
+                if e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT:
                     logging.debug(repr(e))
                     raise EvernoteTokenExpired()
                 else:
@@ -126,17 +85,14 @@ class EvernoteAuthException(Exception):
 
 
 class Evernote:
-    def __init__(self, sdk_dir, sandbox=True):
-        _init_update_sdk_repo(sdk_dir)
-
+    def __init__(self, sandbox=True):
         self.sandbox = sandbox
-        _get_EvernoteClient(sdk_dir)
         self.client = None
 
     @_IORetry
     def retrieve_token(self, consumer_key, consumer_secret, callback_url):
         try:
-            client = _EvernoteClient(
+            client = EvernoteClient(
                 consumer_key=consumer_key,
                 consumer_secret=consumer_secret,
                 sandbox=self.sandbox
@@ -161,7 +117,7 @@ class Evernote:
 
     @_IORetry
     def auth(self, access_token):
-        self.client = _EvernoteClient(token=access_token, sandbox=self.sandbox)
+        self.client = EvernoteClient(token=access_token, sandbox=self.sandbox)
 
     @_IORetry
     def _get_notebooks(self):
@@ -183,10 +139,10 @@ class Evernote:
     def _get_all_notes_metadata(self):
         note_store = self.client.get_note_store()
 
-        noteFilter = _Edam.notestore.NoteStore.NoteFilter()
+        noteFilter = Edam.notestore.NoteStore.NoteFilter()
         noteFilter.ascending = False
 
-        spec = _Edam.notestore.NoteStore.NotesMetadataResultSpec()
+        spec = Edam.notestore.NoteStore.NotesMetadataResultSpec()
         spec.includeTitle = True
         spec.includeUpdateSequenceNum = True
         spec.includeNotebookGuid = True
@@ -195,7 +151,7 @@ class Evernote:
         spec.includeUpdated = True
         spec.includeDeleted = True
 
-        metadata = note_store.findNotesMetadata(noteFilter, 0, _Constants.EDAM_USER_NOTES_MAX, spec)
+        metadata = note_store.findNotesMetadata(noteFilter, 0, Constants.EDAM_USER_NOTES_MAX, spec)
 
         res = {}
 
