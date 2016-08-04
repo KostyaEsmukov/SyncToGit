@@ -22,25 +22,36 @@
       <h1>
 <a id="synctogit" class="anchor" href="#synctogit" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SyncToGit</h1>
 
+<p><a href="https://pypi.python.org/pypi/synctogit/"><img src="https://img.shields.io/pypi/dm/synctogit.svg?style=flat-square" alt="Downloads"></a></p>
+
+<p><a href="https://pypi.python.org/pypi/synctogit/"><img src="https://img.shields.io/pypi/v/synctogit.svg?style=flat-square" alt="Latest Version"></a></p>
+
+<p><a href="https://pypi.python.org/pypi/synctogit/"><img src="https://img.shields.io/github/license/KostyaEsmukov/SyncToGit.svg?style=flat-square" alt="License"></a></p>
+
 <h2>
 <a id="table-of-contents" class="anchor" href="#table-of-contents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Table of contents</h2>
 
 <ol>
-<li><a href="#introduction">Introduction</a></li>
-<li><a href="#how-to-install">How To Install</a></li>
-<li><a href="#known-problems">Known problems</a></li>
-<li><a href="#license">License</a></li>
+<li> <a href="#introduction">Introduction</a>
+</li>
+<li> <a href="#how-to-install">How To Install</a>
+</li>
+<li> <a href="#known-problems-and-limitations">Known problems and limitations</a>
+</li>
+<li> <a href="#license">License</a>
+</li>
 </ol>
 
 <h2>
 <a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction</h2>
 
-<p>This is a lightweight backup solution for your Evernote® stuff. It syncs your notes with their resources to the git repository in HTML format.</p>
+<p>This is a lightweight backup solution for your Evernote® stuff. It syncs
+your notes with their resources to the git repository in HTML format.</p>
 
-<p>Say, you have the following in your Evernote:
-<img src="http://KostyaEsmukov.github.io/SyncToGit/images/ev.png" alt="Evernote screenshot"></p>
+<p>Say, you have the following in your Evernote: <img src="http://KostyaEsmukov.github.io/SyncToGit/images/ev.png" alt="Evernote
+screenshot"></p>
 
-<p>This is a tree of resulting git repository:  </p>
+<p>This is a tree of resulting git repository:</p>
 
 <pre><code>├── index.html
 ├── Notes
@@ -72,184 +83,136 @@
         └── d2a99d1e273b2fc81b32c4d0fa3216ad.png
 </code></pre>
 
-<p>Git log:<br>
-<img src="http://KostyaEsmukov.github.io/SyncToGit/images/git.png" alt="Git log screenshot">  </p>
+<p>Git log:</p>
 
-<h3>
-<a id="see-the-result-online" class="anchor" href="#see-the-result-online" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><a href="http://KostyaEsmukov.github.io/SyncToGit/example/">See the result online</a>
-</h3>
+<p><img src="http://KostyaEsmukov.github.io/SyncToGit/images/git.png" alt="Git log
+screenshot"></p>
+
+<p><a href="http://KostyaEsmukov.github.io/SyncToGit/example/">See the result
+online</a></p>
 
 <h2>
 <a id="how-to-install" class="anchor" href="#how-to-install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How To Install:</h2>
 
 <ol>
-<li>You should have <code>git</code> installed.<br>
-
-<ul>
-<li>Windows:<br>
-<a href="http://git-scm.com/download/win">http://git-scm.com/download/win</a>
-</li>
-<li>Debian\Ubuntu:<br>
-# <code>apt-get install git</code>
-</li>
-</ul>
-</li>
-<li>Make sure you have Python 2.7 installed with virtualenv extension.<br>
-
-<ul>
-<li>Windows:<br>
-
-<ul>
-<li>Download installer from <a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a> , install it.<br>
-</li>
-<li>Open cmd  (Win+R, cmd, Enter)<br>
-</li>
-<li>&gt; <code>cd \Python27\Scripts</code><br>
-</li>
-<li>&gt; <code>pip install virtualenv</code><br>
-</li>
-</ul>
-</li>
-<li>Debian\Ubuntu:<br>
-
-<ul>
-<li># <code>apt-get install python python-virtualenv</code>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Create a directory anywhere you like for this program.<br>
-Examples: <code>/opt/synctogit</code> (Linux); <code>%USERPROFILE%\synctogit</code> (Windows).</li>
-<li>
-<p>Set up a virtual environment and install required dependencies:  </p>
-
-<ul>
-<li>Windows:<br>
-
-<ul>
-<li>&gt; <code>cd %USERPROFILE%\synctogit</code><br>
-</li>
-<li>&gt; <code>C:\Python27\Scripts\virtualenv.exe . --no-site-packages --setuptools</code><br>
-</li>
-<li>&gt; <code>Scripts\activate</code><br>
-</li>
-</ul>
-</li>
-<li>Linux:<br>
-
-<ul>
-<li>$ <code>cd /opt/evernotetogit</code><br>
-</li>
-<li>$ <code>virtualenv . --no-site-packages --setuptools</code><br>
-</li>
-<li>$ <code>. ./bin/activate</code><br>
-</li>
-</ul>
-</li>
-<li>Both:<br>
-
-<ul>
-<li>
-<code>pip install oauth2 GitPython defusedxml regex</code><br>
-</li>
-<li>
-<code>deactivate</code><br>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><code>git clone https://github.com/KostyaEsmukov/SyncToGit.git</code></p></li>
-<li><code>cd SyncToGit</code></li>
-<li>
-<p>Create a new file in this folder: <code>config.ini</code></p>
-
-<div class="highlight highlight-source-ini"><pre><span class="pl-en">[git]</span>
-<span class="pl-k">repo_dir</span> = /home/user/EvernoteBackup
-<span class="pl-k">push</span> = false</pre></div>
-
-<p><code>repo_dir</code> - absolute path to the directory where you would like to keep your target git repository with synced notes. This folder must exist (and should be empty).<br>
-<code>push</code> - should program push changes to remotes?  </p>
-</li>
-<li>
-<p>You are all set. Run the program:  </p>
-
-<ul>
-<li>Windows:<br>
-
-<ul>
-<li>&gt; <code>..\Scripts\python main.py config.ini</code><br>
-</li>
-</ul>
-</li>
-<li>Linux:<br>
-
-<ul>
-<li>$ <code>../bin/python main.py config.ini</code><br>
-</li>
-</ul>
-</li>
-</ul>
-
-<p>Git repository will be initialized and you will be guided through authorization steps. After it initial sync will be performed. Authorization token will be saved in <code>config.ini</code>, so keep this file secure!<br>
-Following syncs will use that token until it is expired or revoked.
-You can run the sync this way:  </p>
-
-<ul>
-<li>Windows:<br>
-
-<ul>
-<li>&gt; <code>..\Scripts\python main.py config.ini -b</code><br>
-</li>
-</ul>
-</li>
-<li>Linux:<br>
-
-<ul>
-<li>$ <code>../bin/python main.py config.ini -b</code><br>
-</li>
-</ul>
-</li>
-</ul>
-
-<p>Notice the <code>-b</code> key - this means never prompt anything - so-called batch mode.</p>
-</li>
-<li>Now you can add remotes to your git repository if you want. Just cd to it and add remotes as usual. Make sure to set <code>push = true</code> in the <code>config.ini</code> file.</li>
-<li>Create a sheduler task, so syncs are performed automatically.
-
-<ul>
-<li>Linux:
-
-<ul>
-<li>$ <code>crontab -e</code>
-</li>
-<li>Add new line: <code>*/10 * * * * /opt/synctogit/SyncToGit/sync.sh</code>
-</li>
-<li>All errors occured during syncs will be mailed to your account by cron. Please refer to its manual.</li>
-</ul>
-</li>
-<li>Windows:<br>
-
-<ul>
-<li>Create new task:<br>
-&gt; <code>Schtasks /Create /TN synctogit /SC DAILY /TR "%USERPROFILE%\synctogit\SyncToGit\NoShell.vbs %USERPROFILE%\synctogit\SyncToGit\sync.bat" /RI 10</code>
-</li>
-<li>you may want to adjust it. Navigate to <strong>Control Panel</strong> -&gt; <strong>Task Sheduler</strong> -&gt; <strong>synctogit</strong>
-</li>
-<li>All errors occured during syncs will be saved in <code>%USERPROFILE%\synctogit\SyncToGit\errors.out</code> file. Make sure to check it sometimes.</li>
-</ul>
-</li>
-</ul>
-</li>
+<li><p>Installation</p></li>
 </ol>
 
-<h2>
-<a id="known-problems" class="anchor" href="#known-problems" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Known problems:</h2>
+<ul>
+<li>
+<p>Windows:</p>
 
 <ul>
-<li>IE has problems with opening notes containing non-latin (unicode) chars. Google Chrome and Mozilla Firefox hasn't.</li>
-<li>Some Evernote clients (ex. ios) make note's html look ugly. This makes diff harder to read. Not a big deal.</li>
+<li>
+<code>git</code>: <a href="http://git-scm.com/download/win">http://git-scm.com/download/win</a>
+</li>
+<li>
+<code>python 2.7</code>: <a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>
+</li>
+<li>Ensure that your PATH variable includes <code>C:\Python27\Scripts</code> and <code>C:\Python27</code>
+</li>
+<li> Open cmd (Win+R, cmd, Enter)</li>
+<li> &gt; <code>pip install synctogit</code>
+</li>
+</ul>
+</li>
+<li>
+<p>Debian/Ubuntu:</p>
+
+<ul>
+<li># <code>apt-get install git python python-pip</code>
+</li>
+<li># <code>pip install synctogit</code>
+</li>
+</ul>
+</li>
+</ul>
+
+<ol>
+<li>
+<p>Create a new file <code>config.ini</code> somewhere (for example:
+<code>~/.synctogit/config.ini</code>):</p>
+
+<pre lang="sourceCode"><code>[git]
+repo_dir = /home/user/EvernoteBackup
+push = false
+</code></pre>
+
+<p><code>repo_dir</code> - absolute path to the directory where you would like to
+keep your target git repository with synced notes. This folder must
+exist (and should be empty). Git repository will be
+initialized automatically.</p>
+
+<p><code>push</code> - should program push changes to remotes? You should add them
+manually, just as usual git remote.</p>
+</li>
+<li>
+<p>You are all set. Run the program:</p>
+
+<ul>
+<li>  &gt; <code>synctogit ~/.synctogit/config.ini</code>
+</li>
+</ul>
+
+<p>Git repository will be initialized and you will be guided through
+authorization steps. After it initial sync will be performed.
+Authorization token will be saved in the <code>config.ini</code>, so keep this
+file secure! Following syncs will use that token until it is expired
+or revoked. You can run the sync this way:</p>
+
+<ul>
+<li>  &gt; <code>synctogit ~/.synctogit/config.ini -b</code>
+</li>
+</ul>
+
+<p>Notice the <code>-b</code> key - this means never prompt anything - so-called
+batch mode. You may also want to use the <code>-q</code> key - which will keep
+the program quiet until a problem arises.</p>
+</li>
+<li><p>Now you can add remotes to your git repository if you want. Just cd
+to it and add remotes as usual. Make sure to set <code>push = true</code> in
+the <code>config.ini</code> file.</p></li>
+<li><p>Create a scheduler task, so syncs are performed automatically.</p></li>
+</ol>
+
+<ul>
+<li>  Linux:
+
+<ul>
+<li>  $ <code>crontab -e</code>
+</li>
+<li>  Add new line:
+<code>*/10 * * * * synctogit ~/.synctogit/config.ini -bq</code>
+</li>
+<li>  All errors occurred during syncs will be mailed to your account
+by cron. Please refer to its manual.</li>
+</ul>
+</li>
+<li>  Windows:
+
+<ul>
+<li>  Create new task: &gt;
+<code>Schtasks /Create /TN synctogit /SC DAILY /TR "C:\Python27\Lib\site-packages\synctogit\NoShell.vbs cmd /C """synctogit %USERPROFILE%\.synctogit\config.ini -bq ^&gt;^&gt; %USERPROFILE%\.synctogit\errors.log 2^&gt;^&amp;1"""" /RI 10</code>
+</li>
+<li>  you may want to adjust it. Navigate to <strong>Control Panel</strong> -&gt;
+<strong>Task Sheduler</strong> -&gt; <strong>synctogit</strong>
+</li>
+<li>  All errors occurred during syncs will be saved in the
+<code>%USERPROFILE%\.synctogit\errors.log</code> file. Make sure to check
+it sometimes.</li>
+</ul>
+</li>
+</ul>
+
+<h2>
+<a id="known-problems-and-limitations" class="anchor" href="#known-problems-and-limitations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Known problems and limitations:</h2>
+
+<ul>
+<li>  IE has problems with opening notes containing non-latin
+(unicode) chars. Google Chrome and Mozilla Firefox hasn't.</li>
+<li>  Some Evernote clients (ex. ios) make note's html look ugly. This
+makes diff hard to read. Not a big deal.</li>
+<li>  Workchat and shared notes are not synced.</li>
 </ul>
 
 <h2>
