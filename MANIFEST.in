@@ -1,0 +1,6 @@
+include CHANGELOG.rst
+include LICENSE.txt
+include README.rst
+include requirements
+include NoShell.vbs
+recursive-include synctogit/js *.min.js

@@ -1,5 +1,11 @@
 
+*.egg-info
+dist
+build
+
 *.pyc
+__pycache__/
+
 *.out
 
 /evernote-sdk-python

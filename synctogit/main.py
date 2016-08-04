@@ -25,7 +25,7 @@ _CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
 
 
 def main():
-    parser = argparse.ArgumentParser(description="SyncToGit. Sync your Evernote to local git repository")
+    parser = argparse.ArgumentParser(description="SyncToGit. Sync your Evernote notes to a local git repository")
     parser.add_argument('-b', '--batch', action='store_true', help='Non-interactive mode')
     parser.add_argument('-f', '--force-update', action='store_true', help='Force download all notes')
     parser.add_argument('config', help='Path to config file')
