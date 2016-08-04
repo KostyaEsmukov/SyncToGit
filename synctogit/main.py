@@ -6,17 +6,12 @@ import argparse
 import threading
 import base64
 
+from .PrintOnExceptionOnly import PrintOnExceptionOnly
 from .Git import Git
 from .Config import Config
 from . import Evernote
 from . import IndexGenerator
 
-"""
-oauth2
-GitPython
-defusedxml
-regex
-"""
 
 # python -c "import base64; print base64.b64encode('123')"
 _CONSUMER_KEY = 'kostya0shift-0653'
@@ -28,11 +23,19 @@ def main():
     parser = argparse.ArgumentParser(description="SyncToGit. Sync your Evernote notes to a local git repository")
     parser.add_argument('-b', '--batch', action='store_true', help='Non-interactive mode')
     parser.add_argument('-f', '--force-update', action='store_true', help='Force download all notes')
+    parser.add_argument('-q', '--quiet', action='store_true', help='Do not print anything unless exit code is non-zero')
     parser.add_argument('config', help='Path to config file')
     pargs = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    if pargs.quiet:
+        with PrintOnExceptionOnly(logging.INFO):
+            run(pargs)
+    else:
+        logging.basicConfig(level=logging.INFO)
+        run(pargs)
 
+
+def run(pargs):
     config = Config(pargs.config)
 
     gc = {

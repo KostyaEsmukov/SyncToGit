@@ -85,7 +85,7 @@ How To Install:
         - ``# apt-get install git python python-pip``
         - ``# pip install synctogit``
 
-2.  Create a new file somewhere (for example: ``~/.synctogit/config.ini``): ``config.ini``
+2.  Create a new file ``config.ini`` somewhere (for example: ``~/.synctogit/config.ini``):
 
     .. code:: ini
 
