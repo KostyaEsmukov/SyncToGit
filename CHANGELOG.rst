@@ -8,7 +8,7 @@ CHANGELOG
 * TBD
 
 
-* (2015-03-14)
+\* (2015-03-14)
 ------------------
 
 * Initial working version
