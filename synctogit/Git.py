@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 import os
 
 import git
 
-from GitTransaction import GitTransaction
+from .GitTransaction import GitTransaction
 
 
 class GitException(Exception):

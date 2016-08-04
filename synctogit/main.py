@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import os
 import logging
 import argparse
 import threading
 import base64
 
-from Git import Git
-from Config import Config
-import Evernote
-import IndexGenerator
+from .Git import Git
+from .Config import Config
+from . import Evernote
+from . import IndexGenerator
 
 """
 oauth2

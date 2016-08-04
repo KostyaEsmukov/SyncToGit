@@ -1,5 +1,5 @@
-import os
-import sys
+from __future__ import absolute_import
+
 import binascii
 import logging
 from socket import error as socketerror
@@ -7,7 +7,6 @@ from time import sleep
 import urlparse
 
 import regex  # \p{L}
-import git
 from evernote.api.client import EvernoteClient
 import evernote.edam as Edam
 import evernote.edam.limits.constants as Constants
@@ -15,8 +14,7 @@ import evernote.edam.error.constants as Errors
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types
 
-import EvernoteNoteParser
-from Git import gitRepo
+from . import EvernoteNoteParser
 
 _RETRIES = 10
 _MAXLEN_TITLE_FILENAME = 30
