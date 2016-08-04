@@ -65,10 +65,10 @@ This is a tree of resulting git repository:
         └── da8d3c90-8f0b-440f-9b46-3c748f1bef65
             └── d2a99d1e273b2fc81b32c4d0fa3216ad.png
 
-| Git log:
-| |Git log screenshot|
-| ###\ `See the result
-  online <http://KostyaEsmukov.github.io/SyncToGit/example/>`__
+
+Git log: |Git log screenshot|
+
+`See the result online <http://KostyaEsmukov.github.io/SyncToGit/example/>`__
 
 How To Install:
 ---------------
@@ -77,8 +77,8 @@ How To Install:
     - Windows:
         - ``git``: http://git-scm.com/download/win
         - ``python 2.7``: https://www.python.org/downloads/
+        - Ensure that your PATH variable includes ``C:\Python27\Scripts`` and ``C:\Python27``
         -  Open cmd (Win+R, cmd, Enter)
-        -  > ``cd \Python27\Scripts``
         -  > ``pip install synctogit``
 
     - Debian/Ubuntu:
@@ -95,15 +95,17 @@ How To Install:
 
     ``repo_dir`` - absolute path to the directory where you would like
     to keep your target git repository with synced notes. This folder
-    must exist (and should be empty).
-    ``push`` - should program push changes to remotes?
+    must exist (and should be empty). Git repository will be initialized automatically.
+
+    ``push`` - should program push changes to remotes? You should add them manually, just as usual git remote.
+
 3.  You are all set. Run the program:
 
     -  > ``synctogit ~/.synctogit/config.ini``
 
     Git repository will be initialized and you will be guided through
     authorization steps. After it initial sync will be performed.
-    Authorization token will be saved in ``config.ini``, so keep this
+    Authorization token will be saved in the ``config.ini``, so keep this
     file secure!
     Following syncs will use that token until it is expired or revoked.
     You can run the sync this way:
@@ -111,38 +113,41 @@ How To Install:
     -  > ``synctogit ~/.synctogit/config.ini -b``
 
     Notice the ``-b`` key - this means never prompt anything - so-called
-    batch mode.
+    batch mode. You may also want to use the ``-q`` key - which will keep the program quiet until a problem arises.
+
 4.  Now you can add remotes to your git repository if you want. Just cd
     to it and add remotes as usual. Make sure to set ``push = true`` in
     the ``config.ini`` file.
+
 5. Create a scheduler task, so syncs are performed automatically.
 
     -  Linux:
 
        -  $ ``crontab -e``
        -  Add new line:
-          ``*/10 * * * * /opt/synctogit/SyncToGit/sync.sh``
-       -  All errors occured during syncs will be mailed to your account
+          ``*/10 * * * * synctogit ~/.synctogit/config.ini -bq``
+       -  All errors occurred during syncs will be mailed to your account
           by cron. Please refer to its manual.
 
     -  Windows:
 
        -  Create new task:
           >
-          ``Schtasks /Create /TN synctogit /SC DAILY /TR "%USERPROFILE%\synctogit\SyncToGit\NoShell.vbs %USERPROFILE%\synctogit\SyncToGit\sync.bat" /RI 10``
+          ``Schtasks /Create /TN synctogit /SC DAILY /TR "C:\Python27\Lib\site-packages\synctogit\NoShell.vbs cmd /C """synctogit %USERPROFILE%\.synctogit\config.ini -bq ^>^> %USERPROFILE%\.synctogit\errors.log 2^>^&1"""" /RI 10``
        -  you may want to adjust it. Navigate to **Control Panel** ->
           **Task Sheduler** -> **synctogit**
-       -  All errors occured during syncs will be saved in
-          ``%USERPROFILE%\synctogit\SyncToGit\errors.out`` file. Make
+       -  All errors occurred during syncs will be saved in
+          the ``%USERPROFILE%\.synctogit\errors.log`` file. Make
           sure to check it sometimes.
 
-Known problems:
----------------
+Known problems and limitations:
+-------------------------------
 
 -  IE has problems with opening notes containing non-latin (unicode)
    chars. Google Chrome and Mozilla Firefox hasn't.
 -  Some Evernote clients (ex. ios) make note's html look ugly. This
-   makes diff harder to read. Not a big deal.
+   makes diff hard to read. Not a big deal.
+-  Workchat and shared notes are not synced.
 
 License
 -------
