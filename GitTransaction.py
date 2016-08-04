@@ -8,275 +8,276 @@ import re
 
 
 def _mkdir_p(d):
-	# `mkdir -p $d`
+    # `mkdir -p $d`
 
-	try:
-		os.makedirs(u'' + d)
-	except OSError as exc:
-		if exc.errno == errno.EEXIST and os.path.isdir(d):
-			pass
-		else:
-			raise
+    try:
+        os.makedirs(u'' + d)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(d):
+            pass
+        else:
+            raise
 
 
 def _rmfile(fp):
-	try:
-		os.remove(u'' + fp)
-	except IOError as e:
-		logging.warn("Unable to delete %s file: %s" % (fp, repr(e)))
+    try:
+        os.remove(u'' + fp)
+    except IOError as e:
+        logging.warn("Unable to delete %s file: %s" % (fp, repr(e)))
 
 
 def _write_to_file(fn, body):
-	with open(u'' + fn, 'wb') as f:
-		f.write(body)
+    with open(u'' + fn, 'wb') as f:
+        f.write(body)
 
 
 class GitSimultaneousTransaction(Exception):
-	pass
+    pass
 
 
 class GitTransaction:
-	def __init__(self, git, repo_dir, branch, push):
-		self.repo_dir = unicode(repo_dir)
-		self.branch = branch
-		self.push = push
+    def __init__(self, git, repo_dir, branch, push):
+        self.repo_dir = unicode(repo_dir)
+        self.branch = branch
+        self.push = push
 
-		self.git = git
+        self.git = git
 
-	def _remove_dirs_until_not_empty(self, d):
-		d = copy(d)
-		try:
-			while d:
-				os.rmdir(self._abspath(d))
-				d.pop()
-		except:
-			pass
+    def _remove_dirs_until_not_empty(self, d):
+        d = copy(d)
+        try:
+            while d:
+                os.rmdir(self._abspath(d))
+                d.pop()
+        except:
+            pass
 
-	def _abspath(self, l):
-		r = unicode(os.path.join(*([self.repo_dir] + l)))
-		if not r.startswith(self.repo_dir):
-			raise Exception("Foreign path has been chosen!")
-		return r
+    def _abspath(self, l):
+        r = unicode(os.path.join(*([self.repo_dir] + l)))
+        if not r.startswith(self.repo_dir):
+            raise Exception("Foreign path has been chosen!")
+        return r
 
-	def _delete_non_existing_resources(self, metadata):
-		try:
-			root, dirs, _ = os.walk(self._abspath(["Resources"])).next()
+    def _delete_non_existing_resources(self, metadata):
+        try:
+            root, dirs, _ = os.walk(self._abspath(["Resources"])).next()
 
-			for d in dirs:
-				if d not in metadata:
-					logging.warning("Resources for non-existing note %s are going to be removed." % d)
-					shutil.rmtree(os.path.join(root, d))
-		except StopIteration:
-			return
+            for d in dirs:
+                if d not in metadata:
+                    logging.warning("Resources for non-existing note %s are going to be removed." % d)
+                    shutil.rmtree(os.path.join(root, d))
+        except StopIteration:
+            return
 
-	def _scan_get_notes_metadata(self):
+    def _scan_get_notes_metadata(self):
 
-		def _rem(f, d=None):
-			logging.warning("Corrupted note is going to be removed: %s" % f)
-			_rmfile(f)
-			if d:
-				self._remove_dirs_until_not_empty(["Notes"] + d)
-	
-		metadata = {}
-		corrupted = {}
+        def _rem(f, d=None):
+            logging.warning("Corrupted note is going to be removed: %s" % f)
+            _rmfile(f)
+            if d:
+                self._remove_dirs_until_not_empty(["Notes"] + d)
 
-		for root, dirs, files in os.walk(self._abspath(["Notes"])):
-			for fn in files:
-				_, ext = os.path.splitext(fn)
+        metadata = {}
+        corrupted = {}
 
-				if ext != ".html":
-					continue
-				
-				cur = {
-					'file': fn,
-					'dir': root.split(os.path.sep),
-					'fp': os.path.join(root, fn)
-				}
+        for root, dirs, files in os.walk(self._abspath(["Notes"])):
+            for fn in files:
+                _, ext = os.path.splitext(fn)
 
-				while cur['dir'] and cur['dir'][0] != "Notes":
-					cur['dir'] = cur['dir'][1:]
+                if ext != ".html":
+                    continue
 
-				if not (2 <= len(cur['dir']) <= 3):
-					_rem(cur['fp'])
-					continue
+                cur = {
+                    'file': fn,
+                    'dir': root.split(os.path.sep),
+                    'fp': os.path.join(root, fn)
+                }
 
-				cur['dir'] = cur['dir'][1:]
+                while cur['dir'] and cur['dir'][0] != "Notes":
+                    cur['dir'] = cur['dir'][1:]
 
-				try:
-					# guid, updateSequenceNum
-					with open(cur['fp'], "r") as f:
-						while len(cur) != 5:
-							l = f.readline()
+                if not (2 <= len(cur['dir']) <= 3):
+                    _rem(cur['fp'])
+                    continue
 
-							if l is '':
-								break
+                cur['dir'] = cur['dir'][1:]
 
-							g = re.search('^<!--[-]+-->$', l)
-							if g is not None:
-								break
+                try:
+                    # guid, updateSequenceNum
+                    with open(cur['fp'], "r") as f:
+                        while len(cur) != 5:
+                            l = f.readline()
 
-							g = re.search('^<!-- ([^:]+): (.+) -->$', l)
-							if g is not None:
-								k = g.group(1)
-								v = g.group(2)
+                            if l is '':
+                                break
 
-								if k in ["guid"]:
-									cur[k] = v
-								if k in ["updateSequenceNum"]:
-									cur[k] = int(v)
-				except Exception as e:
-					logging.warn("Unable to parse the note. Discarding it. %s", repr(e))
+                            g = re.search('^<!--[-]+-->$', l)
+                            if g is not None:
+                                break
 
-				if len(cur) != 5:
-					_rem(cur['fp'], cur['dir'])
-					continue
+                            g = re.search('^<!-- ([^:]+): (.+) -->$', l)
+                            if g is not None:
+                                k = g.group(1)
+                                v = g.group(2)
 
-				if cur['guid'] in metadata:
-					_rem(cur['fp'], cur['dir'])
-					_rem(metadata[cur['guid']]['fp'], metadata[cur['guid']]['dir'])
-					del metadata[cur['guid']]
-					corrupted[cur['guid']] = True
-				elif cur['guid'] in corrupted:
-					_rem(cur['fp'], cur['dir'])
-				else:
-					metadata[cur['guid']] = cur
+                                if k in ["guid"]:
+                                    cur[k] = v
+                                if k in ["updateSequenceNum"]:
+                                    cur[k] = int(v)
+                except Exception as e:
+                    logging.warn("Unable to parse the note. Discarding it. %s", repr(e))
 
-		self._delete_non_existing_resources(metadata)
+                if len(cur) != 5:
+                    _rem(cur['fp'], cur['dir'])
+                    continue
 
-		return metadata
+                if cur['guid'] in metadata:
+                    _rem(cur['fp'], cur['dir'])
+                    _rem(metadata[cur['guid']]['fp'], metadata[cur['guid']]['dir'])
+                    del metadata[cur['guid']]
+                    corrupted[cur['guid']] = True
+                elif cur['guid'] in corrupted:
+                    _rem(cur['fp'], cur['dir'])
+                else:
+                    metadata[cur['guid']] = cur
 
-	def _stash(self):
-		if self.git.is_dirty(untracked_files=True):
-			logging.warning("Git repo is dirty. Working copy is going to be be stashed.")
+        self._delete_non_existing_resources(metadata)
 
-			self.git.git.stash()
+        return metadata
 
-	def _check_repo_state(self):
-		self._stash()
+    def _stash(self):
+        if self.git.is_dirty(untracked_files=True):
+            logging.warning("Git repo is dirty. Working copy is going to be be stashed.")
 
-		if self.branch != self.git.active_branch.name:
-			logging.info("Switching branch")
-			self.git.git.checkout("-b", self.branch)
+            self.git.git.stash()
 
-	def _commit_changes(self):
-		self.git.git.add(["-A", "."])  # there are problems with charset under windows when using python version: self.git.index.add("*")
-		self.git.index.commit("Sync at " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    def _check_repo_state(self):
+        self._stash()
 
-	def _lockfile_location(self):
-		return self._abspath([".evernotetogit.lockfile"])
+        if self.branch != self.git.active_branch.name:
+            logging.info("Switching branch")
+            self.git.git.checkout("-b", self.branch)
 
-	def _lockfile_create(self):
-		with open(self._lockfile_location(), "wb") as f:
-			f.write("1")
+    def _commit_changes(self):
+        self.git.git.add(["-A",
+                          "."])  # there are problems with charset under windows when using python version: self.git.index.add("*")
+        self.git.index.commit("Sync at " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-	def _lockfile_exists(self):
-		return os.path.isfile(self._lockfile_location())
+    def _lockfile_location(self):
+        return self._abspath([".evernotetogit.lockfile"])
 
-	def _lockfile_remove(self):
-		_rmfile(self._lockfile_location())
+    def _lockfile_create(self):
+        with open(self._lockfile_location(), "wb") as f:
+            f.write("1")
 
-	def __enter__(self):
-		if self._lockfile_exists():
-			raise GitSimultaneousTransaction("Lockfile exists. Another copy of program is probably running. "
-											 "Remove this file if you are sure that this is a mistake: %s" % self._lockfile_location())
+    def _lockfile_exists(self):
+        return os.path.isfile(self._lockfile_location())
 
-		self._check_repo_state()
-		self._lockfile_create()
-		return self
+    def _lockfile_remove(self):
+        _rmfile(self._lockfile_location())
 
-	def __exit__(self, exc_type, exc_val, exc_tb):
-		self._lockfile_remove()
+    def __enter__(self):
+        if self._lockfile_exists():
+            raise GitSimultaneousTransaction("Lockfile exists. Another copy of program is probably running. "
+                                             "Remove this file if you are sure that this is a mistake: %s" % self._lockfile_location())
 
-		if exc_type is not None:
-			logging.warning("git transaction failed: %s(%s)" % (repr(exc_type), exc_val))
-			self._stash()
-		else:
-			if self.git.is_dirty(untracked_files=True):
-				self._commit_changes()
+        self._check_repo_state()
+        self._lockfile_create()
+        return self
 
-			if self.push:
-				try:
-					self.git.remotes.origin.push()
-				except Exception as e:
-					logging.warning("Failed to git push: %s", repr(e))
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._lockfile_remove()
 
+        if exc_type is not None:
+            logging.warning("git transaction failed: %s(%s)" % (repr(exc_type), exc_val))
+            self._stash()
+        else:
+            if self.git.is_dirty(untracked_files=True):
+                self._commit_changes()
 
-	def calculate_changes(self, evernoteMetadata, force_update):
-		new = evernoteMetadata
-		old = self._scan_get_notes_metadata()
+            if self.push:
+                try:
+                    self.git.remotes.origin.push()
+                except Exception as e:
+                    logging.warning("Failed to git push: %s", repr(e))
 
-		res = {
-			'new': {},
-			'update': {},
-			'delete': {},
-			'result': []
-		}
+    def calculate_changes(self, evernoteMetadata, force_update):
+        new = evernoteMetadata
+        old = self._scan_get_notes_metadata()
 
-		oldguids = copy(old)
-		for guid in new:
-			res['result'].append([new[guid]['dir'] + [new[guid]['file']],  new[guid]['name']])
-			if guid not in old:
-				res['new'][guid] = new[guid]
-			else:
-				if cmp(new[guid]['file'], old[guid]['file']) != 0:
-					res['delete'][guid] = old[guid]
-					res['new'][guid] = new[guid]
-				elif force_update or new[guid]['updateSequenceNum'] != old[guid]['updateSequenceNum']:
-					res['update'][guid] = new[guid]
+        res = {
+            'new': {},
+            'update': {},
+            'delete': {},
+            'result': []
+        }
 
-				oldguids.pop(guid, 0)
+        oldguids = copy(old)
+        for guid in new:
+            res['result'].append([new[guid]['dir'] + [new[guid]['file']], new[guid]['name']])
+            if guid not in old:
+                res['new'][guid] = new[guid]
+            else:
+                if cmp(new[guid]['file'], old[guid]['file']) != 0:
+                    res['delete'][guid] = old[guid]
+                    res['new'][guid] = new[guid]
+                elif force_update or new[guid]['updateSequenceNum'] != old[guid]['updateSequenceNum']:
+                    res['update'][guid] = new[guid]
 
-		for guid in oldguids:
-			res['delete'][guid] = oldguids[guid]
+                oldguids.pop(guid, 0)
 
-		return res
+        for guid in oldguids:
+            res['delete'][guid] = oldguids[guid]
 
-	def delete_files(self, files):
-		for guid in files:
-			fp = self._abspath(["Notes"] + files[guid]['dir'] + [files[guid]['file']])
-			_rmfile(fp)
+        return res
 
-			self._remove_dirs_until_not_empty(["Notes"] + files[guid]['dir'])
+    def delete_files(self, files):
+        for guid in files:
+            fp = self._abspath(["Notes"] + files[guid]['dir'] + [files[guid]['file']])
+            _rmfile(fp)
 
-	def get_relative_resources_url(self, noteguid, metadata):
-		# utf8 encoded
-		return '/'.join(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]).encode("utf8")
-		# return os.path.join(*(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]))
+            self._remove_dirs_until_not_empty(["Notes"] + files[guid]['dir'])
 
-	def save_note(self, note, metadata):
-		_mkdir_p(self._abspath(["Notes"] + metadata['dir']))
+    def get_relative_resources_url(self, noteguid, metadata):
+        # utf8 encoded
+        return '/'.join(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]).encode("utf8")
 
-		header = []
-		header += ["<!doctype html>"]
-		header += ["<!-- PLEASE DO NOT EDIT THIS FILE -->"]
-		header += ["<!-- All changes you've done here will be stashed on next sync -->"]
-		header += ["<!--+++++++++++++-->"]
-		for k in ["guid", "updateSequenceNum", "title", "created", "updated"]:
-			v = note[k]
-			if k in ["created", "updated"]:
-				v = datetime.fromtimestamp(v / 1000).strftime('%Y-%m-%d %H:%M:%S')
+    # return os.path.join(*(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]))
 
-			header += ["<!-- %s: %s -->" % (k, v)]
+    def save_note(self, note, metadata):
+        _mkdir_p(self._abspath(["Notes"] + metadata['dir']))
 
-		header += ["<!----------------->"]
-		header += [""]
+        header = []
+        header += ["<!doctype html>"]
+        header += ["<!-- PLEASE DO NOT EDIT THIS FILE -->"]
+        header += ["<!-- All changes you've done here will be stashed on next sync -->"]
+        header += ["<!--+++++++++++++-->"]
+        for k in ["guid", "updateSequenceNum", "title", "created", "updated"]:
+            v = note[k]
+            if k in ["created", "updated"]:
+                v = datetime.fromtimestamp(v / 1000).strftime('%Y-%m-%d %H:%M:%S')
 
-		body = '\n'.join(header) + note['html']
+            header += ["<!-- %s: %s -->" % (k, v)]
 
-		f = self._abspath(["Notes"] + metadata['dir'] + [metadata['file']])
-		_write_to_file(f, body)
+        header += ["<!----------------->"]
+        header += [""]
 
-		p = ["Resources"] + [note['guid']]
-		try:
-			shutil.rmtree(self._abspath(p))
-		except:
-			pass
+        body = '\n'.join(header) + note['html']
 
-		if len(note['resources']) > 0:
-			_mkdir_p(self._abspath(p))
+        f = self._abspath(["Notes"] + metadata['dir'] + [metadata['file']])
+        _write_to_file(f, body)
 
-			for guid in note['resources']:
-				m = note['resources'][guid]
+        p = ["Resources"] + [note['guid']]
+        try:
+            shutil.rmtree(self._abspath(p))
+        except:
+            pass
 
-				f = self._abspath(p + [m['filename']])
-				_write_to_file(f, m['body'])
+        if len(note['resources']) > 0:
+            _mkdir_p(self._abspath(p))
+
+            for guid in note['resources']:
+                m = note['resources'][guid]
+
+                f = self._abspath(p + [m['filename']])
+                _write_to_file(f, m['body'])

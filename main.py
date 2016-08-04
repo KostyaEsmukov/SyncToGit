@@ -16,7 +16,6 @@ defusedxml
 regex
 """
 
-
 # python -c "import base64; print base64.b64encode('123')"
 _CONSUMER_KEY = 'kostya0shift-0653'
 _CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==')
@@ -44,7 +43,8 @@ def main():
         'push': config.get_boolean('git', 'push', False)
     }
     git = Git(**gc)
-    evernote = Evernote.Evernote(_pathRelToThis('evernote-sdk-python'), config.get_boolean('evernote', 'sandbox', False))
+    evernote = Evernote.Evernote(_pathRelToThis('evernote-sdk-python'),
+                                 config.get_boolean('evernote', 'sandbox', False))
 
     while _sync(git, evernote, config, pargs):
         pass
@@ -124,7 +124,8 @@ def _sync(git, evernote, config, pargs):
                                 logging.info("Saving note (%d/%d) contents: %s...", saved[0], total, guid)
                                 t.save_note(note, d)
                             else:
-                                logging.info("Skipping note (%d/%d) because it has changed during sync: %s...", saved[0], total, guid)
+                                logging.info("Skipping note (%d/%d) because it has changed during sync: %s...",
+                                             saved[0], total, guid)
                                 updates[0] = True
                         finally:
                             lock.release()
@@ -139,12 +140,13 @@ def _sync(git, evernote, config, pargs):
                 for j in jobs:
                     j.join()
 
-                IndexGenerator.generate(update['result'], os.path.join(config.get_string('git', 'repo_dir'), "index.html"))
+                IndexGenerator.generate(update['result'],
+                                        os.path.join(config.get_string('git', 'repo_dir'), "index.html"))
                 logging.info("Sync loop ended.")
-                logging.info("Target was: delete: %d, create: %d, update: %d", len(update['delete']), len(update['new']), len(update['update']))
+                logging.info("Target was: delete: %d, create: %d, update: %d", len(update['delete']),
+                             len(update['new']), len(update['update']))
                 logging.info("Result: saved: %d, failed: %d", saved[0], failed[0])
                 any_fail = failed[0] != 0
-
 
         logging.info("Done")
 

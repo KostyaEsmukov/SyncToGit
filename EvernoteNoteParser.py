@@ -1,10 +1,9 @@
 import os
+import re
 from xml.sax import ContentHandler
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import SubElement
-import re
-import logging
 
 import defusedxml.sax as sax
 
@@ -35,24 +34,24 @@ _ENCRYPTED_JS = """
 
 
 function evernote_decrypt(o) {
-	var h = o.dataset.hint ? " Hint: " + o.dataset.hint : "";
-	var p = prompt("Enter the passphrase." + h);
-	try {
-		o.outerHTML = decrypt(o.dataset.cipher || "AES", o.dataset.length, p, o.dataset.body);
-	}
-	catch(e) {
-		alert("Failed: " + e);
-	}
-	return false;
+    var h = o.dataset.hint ? " Hint: " + o.dataset.hint : "";
+    var p = prompt("Enter the passphrase." + h);
+    try {
+        o.outerHTML = decrypt(o.dataset.cipher || "AES", o.dataset.length, p, o.dataset.body);
+    }
+    catch(e) {
+        alert("Failed: " + e);
+    }
+    return false;
 }
 
 """ + _get_file_contents("js/decrypt.min.js")
-
 
 _AN_PATTERN = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 _BN_PATTERN = re.compile("<(/head|/body|title)[^>]*>")
 
 _ENTITY_PATTERN = re.compile("&#?\w+;")
+
 
 def _unescape_entities(text):
     def fixup(m):
@@ -67,6 +66,7 @@ def _unescape_entities(text):
             except ValueError:
                 pass
         return text  # leave as is
+
     return _ENTITY_PATTERN.sub(fixup, text)
 
 
@@ -136,7 +136,8 @@ class _EvernoteNoteParser(ContentHandler):
 
         if tag == "en-note":
             if 'style' not in attrs:
-                attrs['style'] = 'word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;'
+                attrs['style'] = 'word-wrap: break-word;' \
+                                 + ' -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;'
 
             attrs.pop('xmlns', 0)
 
@@ -163,9 +164,16 @@ class _EvernoteNoteParser(ContentHandler):
                 # "video/mp4"
 
                 # "application/msword", "application/mspowerpoint", "application/excel"
+                #
                 # "application/vnd.ms-word", "application/vnd.ms-powerpoint", "application/vnd.ms-excel"
-                # "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                # "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote", "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers", "application/x-iwork-keynote-sffkey"
+                #
+                # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                # "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                # "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                #
+                # "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote",
+                # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",
+                # "application/x-iwork-keynote-sffkey"
 
                 toptype, subtype = attrs['type'].split('/', 2)
 
@@ -217,7 +225,8 @@ class _EvernoteNoteParser(ContentHandler):
         r = r.encode("utf8")
 
         if self.include_encrypted_js:
-            r = r.replace("</body>", "<script>" + _ENCRYPTED_JS + "</script></body>", 1)  # avoid dealing with XML text escapes
+            # avoid dealing with XML text escapes
+            r = r.replace("</body>", "<script>" + _ENCRYPTED_JS + "</script></body>", 1)
         return r
 
 
