@@ -149,20 +149,26 @@ class Evernote:
         spec.includeUpdated = True
         spec.includeDeleted = True
 
-        metadata = note_store.findNotesMetadata(noteFilter, 0, Constants.EDAM_USER_NOTES_MAX, spec)
-
         res = {}
+        offset = 0
+        while True:
 
-        for n in metadata.notes:
-            res[n.guid] = {
-                'title': n.title,
-                'notebookGuid': n.notebookGuid,
-                'updateSequenceNum': n.updateSequenceNum,
-                'tagGuids': n.tagGuids,
-                'updated': n.updated,
-                'created': n.created,
-                'deleted': n.deleted
-            }
+            metadata = note_store.findNotesMetadata(noteFilter, offset, Constants.EDAM_USER_NOTES_MAX, spec)
+
+            for n in metadata.notes:
+                res[n.guid] = {
+                    'title': n.title,
+                    'notebookGuid': n.notebookGuid,
+                    'updateSequenceNum': n.updateSequenceNum,
+                    'tagGuids': n.tagGuids,
+                    'updated': n.updated,
+                    'created': n.created,
+                    'deleted': n.deleted
+                }
+
+            offset = metadata.startIndex + len(metadata.notes)
+            if offset >= metadata.totalNotes:
+                break
 
         return res, self._get_notebooks()
 
