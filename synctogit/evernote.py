@@ -1,10 +1,10 @@
-from __future__ import absolute_import
+
 
 import binascii
 import logging
 from socket import error as socketerror
 from time import sleep
-import urlparse
+import urllib.parse
 
 import regex  # \p{L}
 from evernote.api.client import EvernoteClient
@@ -98,12 +98,12 @@ class Evernote:
 
             request_token = client.get_request_token(callback_url)
 
-            print "Open this link in your browser: "
-            print client.get_authorize_url(request_token)
-            print "After giving access you will be redirected to non-existing page. It's OK."
-            url = raw_input("Paste the URL of that page here: ")
+            print("Open this link in your browser: ")
+            print(client.get_authorize_url(request_token))
+            print("After giving access you will be redirected to non-existing page. It's OK.")
+            url = input("Paste the URL of that page here: ")
 
-            oauth_verifier = urlparse.parse_qs(urlparse.urlsplit(url).query)['oauth_verifier'][0]
+            oauth_verifier = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['oauth_verifier'][0]
 
             return client.get_access_token(
                 request_token['oauth_token'],
@@ -181,10 +181,10 @@ class Evernote:
 
             st = ([nb['stack']] if nb['stack'] else []) + [nb['name']]
             res[guid] = {
-                'dir': list(map(lambda s: _normalize_filename(s.decode("utf8")), st)),
+                'dir': [_normalize_filename(s) for s in st],
                 'file': _normalize_filename(
-                    n['title'].decode("utf8")[0:_MAXLEN_TITLE_FILENAME] + "." + guid.decode("utf8")) + ".html",
-                'name': map(lambda s: s.decode("utf8"), st + [n['title']]),
+                    n['title'][0:_MAXLEN_TITLE_FILENAME] + "." + guid) + ".html",
+                'name': [s for s in (st + [n['title']])],
                 'updateSequenceNum': n['updateSequenceNum']
             }
 
@@ -199,7 +199,7 @@ class Evernote:
 
         note = note_store.getNote(guid, True, True, False, False)
 
-        note_parsed = evernote_note_parser.parse(resources_base, note.content, note.title.decode("utf8"))
+        note_parsed = evernote_note_parser.parse(resources_base, note.content, note.title)
 
         resources = {}
         if note.resources:
@@ -208,7 +208,7 @@ class Evernote:
                 resources[chash] = {
                     'body': r.data.body,
                     'mime': r.mime,
-                    'filename': ''.join([chash, '.', r.mime.split('/', 2)[1]]).decode("utf8")
+                    'filename': ''.join([chash, '.', r.mime.split('/', 2)[1]])
                 }
 
         return {

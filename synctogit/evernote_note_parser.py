@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import os
 import re
@@ -23,13 +23,13 @@ def _copy_preserve(orig, preserve, merge=None):
 
 
 def _get_file_contents(p):  # relative to this file path
-    tp = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + os.sep + u'' + p)
+    tp = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + os.sep + '' + p)
     with open(tp, "rb") as f:
         s = f.read()
     return s
 
 
-_ENCRYPTED_JS = """
+_ENCRYPTED_JS = b"""
 
 
 // This is a set of scripts required for decrypting encrypted content. Please don't touch it.
@@ -62,9 +62,9 @@ def _unescape_entities(text):
             # character reference
             try:
                 if text[:3] == "&#x":
-                    return unichr(int(text[3:-1], 16))
+                    return chr(int(text[3:-1], 16))
                 else:
-                    return unichr(int(text[2:-1]))
+                    return chr(int(text[2:-1]))
             except ValueError:
                 pass
         return text  # leave as is
@@ -218,7 +218,7 @@ class _EvernoteNoteParser(ContentHandler):
         if len(self.hierarchy) != 1:
             raise Exception("Note is not parsed yet: hierarchy size is %d" % len(self.hierarchy))
 
-        r = ElementTree.tostring(self.hierarchy[0].e)
+        r = ElementTree.tostring(self.hierarchy[0].e, encoding="unicode")
 
         r = _AN_PATTERN.sub(lambda m: m.group(0) + "\n", r)
         r = _BN_PATTERN.sub(lambda m: "\n" + m.group(0), r)
@@ -228,12 +228,12 @@ class _EvernoteNoteParser(ContentHandler):
 
         if self.include_encrypted_js:
             # avoid dealing with XML text escapes
-            r = r.replace("</body>", "<script>" + _ENCRYPTED_JS + "</script></body>", 1)
+            r = r.replace(b"</body>", b"<script>" + _ENCRYPTED_JS + b"</script></body>", 1)
         return r
 
 
 def parse(resources_base_path, enbody, title):
     p = _EvernoteNoteParser(resources_base_path, title)
-    sax.parseString(enbody, p, forbid_dtd=False, forbid_entities=False, forbid_external=False)
+    sax.parseString(enbody.encode("utf8"), p, forbid_dtd=False, forbid_entities=False, forbid_external=False)
 
     return p.getResult()

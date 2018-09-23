@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import os
-import urllib
+import urllib.parse
 from xml.sax.saxutils import escape
 
 _note_el = """<li><a href="%(url)s" onclick="return frmLocation('%(url)s');">%(text)s</a></li>"""
@@ -81,7 +78,7 @@ def generate(notes, output_filepath):
     for l in notes:
         text = ' &rarr; '.join(map(escape, l[1]))
 
-        parts = map(lambda s: urllib.quote(s.encode("utf8")), ["Notes"] + l[0])
+        parts = map(lambda s: urllib.parse.quote(s.encode("utf8")), ["Notes"] + l[0])
         url = './' + '/'.join(parts)
 
         r.append(_note_el % {'text': text, 'url': url})

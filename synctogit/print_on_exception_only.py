@@ -1,6 +1,6 @@
 import logging
 import sys
-from cStringIO import StringIO
+from io import StringIO
 
 
 class PrintOnExceptionOnly(object):

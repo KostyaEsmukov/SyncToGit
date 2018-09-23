@@ -47,6 +47,7 @@ setup(
     },
     install_requires=reqs("requirements"),
     license="MIT",
+    python_requires=">=3.5",
     zip_safe=False,
     keywords='evernote backup git',
     classifiers=[
@@ -54,7 +55,10 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3 :: Only",
         'Topic :: Utilities'
     ],
 )

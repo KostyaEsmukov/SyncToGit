@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import os
 import errno
@@ -13,7 +13,7 @@ def _mkdir_p(d):
     # `mkdir -p $d`
 
     try:
-        os.makedirs(u'' + d)
+        os.makedirs('' + d)
     except OSError as exc:
         if exc.errno == errno.EEXIST and os.path.isdir(d):
             pass
@@ -23,13 +23,13 @@ def _mkdir_p(d):
 
 def _rmfile(fp):
     try:
-        os.remove(u'' + fp)
+        os.remove('' + fp)
     except IOError as e:
         logging.warn("Unable to delete %s file: %s" % (fp, repr(e)))
 
 
 def _write_to_file(fn, body):
-    with open(u'' + fn, 'wb') as f:
+    with open('' + fn, 'wb') as f:
         f.write(body)
 
 
@@ -39,7 +39,7 @@ class GitSimultaneousTransaction(Exception):
 
 class GitTransaction:
     def __init__(self, git, repo_dir, branch, push):
-        self.repo_dir = unicode(repo_dir)
+        self.repo_dir = str(repo_dir)
         self.branch = branch
         self.push = push
 
@@ -55,14 +55,14 @@ class GitTransaction:
             pass
 
     def _abspath(self, l):
-        r = unicode(os.path.join(*([self.repo_dir] + l)))
+        r = str(os.path.join(*([self.repo_dir] + l)))
         if not r.startswith(self.repo_dir):
             raise Exception("Foreign path has been chosen!")
         return r
 
     def _delete_non_existing_resources(self, metadata):
         try:
-            root, dirs, _ = os.walk(self._abspath(["Resources"])).next()
+            root, dirs, _ = next(os.walk(self._abspath(["Resources"])))
 
             for d in dirs:
                 if d not in metadata:
@@ -170,7 +170,7 @@ class GitTransaction:
 
     def _lockfile_create(self):
         with open(self._lockfile_location(), "wb") as f:
-            f.write("1")
+            f.write(b"1")
 
     def _lockfile_exists(self):
         return os.path.isfile(self._lockfile_location())
@@ -220,7 +220,7 @@ class GitTransaction:
             if guid not in old:
                 res['new'][guid] = new[guid]
             else:
-                if cmp(new[guid]['file'], old[guid]['file']) != 0:
+                if new[guid]['file'] != old[guid]['file']:
                     res['delete'][guid] = old[guid]
                     res['new'][guid] = new[guid]
                 elif force_update or new[guid]['updateSequenceNum'] != old[guid]['updateSequenceNum']:
@@ -242,7 +242,7 @@ class GitTransaction:
 
     def get_relative_resources_url(self, noteguid, metadata):
         # utf8 encoded
-        return '/'.join(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]).encode("utf8")
+        return '/'.join(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""])
 
     # return os.path.join(*(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]))
 
@@ -264,7 +264,7 @@ class GitTransaction:
         header += ["<!----------------->"]
         header += [""]
 
-        body = '\n'.join(header) + note['html']
+        body = '\n'.join(header).encode() + note['html']  # type: bytes
 
         f = self._abspath(["Notes"] + metadata['dir'] + [metadata['file']])
         _write_to_file(f, body)

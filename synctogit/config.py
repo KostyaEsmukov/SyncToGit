@@ -1,9 +1,4 @@
-from __future__ import absolute_import
-
-try:
-    import configparser
-except:
-    import ConfigParser as configparser
+import configparser
 
 
 class _NotSet(object):

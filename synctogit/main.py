@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import os
 import logging
@@ -9,13 +9,13 @@ import base64
 from .print_on_exception_only import PrintOnExceptionOnly
 from .git import Git
 from .config import Config
-from .evernote import Evernote
+from .evernote import Evernote, EvernoteTokenExpired
 from . import index_generator
 
 
 # python -c "import base64; print base64.b64encode('123')"
 _CONSUMER_KEY = 'kostya0shift-0653'
-_CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==')
+_CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
 _CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
 
 
@@ -52,7 +52,7 @@ def run(pargs):
 
 def _sync(git, evernote, config, pargs):
     try:
-        token = base64.b64decode(config.get_string('evernote', 'token'))
+        token = base64.b64decode(config.get_string('evernote', 'token')).decode()
     except Exception as e:
         logging.info("No valid token found.")
         if pargs.batch:
@@ -154,7 +154,7 @@ def _sync(git, evernote, config, pargs):
             raise Exception("Sync done with fails")
 
         return False
-    except Evernote.EvernoteTokenExpired:
+    except EvernoteTokenExpired:
         logging.warning("Auth token expired.")
         config.unset('evernote', 'token')
         return True
