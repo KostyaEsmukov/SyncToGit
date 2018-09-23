@@ -4,3 +4,7 @@ source = synctogit
 [report]
 show_missing = True
 ; fail_under = 80
+exclude_lines =
+    pragma: no cover
+    @abstractmethod
+    @abc.abstractmethod

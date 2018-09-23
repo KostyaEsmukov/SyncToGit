@@ -6,7 +6,7 @@ import threading
 import click
 
 from . import index_generator
-from .config import Config
+from .config import Config, FilesystemConfigReadWriter
 from .evernote import Evernote, EvernoteTokenExpired
 from .git import Git
 from .print_on_exception_only import PrintOnExceptionOnly
@@ -56,15 +56,15 @@ def main(batch, force_update, quiet, config):
 
 
 def run(batch, force_update, config):
-    config = Config(config)
+    config = Config(FilesystemConfigReadWriter(config))
 
     gc = {
-        'repo_dir': config.get_string('git', 'repo_dir'),
-        'branch': config.get_string('git', 'branch', 'master'),
-        'push': config.get_boolean('git', 'push', False),
+        'repo_dir': config.get_str('git', 'repo_dir'),
+        'branch': config.get_str('git', 'branch', 'master'),
+        'push': config.get_bool('git', 'push', False),
     }
     git = Git(**gc)
-    evernote = Evernote(config.get_boolean('evernote', 'sandbox', False))
+    evernote = Evernote(config.get_bool('evernote', 'sandbox', False))
 
     while _sync(git, evernote, config, batch, force_update):
         pass
@@ -72,20 +72,20 @@ def run(batch, force_update, config):
 
 def _sync(git, evernote, config, batch, force_update):
     try:
-        token = base64.b64decode(config.get_string('evernote', 'token')).decode()
+        token = base64.b64decode(config.get_str('evernote', 'token')).decode()
     except Exception as e:
         logging.info("No valid token found.")
         if batch:
             raise Exception("Unable to proceed due to running batch mode.", e)
 
         c = {
-            'consumer_key': config.get_string(
+            'consumer_key': config.get_str(
                 "evernote", "consumer_key", _CONSUMER_KEY
             ),
-            'consumer_secret': config.get_string(
+            'consumer_secret': config.get_str(
                 "evernote", "consumer_secret", _CONSUMER_SECRET
             ),
-            'callback_url': config.get_string(
+            'callback_url': config.get_str(
                 "evernote", "callback_url", _CALLBACK_URL
             ),
         }
@@ -188,7 +188,7 @@ def _sync(git, evernote, config, batch, force_update):
 
                 index_generator.generate(
                     update['result'],
-                    os.path.join(config.get_string('git', 'repo_dir'), "index.html"),
+                    os.path.join(config.get_str('git', 'repo_dir'), "index.html"),
                 )
                 logging.info("Sync loop ended.")
                 logging.info(

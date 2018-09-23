@@ -2,11 +2,11 @@
 
 .PHONY: format
 format:
-	isort -rc synctogit *.py
+	isort -rc synctogit tests *.py
 
 .PHONY: lint
 lint:
-	flake8 && isort --check-only -rc synctogit *.py
+	flake8 && isort --check-only -rc synctogit tests *.py
 
 .PHONY: test
 test:
