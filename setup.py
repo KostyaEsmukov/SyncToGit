@@ -51,8 +51,10 @@ setup(
     ],
     extras_require={
         'dev': [
+            'coverage==4.5.1',
             'flake8==3.5.0',
             'isort==4.3.4',
+            'pytest==3.8.1',
         ],
     },
     license="MIT",

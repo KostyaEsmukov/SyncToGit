@@ -8,6 +8,9 @@ __pycache__/
 
 *.out
 
+.coverage
+.pytest_cache
+
 /evernote-sdk-python
 /.idea
 
