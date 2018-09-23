@@ -26,6 +26,11 @@ _entity_pattern = re.compile("&#?\w+;")
 _note_tail_template = template_env.get_template('evernote/body_tail.j2')
 
 
+def resource_filename(file_hash: str, mime_type: str) -> str:
+    _, ext = mime_type.split('/', 2)
+    return "%s.%s" % (file_hash, ext)
+
+
 class _EWrapper:
     """Element wrapper. Contains Element and a required context."""
     def __init__(self, element):
@@ -164,10 +169,10 @@ class _EvernoteNoteParser(ContentHandler):
         # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",  # noqa: E501
         # "application/x-iwork-keynote-sffkey"
 
-        toptype, subtype = attrs['type'].split('/', 2)
+        toptype, _ = attrs['type'].split('/', 2)
 
-        # XXX move resource filename generation out
-        src = ''.join([self.resources_base, attrs['hash'], ".", subtype])
+        src = "%s%s" % (self.resources_base,
+                        resource_filename(attrs['hash'], attrs['type']))
         if toptype == "image":
             a = _copy_preserve(
                 attrs, ["alt", "style", "width", "height"]

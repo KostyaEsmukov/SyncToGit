@@ -210,12 +210,11 @@ class Evernote:
         resources = {}
         if note.resources:
             for r in note.resources:
-                chash = binascii.hexlify(r.data.bodyHash)
-                _, ext = r.mime.split('/', 2)
+                chash = binascii.hexlify(r.data.bodyHash).decode()
                 resources[chash] = models.NoteResource(
                     body=r.data.body,
                     mime=r.mime,
-                    filename="%s.%s" % (chash, ext)
+                    filename=note_parser.resource_filename(chash, r.mime),
                 )
 
         return models.Note(
