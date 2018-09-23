@@ -6,6 +6,8 @@ import shutil
 from copy import copy
 from datetime import datetime
 
+logger = logging.getLogger(__name__)
+
 
 def _mkdir_p(d):
     # `mkdir -p $d`
@@ -23,7 +25,7 @@ def _rmfile(fp):
     try:
         os.remove('' + fp)
     except IOError as e:
-        logging.warn("Unable to delete %s file: %s" % (fp, repr(e)))
+        logger.warn("Unable to delete %s file: %s" % (fp, repr(e)))
 
 
 def _write_to_file(fn, body):
@@ -64,7 +66,7 @@ class GitTransaction:
 
             for d in dirs:
                 if d not in metadata:
-                    logging.warning(
+                    logger.warning(
                         "Resources for non-existing note %s are going to be removed." % d
                     )
                     shutil.rmtree(os.path.join(root, d))
@@ -73,7 +75,7 @@ class GitTransaction:
 
     def _scan_get_notes_metadata(self):
         def _rem(f, d=None):
-            logging.warning("Corrupted note is going to be removed: %s" % f)
+            logger.warning("Corrupted note is going to be removed: %s" % f)
             _rmfile(f)
             if d:
                 self._remove_dirs_until_not_empty(["Notes"] + d)
@@ -126,7 +128,7 @@ class GitTransaction:
                                 if k in ["updateSequenceNum"]:
                                     cur[k] = int(v)
                 except Exception as e:
-                    logging.warn("Unable to parse the note. Discarding it. %s", repr(e))
+                    logger.warn("Unable to parse the note. Discarding it. %s", repr(e))
 
                 if len(cur) != 5:
                     _rem(cur['fp'], cur['dir'])
@@ -148,7 +150,7 @@ class GitTransaction:
 
     def _stash(self):
         if self.git.is_dirty(untracked_files=True):
-            logging.warning(
+            logger.warning(
                 "Git repo is dirty. Working copy is going to be be stashed."
             )
 
@@ -158,7 +160,7 @@ class GitTransaction:
         self._stash()
 
         if self.branch != self.git.active_branch.name:
-            logging.info("Switching branch")
+            logger.info("Switching branch")
             self.git.git.checkout("-b", self.branch)
 
     def _commit_changes(self):
@@ -196,7 +198,7 @@ class GitTransaction:
         self._lockfile_remove()
 
         if exc_type is not None:
-            logging.warning(
+            logger.warning(
                 "git transaction failed: %s(%s)" % (repr(exc_type), exc_val)
             )
             self._stash()
@@ -208,7 +210,7 @@ class GitTransaction:
                 try:
                     self.git.remotes.origin.push()
                 except Exception as e:
-                    logging.warning("Failed to git push: %s", repr(e))
+                    logger.warning("Failed to git push: %s", repr(e))
 
     def calculate_changes(self, evernoteMetadata, force_update):
         new = evernoteMetadata

@@ -15,6 +15,7 @@ from . import evernote_note_parser
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types
 
+logger = logging.getLogger(__name__)
 
 _RETRIES = 10
 _MAXLEN_TITLE_FILENAME = 30
@@ -56,12 +57,12 @@ def _IORetry(f):
             try:
                 return f(*p, **k)
             except (socketerror, EOFError) as e:
-                logging.warning("IO failure: %d/%d: %s" % (i + 1, _RETRIES, repr(e)))
+                logger.warning("IO failure: %d/%d: %s" % (i + 1, _RETRIES, repr(e)))
                 ee = e
             except Errors.EDAMSystemException as e:
                 if e.errorCode == Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
                     s = e.rateLimitDuration + 1
-                    logging.warning("Rate limit reached. Waiting %d seconds..." % s)
+                    logger.warning("Rate limit reached. Waiting %d seconds..." % s)
                     sleep(s)
                     ee = e
                 else:
@@ -71,7 +72,7 @@ def _IORetry(f):
                     e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED
                     or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT
                 ):
-                    logging.debug(repr(e))
+                    logger.debug(repr(e))
                     raise EvernoteTokenExpired()
                 else:
                     raise

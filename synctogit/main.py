@@ -11,6 +11,8 @@ from .evernote import Evernote, EvernoteTokenExpired
 from .git import Git
 from .print_on_exception_only import PrintOnExceptionOnly
 
+logger = logging.getLogger(__name__)
+
 # python -c "import base64; print base64.b64encode('123')"
 _CONSUMER_KEY = 'kostya0shift-0653'
 _CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
@@ -47,11 +49,7 @@ def main(batch, force_update, quiet, config):
     might be overwritten by synctogit.
     """
 
-    if quiet:
-        with PrintOnExceptionOnly(logging.INFO):
-            run(batch, force_update, config)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    with PrintOnExceptionOnly(quiet, logging.INFO):
         run(batch, force_update, config)
 
 
@@ -74,7 +72,7 @@ def _sync(git, evernote, config, batch, force_update):
     try:
         token = base64.b64decode(config.get_str('evernote', 'token')).decode()
     except Exception as e:
-        logging.info("No valid token found.")
+        logger.info("No valid token found.")
         if batch:
             raise Exception("Unable to proceed due to running batch mode.", e)
 
@@ -93,7 +91,7 @@ def _sync(git, evernote, config, batch, force_update):
         config.set('evernote', 'token', base64.b64encode(token))
 
     try:
-        logging.info("Authenticating...")
+        logger.info("Authenticating...")
         evernote.auth(token)
 
         any_fail = False
@@ -102,11 +100,11 @@ def _sync(git, evernote, config, batch, force_update):
             updates[0] = False
 
             with git.transaction() as t:
-                logging.info("Calculating changes...")
+                logger.info("Calculating changes...")
                 update = t.calculate_changes(
                     evernote.get_actual_metadata(), force_update
                 )
-                logging.info("Applying changes...")
+                logger.info("Applying changes...")
 
                 t.delete_files(update['delete'])
 
@@ -134,7 +132,7 @@ def _sync(git, evernote, config, batch, force_update):
 
                         guid = j[1]
                         d = j[2]
-                        logging.info(
+                        logger.info(
                             "Getting note (%d/%d) contents: %s...", i, total, guid
                         )
 
@@ -143,7 +141,7 @@ def _sync(git, evernote, config, batch, force_update):
                                 guid, t.get_relative_resources_url(guid, d)
                             )
                         except Exception as e:
-                            logging.warning(
+                            logger.warning(
                                 "Unable to get the note %s: %s", guid, repr(e)
                             )
                             lock.acquire()
@@ -155,7 +153,7 @@ def _sync(git, evernote, config, batch, force_update):
                         try:
                             saved[0] += 1
                             if note['updateSequenceNum'] == d['updateSequenceNum']:
-                                logging.info(
+                                logger.info(
                                     "Saving note (%d/%d) contents: %s...",
                                     saved[0],
                                     total,
@@ -163,7 +161,7 @@ def _sync(git, evernote, config, batch, force_update):
                                 )
                                 t.save_note(note, d)
                             else:
-                                logging.info(
+                                logger.info(
                                     "Skipping note (%d/%d) because it has changed "
                                     "during sync: %s...",
                                     saved[0],
@@ -190,24 +188,24 @@ def _sync(git, evernote, config, batch, force_update):
                     update['result'],
                     os.path.join(config.get_str('git', 'repo_dir'), "index.html"),
                 )
-                logging.info("Sync loop ended.")
-                logging.info(
+                logger.info("Sync loop ended.")
+                logger.info(
                     "Target was: delete: %d, create: %d, update: %d",
                     len(update['delete']),
                     len(update['new']),
                     len(update['update']),
                 )
-                logging.info("Result: saved: %d, failed: %d", saved[0], failed[0])
+                logger.info("Result: saved: %d, failed: %d", saved[0], failed[0])
                 any_fail = failed[0] != 0
 
-        logging.info("Done")
+        logger.info("Done")
 
         if any_fail:
             raise Exception("Sync done with fails")
 
         return False
     except EvernoteTokenExpired:
-        logging.warning("Auth token expired.")
+        logger.warning("Auth token expired.")
         config.unset('evernote', 'token')
         return True
 
