@@ -1,11 +1,8 @@
-
-
 import os
 import re
-from xml.sax import ContentHandler
 from xml.etree import ElementTree
-from xml.etree.ElementTree import Element
-from xml.etree.ElementTree import SubElement
+from xml.etree.ElementTree import Element, SubElement
+from xml.sax import ContentHandler
 
 import defusedxml.sax as sax
 
@@ -47,7 +44,7 @@ function evernote_decrypt(o) {
     return false;
 }
 
-""" + _get_file_contents("js/decrypt.min.js")
+""" + _get_file_contents("js/decrypt.min.js")  # noqa: E501
 
 _AN_PATTERN = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 _BN_PATTERN = re.compile("<(/head|/body|title)[^>]*>")
@@ -89,7 +86,8 @@ class _EvernoteNoteParser(ContentHandler):
         self.hierarchy[0].st['latest_child'] = None
 
         self._startElement("head")
-        self._startElement("meta", attrib={'http-equiv': 'Content-Type', 'content': 'text/html; charset=UTF-8'})
+        self._startElement("meta", attrib={'http-equiv': 'Content-Type',
+                                           'content': 'text/html; charset=UTF-8'})
         self._endElement()
 
         self._startElement("title", text=title)
@@ -138,8 +136,11 @@ class _EvernoteNoteParser(ContentHandler):
 
         if tag == "en-note":
             if 'style' not in attrs:
-                attrs['style'] = 'word-wrap: break-word;' \
-                                 + ' -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;'
+                attrs['style'] = (
+                    'word-wrap: break-word; '
+                    '-webkit-nbsp-mode: space; '
+                    '-webkit-line-break: after-white-space;'
+                )
 
             attrs.pop('xmlns', 0)
 
@@ -167,26 +168,28 @@ class _EvernoteNoteParser(ContentHandler):
 
                 # "application/msword", "application/mspowerpoint", "application/excel"
                 #
-                # "application/vnd.ms-word", "application/vnd.ms-powerpoint", "application/vnd.ms-excel"
+                # "application/vnd.ms-word", "application/vnd.ms-powerpoint", "application/vnd.ms-excel"  # noqa: E501
                 #
-                # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                # "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # noqa: E501
+                # "application/vnd.openxmlformats-officedocument.presentationml.presentation",  # noqa: E501
                 # "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 #
-                # "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote",
-                # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",
+                # "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote",  # noqa: E501
+                # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",  # noqa: E501
                 # "application/x-iwork-keynote-sffkey"
 
                 toptype, subtype = attrs['type'].split('/', 2)
 
                 src = ''.join([self.resources_base, attrs['hash'], ".", subtype])
                 if toptype == "image":
-                    a = _copy_preserve(attrs, ["alt", "style", "width", "height"], {'src': src})
+                    a = _copy_preserve(attrs, ["alt", "style", "width", "height"],
+                                       {'src': src})
                     self._startElement("img", attrib=a)
                 else:
                     # TODO other types
 
-                    self._startElement("a", text="Document of type " + attrs['type'], href=src)
+                    self._startElement("a", text="Document of type " + attrs['type'],
+                                       href=src)
 
             elif tag == 'en-crypt':
                 self.include_encrypted_js = True
@@ -200,7 +203,9 @@ class _EvernoteNoteParser(ContentHandler):
                     if k in attrs:
                         a['data-' + k] = attrs[k]
 
-                self._startElement("a", text="Encrypted content. Click here to decrypt.", attrib=a)
+                self._startElement("a",
+                                   text="Encrypted content. Click here to decrypt.",
+                                   attrib=a)
                 self.hierarchy[-1].st['en-crypt'] = True
             else:
                 self._startElement(tag, attrib=attrs)
@@ -216,7 +221,9 @@ class _EvernoteNoteParser(ContentHandler):
 
     def getResult(self):  # utf8-encoded
         if len(self.hierarchy) != 1:
-            raise Exception("Note is not parsed yet: hierarchy size is %d" % len(self.hierarchy))
+            raise Exception(
+                "Note is not parsed yet: hierarchy size is %d" % len(self.hierarchy)
+            )
 
         r = ElementTree.tostring(self.hierarchy[0].e, encoding="unicode")
 
@@ -228,12 +235,14 @@ class _EvernoteNoteParser(ContentHandler):
 
         if self.include_encrypted_js:
             # avoid dealing with XML text escapes
-            r = r.replace(b"</body>", b"<script>" + _ENCRYPTED_JS + b"</script></body>", 1)
+            r = r.replace(b"</body>",
+                          b"<script>" + _ENCRYPTED_JS + b"</script></body>", 1)
         return r
 
 
 def parse(resources_base_path, enbody, title):
     p = _EvernoteNoteParser(resources_base_path, title)
-    sax.parseString(enbody.encode("utf8"), p, forbid_dtd=False, forbid_entities=False, forbid_external=False)
+    sax.parseString(enbody.encode("utf8"), p, forbid_dtd=False,
+                    forbid_entities=False, forbid_external=False)
 
     return p.getResult()

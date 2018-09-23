@@ -27,7 +27,9 @@ class Config:
 
         if not self.conf.has_option(section, key):
             if isinstance(default, _NotSet):
-                raise ConfigException('Key %s from section %s is missing' % (key, section))
+                raise ConfigException(
+                    'Key %s from section %s is missing' % (key, section)
+                )
             else:
                 v = default
         else:

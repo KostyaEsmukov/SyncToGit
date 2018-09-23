@@ -1,17 +1,14 @@
-
-
-import os
-import logging
 import argparse
-import threading
 import base64
+import logging
+import os
+import threading
 
-from .print_on_exception_only import PrintOnExceptionOnly
-from .git import Git
+from . import index_generator
 from .config import Config
 from .evernote import Evernote, EvernoteTokenExpired
-from . import index_generator
-
+from .git import Git
+from .print_on_exception_only import PrintOnExceptionOnly
 
 # python -c "import base64; print base64.b64encode('123')"
 _CONSUMER_KEY = 'kostya0shift-0653'
@@ -20,10 +17,15 @@ _CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
 
 
 def main():
-    parser = argparse.ArgumentParser(description="SyncToGit. Sync your Evernote notes to a local git repository")
-    parser.add_argument('-b', '--batch', action='store_true', help='Non-interactive mode')
-    parser.add_argument('-f', '--force-update', action='store_true', help='Force download all notes')
-    parser.add_argument('-q', '--quiet', action='store_true', help='Do not print anything unless exit code is non-zero')
+    parser = argparse.ArgumentParser(
+        description="SyncToGit. Sync your Evernote notes to a local git repository"
+    )
+    parser.add_argument('-b', '--batch', action='store_true',
+                        help='Non-interactive mode')
+    parser.add_argument('-f', '--force-update', action='store_true',
+                        help='Force download all notes')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Do not print anything unless exit code is non-zero')
     parser.add_argument('config', help='Path to config file')
     pargs = parser.parse_args()
 
@@ -59,9 +61,12 @@ def _sync(git, evernote, config, pargs):
             raise Exception("Unable to proceed due to running batch mode.", e)
 
         c = {
-            'consumer_key': config.get_string("evernote", "consumer_key", _CONSUMER_KEY),
-            'consumer_secret': config.get_string("evernote", "consumer_secret", _CONSUMER_SECRET),
-            'callback_url': config.get_string("evernote", "callback_url", _CALLBACK_URL)
+            'consumer_key': config.get_string("evernote",
+                                              "consumer_key", _CONSUMER_KEY),
+            'consumer_secret': config.get_string("evernote",
+                                                 "consumer_secret", _CONSUMER_SECRET),
+            'callback_url': config.get_string("evernote",
+                                              "callback_url", _CALLBACK_URL)
         }
         token = evernote.retrieve_token(**c)
         config.set('evernote', 'token', base64.b64encode(token))
@@ -77,7 +82,8 @@ def _sync(git, evernote, config, pargs):
 
             with git.transaction() as t:
                 logging.info("Calculating changes...")
-                update = t.calculate_changes(evernote.get_actual_metadata(), pargs.force_update)
+                update = t.calculate_changes(evernote.get_actual_metadata(),
+                                             pargs.force_update)
                 logging.info("Applying changes...")
 
                 t.delete_files(update['delete'])
@@ -99,19 +105,24 @@ def _sync(git, evernote, config, pargs):
                         try:
                             j = queue.pop()
                             i = total - len(queue)
-                        except:
+                        except Exception:
                             return
                         finally:
                             lock.release()
 
                         guid = j[1]
                         d = j[2]
-                        logging.info("Getting note (%d/%d) contents: %s...", i, total, guid)
+                        logging.info("Getting note (%d/%d) contents: %s...",
+                                     i, total, guid)
 
                         try:
-                            note = evernote.get_note(guid, t.get_relative_resources_url(guid, d))
+                            note = evernote.get_note(
+                                guid,
+                                t.get_relative_resources_url(guid, d),
+                            )
                         except Exception as e:
-                            logging.warning("Unable to get the note %s: %s", guid, repr(e))
+                            logging.warning("Unable to get the note %s: %s",
+                                            guid, repr(e))
                             lock.acquire()
                             failed[0] += 1
                             lock.release()
@@ -121,17 +132,22 @@ def _sync(git, evernote, config, pargs):
                         try:
                             saved[0] += 1
                             if note['updateSequenceNum'] == d['updateSequenceNum']:
-                                logging.info("Saving note (%d/%d) contents: %s...", saved[0], total, guid)
+                                logging.info("Saving note (%d/%d) contents: %s...",
+                                             saved[0], total, guid)
                                 t.save_note(note, d)
                             else:
-                                logging.info("Skipping note (%d/%d) because it has changed during sync: %s...",
-                                             saved[0], total, guid)
+                                logging.info(
+                                    "Skipping note (%d/%d) because it has changed "
+                                    "during sync: %s...",
+                                    saved[0], total, guid,
+                                )
                                 updates[0] = True
                         finally:
                             lock.release()
 
                 jobs = []
-                for j in range(config.get_int("internals", "notes_download_threads", 30)):
+                for j in range(config.get_int("internals",
+                                              "notes_download_threads", 30)):
                     jobs.append(threading.Thread(target=job))
 
                 for j in jobs:
@@ -140,10 +156,13 @@ def _sync(git, evernote, config, pargs):
                 for j in jobs:
                     j.join()
 
-                index_generator.generate(update['result'],
-                                         os.path.join(config.get_string('git', 'repo_dir'), "index.html"))
+                index_generator.generate(
+                    update['result'],
+                    os.path.join(config.get_string('git', 'repo_dir'), "index.html"),
+                )
                 logging.info("Sync loop ended.")
-                logging.info("Target was: delete: %d, create: %d, update: %d", len(update['delete']),
+                logging.info("Target was: delete: %d, create: %d, update: %d",
+                             len(update['delete']),
                              len(update['new']), len(update['update']))
                 logging.info("Result: saved: %d, failed: %d", saved[0], failed[0])
                 any_fail = failed[0] != 0

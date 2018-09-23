@@ -1,20 +1,20 @@
-
-
 import binascii
 import logging
+import urllib.parse
 from socket import error as socketerror
 from time import sleep
-import urllib.parse
 
-import regex  # \p{L}
-from evernote.api.client import EvernoteClient
 import evernote.edam as Edam
-import evernote.edam.limits.constants as Constants
 import evernote.edam.error.constants as Errors
+import evernote.edam.limits.constants as Constants
+import regex
+from evernote.api.client import EvernoteClient
+
+from . import evernote_note_parser
+
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types
 
-from . import evernote_note_parser
 
 _RETRIES = 10
 _MAXLEN_TITLE_FILENAME = 30
@@ -32,8 +32,8 @@ def _normalize_filename(fn):
         fn = ec + fn + ec
 
     # https://msdn.microsoft.com/en-us/library/aa365247.aspx
-    l = ["CON", "COM[0-9]", "LPT[0-9]", "PRN", "AUX", "NUL"]  # special msdos devices
-    for s in l:
+    dev = ["CON", "COM[0-9]", "LPT[0-9]", "PRN", "AUX", "NUL"]  # special msdos devices
+    for s in dev:
         if regex.match("^" + s, fn, regex.IGNORECASE):
             fn = ec + fn
             break
@@ -67,7 +67,8 @@ def _IORetry(f):
                 else:
                     raise
             except Errors.EDAMUserException as e:
-                if e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT:
+                if e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED \
+                        or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT:
                     logging.debug(repr(e))
                     raise EvernoteTokenExpired()
                 else:
@@ -100,10 +101,16 @@ class Evernote:
 
             print("Open this link in your browser: ")
             print(client.get_authorize_url(request_token))
-            print("After giving access you will be redirected to non-existing page. It's OK.")
+            print(
+                "After giving access you will be redirected to "
+                "a non-existing page. It's OK."
+            )
             url = input("Paste the URL of that page here: ")
 
-            oauth_verifier = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['oauth_verifier'][0]
+            oauth_verifier = (
+                urllib.parse
+                .parse_qs(urllib.parse.urlsplit(url).query)['oauth_verifier'][0]
+            )
 
             return client.get_access_token(
                 request_token['oauth_token'],
@@ -153,7 +160,12 @@ class Evernote:
         offset = 0
         while True:
 
-            metadata = note_store.findNotesMetadata(noteFilter, offset, Constants.EDAM_USER_NOTES_MAX, spec)
+            metadata = note_store.findNotesMetadata(
+                noteFilter,
+                offset,
+                Constants.EDAM_USER_NOTES_MAX,
+                spec,
+            )
 
             for n in metadata.notes:
                 res[n.guid] = {
@@ -199,7 +211,11 @@ class Evernote:
 
         note = note_store.getNote(guid, True, True, False, False)
 
-        note_parsed = evernote_note_parser.parse(resources_base, note.content, note.title)
+        note_parsed = evernote_note_parser.parse(
+            resources_base,
+            note.content,
+            note.title,
+        )
 
         resources = {}
         if note.resources:

@@ -1,12 +1,10 @@
-
-
-import os
 import errno
+import logging
+import os
+import re
+import shutil
 from copy import copy
 from datetime import datetime
-import logging
-import shutil
-import re
 
 
 def _mkdir_p(d):
@@ -51,7 +49,7 @@ class GitTransaction:
             while d:
                 os.rmdir(self._abspath(d))
                 d.pop()
-        except:
+        except Exception:
             pass
 
     def _abspath(self, l):
@@ -66,7 +64,9 @@ class GitTransaction:
 
             for d in dirs:
                 if d not in metadata:
-                    logging.warning("Resources for non-existing note %s are going to be removed." % d)
+                    logging.warning(
+                        "Resources for non-existing note %s are going to be removed." % d
+                    )
                     shutil.rmtree(os.path.join(root, d))
         except StopIteration:
             return
@@ -108,16 +108,16 @@ class GitTransaction:
                     # guid, updateSequenceNum
                     with open(cur['fp'], "r") as f:
                         while len(cur) != 5:
-                            l = f.readline()
+                            line = f.readline()
 
-                            if l is '':
+                            if line is '':
                                 break
 
-                            g = re.search('^<!--[-]+-->$', l)
+                            g = re.search('^<!--[-]+-->$', line)
                             if g is not None:
                                 break
 
-                            g = re.search('^<!-- ([^:]+): (.+) -->$', l)
+                            g = re.search('^<!-- ([^:]+): (.+) -->$', line)
                             if g is not None:
                                 k = g.group(1)
                                 v = g.group(2)
@@ -161,8 +161,9 @@ class GitTransaction:
             self.git.git.checkout("-b", self.branch)
 
     def _commit_changes(self):
-        self.git.git.add(["-A",
-                          "."])  # there are problems with charset under windows when using python version: self.git.index.add("*")
+        # there are problems with charset under windows when using
+        # python version: self.git.index.add("*")
+        self.git.git.add(["-A", "."])
         self.git.index.commit("Sync at " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
     def _lockfile_location(self):
@@ -180,8 +181,11 @@ class GitTransaction:
 
     def __enter__(self):
         if self._lockfile_exists():
-            raise GitSimultaneousTransaction("Lockfile exists. Another copy of program is probably running. "
-                                             "Remove this file if you are sure that this is a mistake: %s" % self._lockfile_location())
+            raise GitSimultaneousTransaction(
+                "Lockfile exists. Another copy of program is probably running. "
+                "Remove this file if you are sure that this is "
+                "a mistake: %s" % self._lockfile_location()
+            )
 
         self._check_repo_state()
         self._lockfile_create()
@@ -191,7 +195,9 @@ class GitTransaction:
         self._lockfile_remove()
 
         if exc_type is not None:
-            logging.warning("git transaction failed: %s(%s)" % (repr(exc_type), exc_val))
+            logging.warning(
+                "git transaction failed: %s(%s)" % (repr(exc_type), exc_val)
+            )
             self._stash()
         else:
             if self.git.is_dirty(untracked_files=True):
@@ -216,14 +222,16 @@ class GitTransaction:
 
         oldguids = copy(old)
         for guid in new:
-            res['result'].append([new[guid]['dir'] + [new[guid]['file']], new[guid]['name']])
+            res['result'].append([new[guid]['dir'] +
+                                  [new[guid]['file']], new[guid]['name']])
             if guid not in old:
                 res['new'][guid] = new[guid]
             else:
                 if new[guid]['file'] != old[guid]['file']:
                     res['delete'][guid] = old[guid]
                     res['new'][guid] = new[guid]
-                elif force_update or new[guid]['updateSequenceNum'] != old[guid]['updateSequenceNum']:
+                elif force_update or new[guid]['updateSequenceNum'] \
+                        != old[guid]['updateSequenceNum']:
                     res['update'][guid] = new[guid]
 
                 oldguids.pop(guid, 0)
@@ -242,9 +250,11 @@ class GitTransaction:
 
     def get_relative_resources_url(self, noteguid, metadata):
         # utf8 encoded
-        return '/'.join(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""])
+        return '/'.join(([".."] * (len(metadata['dir']) + 1)) +
+                        ["Resources", noteguid, ""])
 
-    # return os.path.join(*(([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]))
+    # return os.path.join(*(([".."] * (len(metadata['dir']) + 1))
+    # + ["Resources", noteguid, ""]))
 
     def save_note(self, note, metadata):
         _mkdir_p(self._abspath(["Notes"] + metadata['dir']))
@@ -272,7 +282,7 @@ class GitTransaction:
         p = ["Resources"] + [note['guid']]
         try:
             shutil.rmtree(self._abspath(p))
-        except:
+        except Exception:
             pass
 
         if len(note['resources']) > 0:

@@ -3,6 +3,7 @@
 
 import os
 import sys
+
 from setuptools import setup
 
 import synctogit
@@ -19,10 +20,6 @@ if sys.argv[-1] == 'publish':
 
 def strip_comments(l):
     return l.split('#', 1)[0].strip()
-
-
-def reqs(*f):
-    return [r for r in (strip_comments(lr) for l in (open(os.path.join(os.getcwd(), ff)).readlines() for ff in f) for lr in l) if r]
 
 
 readme = open('README.rst').read()
@@ -45,7 +42,19 @@ setup(
             'synctogit = synctogit.main:main'
         ]
     },
-    install_requires=reqs("requirements"),
+    install_requires=[
+        "GitPython==2.1.11",
+        "defusedxml==0.5.0",
+        "evernote3==1.25.12",
+        "oauth2==1.9.0.post1",
+        "regex==2018.08.29",
+    ],
+    extras_require={
+        'dev': [
+            'flake8==3.5.0',
+            'isort==4.3.4',
+        ],
+    },
     license="MIT",
     python_requires=">=3.5",
     zip_safe=False,

@@ -2,7 +2,9 @@ import os
 import urllib.parse
 from xml.sax.saxutils import escape
 
-_note_el = """<li><a href="%(url)s" onclick="return frmLocation('%(url)s');">%(text)s</a></li>"""
+_note_el = (
+    '<li><a href="%(url)s" onclick="return frmLocation(\'%(url)s\');">%(text)s</a></li>'
+)
 
 _index_html = """
 <!doctype html>

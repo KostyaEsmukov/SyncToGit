@@ -16,7 +16,8 @@ os.environ['USERNAME'] = 'None'  # default username for git
 
 def gitRepo(d):
     r = git.Repo(d)
-    if os.path.normpath(d + os.sep + ".git") != os.path.normpath(r.git_dir):  # parent git root chosen
+    if os.path.normpath(d + os.sep + ".git") != os.path.normpath(r.git_dir):
+        # parent git root chosen
         return None
     return r
 
@@ -41,12 +42,14 @@ class Git:
     @staticmethod
     def _check_init_git(d):
         if not os.path.isdir(d):
-            raise GitException("Git directory does not exists: %s. You should create it manually." % d)
+            raise GitException(
+                "Git directory does not exists: %s. You should create it manually." % d
+            )
 
         try:
             r = gitRepo(d) or Git._init_git_repo(d)
             return r
-        except:
+        except Exception:
             if len(os.listdir(d)) > 0:
                 raise GitException("Git directory is not a git repo and is not empty")
             else:
