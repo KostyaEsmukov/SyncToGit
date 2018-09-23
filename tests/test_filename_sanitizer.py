@@ -1,4 +1,5 @@
 import pytest
+
 from synctogit.filename_sanitizer import normalize_filename
 
 

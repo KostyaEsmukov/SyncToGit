@@ -44,11 +44,13 @@ setup(
     },
     install_requires=[
         "GitPython==2.1.11",
+        "cached-property==1.5.1",
         "click==6.7",
         "defusedxml==0.5.0",
         "evernote3==1.25.12",
         "jinja2==2.10",
         "oauth2==1.9.0.post1",
+        "pytz",
         "regex==2018.08.29",
     ],
     extras_require={

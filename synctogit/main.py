@@ -7,7 +7,8 @@ import click
 
 from . import index_generator
 from .config import Config, FilesystemConfigReadWriter
-from .evernote.evernote import Evernote, EvernoteTokenExpired
+from .evernote.evernote import Evernote
+from .evernote.exc import EvernoteTokenExpiredError
 from .git import Git
 from .print_on_exception_only import PrintOnExceptionOnly
 
@@ -152,7 +153,7 @@ def _sync(git, evernote, config, batch, force_update):
                         lock.acquire()
                         try:
                             saved[0] += 1
-                            if note['updateSequenceNum'] == d['updateSequenceNum']:
+                            if note.update_sequence_num == d.update_sequence_num:
                                 logger.info(
                                     "Saving note (%d/%d) contents: %s...",
                                     saved[0],
@@ -206,7 +207,7 @@ def _sync(git, evernote, config, batch, force_update):
             raise Exception("Sync done with fails")
 
         return False
-    except EvernoteTokenExpired:
+    except EvernoteTokenExpiredError:
         logger.warning("Auth token expired.")
         config.unset('evernote', 'token')
         return True

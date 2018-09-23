@@ -1,16 +1,19 @@
 import binascii
+import datetime
 import logging
 import urllib.parse
+from functools import wraps
 from socket import error as socketerror
-from time import sleep
+from typing import Mapping, Optional
 
 import evernote.edam as Edam
 import evernote.edam.error.constants as Errors
 import evernote.edam.limits.constants as Constants
-import regex
+import pytz
+from cached_property import cached_property
 from evernote.api.client import EvernoteClient
 
-from . import evernote_note_parser
+from . import evernote_note_parser, exc, models
 from ..filename_sanitizer import normalize_filename
 
 # import evernote.edam.userstore.constants as UserStoreConstants
@@ -27,44 +30,30 @@ _MAXLEN_TITLE_FILENAME = 30
 # Read existing notes
 
 
-class EvernoteTokenExpired(Exception):
-    pass
-
-
-def _IORetry(f):
-    def c(*p, **k):
-        ee = None
-        for i in range(_RETRIES):
-            try:
-                return f(*p, **k)
-            except (socketerror, EOFError) as e:
-                logger.warning("IO failure: %d/%d: %s" % (i + 1, _RETRIES, repr(e)))
-                ee = e
-            except Errors.EDAMSystemException as e:
-                if e.errorCode == Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
-                    s = e.rateLimitDuration + 1
-                    logger.warning("Rate limit reached. Waiting %d seconds..." % s)
-                    sleep(s)
-                    ee = e
-                else:
-                    raise
-            except Errors.EDAMUserException as e:
-                if (
-                    e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED
-                    or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT
-                ):
-                    logger.debug(repr(e))
-                    raise EvernoteTokenExpired()
-                else:
-                    raise
-
-        raise ee
+def translate_exceptions(f):
+    @wraps(f)
+    def c(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except (socketerror, EOFError) as e:
+            raise exc.EvernoteIOError(e)
+        except Errors.EDAMSystemException as e:
+            if e.errorCode == Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
+                s = float(e.rateLimitDuration + 1)
+                # XXX sleep?
+                raise exc.EvernoteApiRateLimitError(e, rate_limit_duration_seconds=s)
+            else:
+                raise exc.EvernoteApiError(e)
+        except Errors.EDAMUserException as e:
+            if (
+                e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED
+                or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT
+            ):
+                raise exc.EvernoteTokenExpiredError(e)
+            else:
+                raise exc.EvernoteApiError(e)
 
     return c
-
-
-class EvernoteAuthException(Exception):
-    pass
 
 
 class Evernote:
@@ -72,8 +61,8 @@ class Evernote:
         self.sandbox = sandbox
         self.client = None
 
-    @_IORetry
-    def retrieve_token(self, consumer_key, consumer_secret, callback_url):
+    @translate_exceptions
+    def retrieve_token(self, consumer_key, consumer_secret, callback_url) -> str:
         try:
             client = EvernoteClient(
                 consumer_key=consumer_key,
@@ -97,35 +86,37 @@ class Evernote:
             )
 
             return client.get_access_token(
-                request_token['oauth_token'],
-                request_token['oauth_token_secret'],
+                request_token["oauth_token"],
+                request_token["oauth_token_secret"],
                 oauth_verifier,
             )
         except Exception as e:
-            raise EvernoteAuthException(e)
+            raise exc.EvernoteAuthError(e)
 
-    @_IORetry
-    def auth(self, access_token):
+    @translate_exceptions
+    def auth(self, access_token: str) -> None:
         self.client = EvernoteClient(token=access_token, sandbox=self.sandbox)
 
-    @_IORetry
-    def _get_notebooks(self):
+    def get_actual_metadata(self) -> Mapping[models.NoteGuid, models.NoteMetadata]:
+        notes_metadata = self._get_all_notes_metadata()
+        notebooks = self._get_notebooks()
+        return self._process_metadata(notes_metadata, notebooks)
+
+    @translate_exceptions
+    def _get_notebooks(self) -> Mapping[models.NotebookGuid, models.NotebookInfo]:
         note_store = self.client.get_note_store()
         notebooks = note_store.listNotebooks()
+        return {
+            n.guid: models.NotebookInfo(
+                name=n.name,
+                update_sequence_num=n.updateSequenceNum,
+                stack=n.stack if n.stack is not None else None,
+            )
+            for n in notebooks
+        }
 
-        res = {}
-
-        for n in notebooks:
-            res[n.guid] = {
-                'name': n.name,
-                'updateSequenceNum': n.updateSequenceNum,
-                'stack': n.stack if n.stack is not None else None,
-            }
-
-        return res
-
-    @_IORetry
-    def _get_all_notes_metadata(self):
+    @translate_exceptions
+    def _get_all_notes_metadata(self) -> Mapping[models.NoteGuid, models.NoteInfo]:
         note_store = self.client.get_note_store()
 
         noteFilter = Edam.notestore.NoteStore.NoteFilter()
@@ -149,50 +140,68 @@ class Evernote:
             )
 
             for n in metadata.notes:
-                res[n.guid] = {
-                    'title': n.title,
-                    'notebookGuid': n.notebookGuid,
-                    'updateSequenceNum': n.updateSequenceNum,
-                    'tagGuids': n.tagGuids,
-                    'updated': n.updated,
-                    'created': n.created,
-                    'deleted': n.deleted,
-                }
+                res[n.guid] = models.NoteInfo(
+                    title=n.title,
+                    notebook_guid=n.notebookGuid,
+                    update_sequence_num=n.updateSequenceNum,
+                    tag_guids=list(n.tagGuids or []),
+                    updated=self._normalize_timestamp(n.updated),
+                    created=self._normalize_timestamp(n.created),
+                    deleted=self._normalize_timestamp(n.deleted),
+                )
 
             offset = metadata.startIndex + len(metadata.notes)
             if offset >= metadata.totalNotes:
                 break
 
-        return res, self._get_notebooks()
+        return res
 
-    def _process_metadata(self, metadata):
+    def _process_metadata(
+        self,
+        notes_metadata: Mapping[models.NoteGuid, models.NoteInfo],
+        notebooks: Mapping[models.NotebookGuid, models.NotebookInfo],
+    ) -> Mapping[models.NoteGuid, models.NoteMetadata]:
         res = {}
 
-        for guid in metadata[0]:
-            n = metadata[0][guid]
-            nb = metadata[1][n['notebookGuid']]
+        for note_guid, note_info in notes_metadata.items():
+            notebook_info = notebooks[note_info.notebook_guid]
 
-            st = ([nb['stack']] if nb['stack'] else []) + [nb['name']]
-            res[guid] = {
-                'dir': [normalize_filename(s) for s in st],
-                'file': normalize_filename(
-                    n['title'][0:_MAXLEN_TITLE_FILENAME] + "." + guid
-                )
-                + ".html",
-                'name': [s for s in (st + [n['title']])],
-                'updateSequenceNum': n['updateSequenceNum'],
-            }
+            note_location = [notebook_info.name, note_info.title]
+            if notebook_info.stack:
+                note_location = [notebook_info.stack] + note_location
+
+            normalized_note_location = [normalize_filename(s) for s in note_location]
+
+            file = normalize_filename(
+                "%s.%s.html" % (note_info.title[:_MAXLEN_TITLE_FILENAME], note_guid)
+            )
+
+            res[note_guid] = models.NoteMetadata(
+                dir=normalized_note_location[:-1],
+                name=note_location,
+                update_sequence_num=note_info.update_sequence_num,
+                file=file,
+            )
 
         return res
 
-    def get_actual_metadata(self):
-        return self._process_metadata(self._get_all_notes_metadata())
-
-    @_IORetry
-    def get_note(self, guid, resources_base):
+    @translate_exceptions
+    def get_note(self, guid: models.NoteGuid, resources_base) -> models.Note:
         note_store = self.client.get_note_store()
 
-        note = note_store.getNote(guid, True, True, False, False)
+        # These args must be positional :(
+        # Otherwise it raises:
+        #
+        # TypeError("getNote() missing 4 required positional arguments:
+        # 'withContent', 'withResourcesData', 'withResourcesRecognition',
+        # and 'withResourcesAlternateData'",)
+        note = note_store.getNote(
+            guid,
+            True,
+            True,
+            False,
+            False,
+        )
 
         note_parsed = evernote_note_parser.parse(
             resources_base, note.content, note.title
@@ -202,18 +211,28 @@ class Evernote:
         if note.resources:
             for r in note.resources:
                 chash = binascii.hexlify(r.data.bodyHash)
-                resources[chash] = {
-                    'body': r.data.body,
-                    'mime': r.mime,
-                    'filename': ''.join([chash, '.', r.mime.split('/', 2)[1]]),
-                }
+                _, ext = r.mime.split('/', 2)
+                resources[chash] = models.NoteResource(
+                    body=r.data.body,
+                    mime=r.mime,
+                    filename="%s.%s" % (chash, ext)
+                )
 
-        return {
-            'title': note.title,
-            'updateSequenceNum': note.updateSequenceNum,
-            'guid': note.guid,
-            'created': note.created,
-            'updated': note.updated,
-            'html': note_parsed,
-            'resources': resources,
-        }
+        return models.Note(
+            title=note.title,
+            update_sequence_num=note.updateSequenceNum,
+            guid=note.guid,
+            created=self._normalize_timestamp(note.created),
+            updated=self._normalize_timestamp(note.updated),
+            html=note_parsed,
+            resources=resources,
+        )
+
+    @cached_property
+    def _timezone(self) -> datetime.tzinfo:
+        return pytz.timezone(self.client.get_user_store().getUser().timezone)
+
+    def _normalize_timestamp(self, ts: Optional[int]) -> Optional[datetime.datetime]:
+        if not ts:
+            return None
+        return datetime.datetime.fromtimestamp(ts / 1000).replace(tzinfo=self._timezone)

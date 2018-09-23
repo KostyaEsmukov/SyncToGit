@@ -5,6 +5,9 @@ import re
 import shutil
 from copy import copy
 from datetime import datetime
+from typing import Mapping
+
+from synctogit.evernote.models import Note, NoteGuid, NoteMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +31,8 @@ def _rmfile(fp):
         logger.warn("Unable to delete %s file: %s" % (fp, repr(e)))
 
 
-def _write_to_file(fn, body):
-    with open('' + fn, 'wb') as f:
+def _write_to_file(fn: str, body: str):
+    with open(fn, 'wb') as f:
         f.write(body)
 
 
@@ -73,7 +76,7 @@ class GitTransaction:
         except StopIteration:
             return
 
-    def _scan_get_notes_metadata(self):
+    def _scan_get_notes_metadata(self) -> Mapping[NoteGuid, NoteMetadata]:
         def _rem(f, d=None):
             logger.warning("Corrupted note is going to be removed: %s" % f)
             _rmfile(f)
@@ -146,6 +149,15 @@ class GitTransaction:
 
         self._delete_non_existing_resources(metadata)
 
+        return {
+            guid: NoteMetadata(
+                dir=note['dir'],
+                name=None,  # XXX
+                update_sequence_num=note['updateSequenceNum'],
+                file=note['file'],
+            )
+            for guid, note in metadata.items()
+        }
         return metadata
 
     def _stash(self):
@@ -212,8 +224,12 @@ class GitTransaction:
                 except Exception as e:
                     logger.warning("Failed to git push: %s", repr(e))
 
-    def calculate_changes(self, evernoteMetadata, force_update):
-        new = evernoteMetadata
+    def calculate_changes(
+        self,
+        evernote_metadata: Mapping[NoteGuid, NoteMetadata],
+        force_update: bool,
+    ):
+        new = evernote_metadata
         old = self._scan_get_notes_metadata()
 
         res = {
@@ -224,21 +240,21 @@ class GitTransaction:
         }
 
         oldguids = copy(old)
-        for guid in new:
+        for guid, note in new.items():
             res['result'].append(
-                [new[guid]['dir'] + [new[guid]['file']], new[guid]['name']]
+                [note.dir + [note.file], note.name]
             )
             if guid not in old:
-                res['new'][guid] = new[guid]
+                res['new'][guid] = note
             else:
-                if new[guid]['file'] != old[guid]['file']:
+                if note.file != old[guid].file:
                     res['delete'][guid] = old[guid]
-                    res['new'][guid] = new[guid]
+                    res['new'][guid] = note
                 elif (
                     force_update
-                    or new[guid]['updateSequenceNum'] != old[guid]['updateSequenceNum']
+                    or note.update_sequence_num != old[guid].update_sequence_num
                 ):
-                    res['update'][guid] = new[guid]
+                    res['update'][guid] = note
 
                 oldguids.pop(guid, 0)
 
@@ -247,24 +263,24 @@ class GitTransaction:
 
         return res
 
-    def delete_files(self, files):
-        for guid in files:
-            fp = self._abspath(["Notes"] + files[guid]['dir'] + [files[guid]['file']])
+    def delete_files(self, files: Mapping[NoteGuid, NoteMetadata]):
+        for note in files.values():
+            fp = self._abspath(["Notes"] + note.dir + [note.file])
             _rmfile(fp)
 
-            self._remove_dirs_until_not_empty(["Notes"] + files[guid]['dir'])
+            self._remove_dirs_until_not_empty(["Notes"] + note.dir)
 
-    def get_relative_resources_url(self, noteguid, metadata):
+    def get_relative_resources_url(self, noteguid: NoteGuid, metadata: NoteMetadata):
         # utf8 encoded
         return '/'.join(
-            ([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]
+            ([".."] * (len(metadata.dir) + 1)) + ["Resources", noteguid, ""]
         )
 
     # return os.path.join(*(([".."] * (len(metadata['dir']) + 1))
     # + ["Resources", noteguid, ""]))
 
-    def save_note(self, note, metadata):
-        _mkdir_p(self._abspath(["Notes"] + metadata['dir']))
+    def save_note(self, note: Note, metadata: NoteMetadata):
+        _mkdir_p(self._abspath(["Notes"] + metadata.dir))
 
         header = []
         header += ["<!doctype html>"]
@@ -272,31 +288,30 @@ class GitTransaction:
         header += ["<!-- All changes you've done here will be stashed on next sync -->"]
         header += ["<!--+++++++++++++-->"]
         for k in ["guid", "updateSequenceNum", "title", "created", "updated"]:
-            v = note[k]
+            k_ = re.sub('([A-Z]+)', r'_\1', k).lower()
+            v = getattr(note, k_)
             if k in ["created", "updated"]:
-                v = datetime.fromtimestamp(v / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                v = v.strftime('%Y-%m-%d %H:%M:%S')
 
             header += ["<!-- %s: %s -->" % (k, v)]
 
         header += ["<!----------------->"]
         header += [""]
 
-        body = '\n'.join(header).encode() + note['html']  # type: bytes
+        body = '\n'.join(header).encode() + note.html  # type: bytes
 
-        f = self._abspath(["Notes"] + metadata['dir'] + [metadata['file']])
+        f = self._abspath(["Notes"] + metadata.dir + [metadata.file])
         _write_to_file(f, body)
 
-        p = ["Resources"] + [note['guid']]
+        p = ["Resources"] + [note.guid]
         try:
             shutil.rmtree(self._abspath(p))
         except Exception:
             pass
 
-        if len(note['resources']) > 0:
+        if note.resources:
             _mkdir_p(self._abspath(p))
 
-            for guid in note['resources']:
-                m = note['resources'][guid]
-
-                f = self._abspath(p + [m['filename']])
-                _write_to_file(f, m['body'])
+            for m in note.resources.values():
+                f = self._abspath(p + [m.filename])
+                _write_to_file(f, m.body)
