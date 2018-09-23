@@ -6,11 +6,11 @@ import argparse
 import threading
 import base64
 
-from .PrintOnExceptionOnly import PrintOnExceptionOnly
-from .Git import Git
-from .Config import Config
-from . import Evernote
-from . import IndexGenerator
+from .print_on_exception_only import PrintOnExceptionOnly
+from .git import Git
+from .config import Config
+from .evernote import Evernote
+from . import index_generator
 
 
 # python -c "import base64; print base64.b64encode('123')"
@@ -44,7 +44,7 @@ def run(pargs):
         'push': config.get_boolean('git', 'push', False)
     }
     git = Git(**gc)
-    evernote = Evernote.Evernote(config.get_boolean('evernote', 'sandbox', False))
+    evernote = Evernote(config.get_boolean('evernote', 'sandbox', False))
 
     while _sync(git, evernote, config, pargs):
         pass
@@ -140,8 +140,8 @@ def _sync(git, evernote, config, pargs):
                 for j in jobs:
                     j.join()
 
-                IndexGenerator.generate(update['result'],
-                                        os.path.join(config.get_string('git', 'repo_dir'), "index.html"))
+                index_generator.generate(update['result'],
+                                         os.path.join(config.get_string('git', 'repo_dir'), "index.html"))
                 logging.info("Sync loop ended.")
                 logging.info("Target was: delete: %d, create: %d, update: %d", len(update['delete']),
                              len(update['new']), len(update['update']))

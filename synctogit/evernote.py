@@ -14,7 +14,7 @@ import evernote.edam.error.constants as Errors
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types
 
-from . import EvernoteNoteParser
+from . import evernote_note_parser
 
 _RETRIES = 10
 _MAXLEN_TITLE_FILENAME = 30
@@ -199,7 +199,7 @@ class Evernote:
 
         note = note_store.getNote(guid, True, True, False, False)
 
-        note_parsed = EvernoteNoteParser.parse(resources_base, note.content, note.title.decode("utf8"))
+        note_parsed = evernote_note_parser.parse(resources_base, note.content, note.title.decode("utf8"))
 
         resources = {}
         if note.resources:

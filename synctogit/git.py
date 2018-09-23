@@ -4,7 +4,7 @@ import os
 
 import git
 
-from .GitTransaction import GitTransaction
+from .git_transaction import GitTransaction
 
 
 class GitException(Exception):
