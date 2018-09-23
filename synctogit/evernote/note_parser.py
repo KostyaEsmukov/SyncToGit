@@ -1,7 +1,8 @@
 import re
+from typing import Any, Iterable, Mapping
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
-from xml.sax import ContentHandler
+from xml.sax import ContentHandler, SAXParseException
 
 from synctogit.index_generator import template_env
 from synctogit.xmlutils import parseString
@@ -9,54 +10,45 @@ from synctogit.xmlutils import parseString
 from .exc import EvernoteMalformedNoteError
 
 
-def _copy_preserve(orig, preserve, merge=None):
-    # return keys $preserve from $orig and merge with $merge
-    res = {k: orig[k] for k in preserve if k in orig}
-    res.update(merge or {})
-    return res
+def _copy_preserve(orig: Mapping[str, Any], preserve: Iterable[str]):
+    """Return `preserve` keys from `orig`."""
+    return {k: orig[k] for k in preserve if k in orig}
 
 
-_AN_PATTERN = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
-_BN_PATTERN = re.compile("<(/head|/body|title)[^>]*>")
+# Add newline after:
+_an_pattern = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 
-_ENTITY_PATTERN = re.compile("&#?\w+;")
+# Add newline before:
+_bn_pattern = re.compile("<(/head|/body|title)[^>]*>")
+
+_entity_pattern = re.compile("&#?\w+;")
 
 _note_tail_template = template_env.get_template('evernote/body_tail.j2')
 
 
-def _unescape_entities(text):
-    def fixup(m):
-        text = m.group(0)
-        if text[:2] == "&#":
-            # character reference
-            try:
-                if text[:3] == "&#x":
-                    return chr(int(text[3:-1], 16))
-                else:
-                    return chr(int(text[2:-1]))
-            except ValueError:
-                pass
-        return text  # leave as is
-
-    return _ENTITY_PATTERN.sub(fixup, text)
-
-
 class _EWrapper:
-    def __init__(self, e):
-        self.e = e
-        self.st = {}
+    """Element wrapper. Contains Element and a required context."""
+    def __init__(self, element):
+        self.e = element  # type: Element
+        self.latest_child = None  # type: '_EWrapper'
+        self.en_crypt = False  # type: bool
 
 
 class _EvernoteNoteParser(ContentHandler):
-    def __init__(self, resources_base, title):
-        ContentHandler.__init__(self)
+    def __init__(self, resources_base: str, title: str):
+        super().__init__()
 
         self.resources_base = resources_base
 
-        self.hierarchy = []
+        self.hierarchy = []  # type: List[_EWrapper]
         self.hierarchy.append(_EWrapper(Element("html")))
-        self.hierarchy[0].st['latest_child'] = None
 
+        self._writeHead(title)
+
+        self.body_started = False
+        self.include_encrypted_js = False
+
+    def _writeHead(self, title):
         self._startElement("head")
         self._startElement(
             "meta",
@@ -72,16 +64,12 @@ class _EvernoteNoteParser(ContentHandler):
 
         self._endElement()
 
-        self.body_started = False
-        self.include_encrypted_js = False
-
     def _startElement(self, tag, text=None, attrib=None, **extraattrib):
         z = extraattrib.copy()
         z.update(attrib or {})
 
         se = _EWrapper(SubElement(self.hierarchy[-1].e, tag, attrib=z))
-        se.st['latest_child'] = None
-        self.hierarchy[-1].st['latest_child'] = se
+        self.hierarchy[-1].latest_child = se
 
         if text is not None:
             se.e.text = text
@@ -90,18 +78,6 @@ class _EvernoteNoteParser(ContentHandler):
 
     def _endElement(self):
         self.hierarchy = self.hierarchy[:-1]
-
-    def _text(self, t):
-        if self.hierarchy[-1].st['latest_child'] is None:
-            if self.hierarchy[-1].e.text is None:
-                self.hierarchy[-1].e.text = t
-            else:
-                self.hierarchy[-1].e.text += t
-        else:
-            if self.hierarchy[-1].st['latest_child'].e.tail is None:
-                self.hierarchy[-1].st['latest_child'].e.tail = t
-            else:
-                self.hierarchy[-1].st['latest_child'].e.tail += t
 
     def startElement(self, tag, attrs):
         # https://dev.evernote.com/doc/articles/enml.php
@@ -128,90 +104,111 @@ class _EvernoteNoteParser(ContentHandler):
                 raise EvernoteMalformedNoteError(
                     'Malformed note: tag %s appeared before en-note' % tag
                 )
-
-            if tag == 'en-todo':
-                a = {'type': "checkbox", 'disabled': "disabled"}
-
-                if attrs['checked'].lower() in ("true", "checked"):
-                    a['checked'] = 'checked'
-                self._startElement("input", attrib=a)
-
-            elif tag == 'en-media':
-                # https://dev.evernote.com/doc/reference/Limits.html
-
-                # "image/gif", "image/jpeg", "image/png"
-                # "audio/wav", "audio/mpeg", "audio/amr", "audio/aac", "audio/mp4"
-                # "application/vnd.evernote.ink"
-                # "application/pdf"
-                # "video/mp4"
-
-                # "application/msword", "application/mspowerpoint", "application/excel"
-                #
-                # "application/vnd.ms-word", "application/vnd.ms-powerpoint", "application/vnd.ms-excel"  # noqa: E501
-                #
-                # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # noqa: E501
-                # "application/vnd.openxmlformats-officedocument.presentationml.presentation",  # noqa: E501
-                # "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                #
-                # "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote",  # noqa: E501
-                # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",  # noqa: E501
-                # "application/x-iwork-keynote-sffkey"
-
-                toptype, subtype = attrs['type'].split('/', 2)
-
-                src = ''.join([self.resources_base, attrs['hash'], ".", subtype])
-                if toptype == "image":
-                    a = _copy_preserve(
-                        attrs, ["alt", "style", "width", "height"], {'src': src}
-                    )
-                    self._startElement("img", attrib=a)
-                else:
-                    # TODO other types
-
-                    self._startElement(
-                        "a", text="Document of type " + attrs['type'], href=src
-                    )
-
-            elif tag == 'en-crypt':
-                self.include_encrypted_js = True
-
-                a = {
-                    'href': '#',
-                    'onclick': 'return evernote_decrypt(this);',
-                    'data-body': '',
-                }
-                for k in ['cipher', 'length', 'hint']:
-                    if k in attrs:
-                        a['data-' + k] = attrs[k]
-
-                self._startElement(
-                    "a", text="Encrypted content. Click here to decrypt.", attrib=a
-                )
-                self.hierarchy[-1].st['en-crypt'] = True
-            else:
-                self._startElement(tag, attrib=attrs)
+            self._processTag(tag, attrs)
 
     def endElement(self, tag):
         self._endElement()
 
     def characters(self, content):
-        if 'en-crypt' in self.hierarchy[-1].st and self.hierarchy[-1].st['en-crypt']:
-            self.hierarchy[-1].e.attrib['data-body'] += content
-        else:
-            self._text(content)
+        current_el = self.hierarchy[-1]
+        if current_el.en_crypt:
+            current_el.e.attrib['data-body'] += content
+            return
 
-    def getResult(self):  # utf8-encoded
-        if len(self.hierarchy) != 1:
+        if current_el.latest_child is None:
+            if current_el.e.text is None:
+                current_el.e.text = ""
+            current_el.e.text += content
+            return
+
+        if current_el.latest_child.e.tail is None:
+            current_el.latest_child.e.tail = ""
+        current_el.latest_child.e.tail += content
+
+    def _processTag(self, tag, attrs):
+        m = {
+            'en-todo': self._processTagEnTodo,
+            'en-media': self._processTagEnMedia,
+            'en-crypt': self._processTagEnCrypt,
+        }
+        if tag in m:
+            m[tag](attrs)
+        else:
+            self._startElement(tag, attrib=attrs)
+
+    def _processTagEnTodo(self, attrs):
+        a = {'type': "checkbox", 'disabled': "disabled"}
+
+        if attrs['checked'].lower() in ("true", "checked"):
+            a['checked'] = 'checked'
+        self._startElement("input", attrib=a)
+
+    def _processTagEnMedia(self, attrs):
+        # https://dev.evernote.com/doc/reference/Limits.html
+
+        # "image/gif", "image/jpeg", "image/png"
+        # "audio/wav", "audio/mpeg", "audio/amr", "audio/aac", "audio/mp4"
+        # "application/vnd.evernote.ink"
+        # "application/pdf"
+        # "video/mp4"
+
+        # "application/msword", "application/mspowerpoint", "application/excel"
+        #
+        # "application/vnd.ms-word", "application/vnd.ms-powerpoint", "application/vnd.ms-excel"  # noqa: E501
+        #
+        # "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # noqa: E501
+        # "application/vnd.openxmlformats-officedocument.presentationml.presentation",  # noqa: E501
+        # "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #
+        # "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote",  # noqa: E501
+        # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",  # noqa: E501
+        # "application/x-iwork-keynote-sffkey"
+
+        toptype, subtype = attrs['type'].split('/', 2)
+
+        # XXX move resource filename generation out
+        src = ''.join([self.resources_base, attrs['hash'], ".", subtype])
+        if toptype == "image":
+            a = _copy_preserve(
+                attrs, ["alt", "style", "width", "height"]
+            )
+            a['src'] = src
+            self._startElement("img", attrib=a)
+        else:
+            # TODO other types
+
+            self._startElement(
+                "a", text="Document of type " + attrs['type'], href=src
+            )
+
+    def _processTagEnCrypt(self, attrs):
+        self.include_encrypted_js = True
+
+        a = {
+            'href': '#',
+            'onclick': 'return evernote_decrypt(this);',
+            'data-body': '',
+        }
+        for k in ['cipher', 'length', 'hint']:
+            if k in attrs:
+                a['data-' + k] = attrs[k]
+
+        self._startElement(
+            "a", text="Encrypted content. Click here to decrypt.", attrib=a
+        )
+        self.hierarchy[-1].en_crypt = True
+
+    def getResult(self) -> bytes:  # utf8-encoded
+        if len(self.hierarchy) != 1:  # pragma: no cover
             raise RuntimeError(
                 "Note is not parsed yet: hierarchy size is %d" % len(self.hierarchy)
             )
 
         r = ElementTree.tostring(self.hierarchy[0].e, encoding="unicode")
 
-        r = _AN_PATTERN.sub(lambda m: m.group(0) + "\n", r)
-        r = _BN_PATTERN.sub(lambda m: "\n" + m.group(0), r)
+        r = _an_pattern.sub(lambda m: m.group(0) + "\n", r)
+        r = _bn_pattern.sub(lambda m: "\n" + m.group(0), r)
 
-        r = _unescape_entities(r)
         r = r.encode("utf8")
 
         tail = _note_tail_template.render(dict(
@@ -224,14 +221,18 @@ class _EvernoteNoteParser(ContentHandler):
         return r
 
 
-def parse(resources_base_path, enbody: str, title):
+def parse(resources_base_path: str, enbody: str, title: str) -> bytes:
     p = _EvernoteNoteParser(resources_base_path, title)
-    parseString(
-        enbody.encode("utf8"),
-        p,
-        forbid_dtd=False,
-        forbid_entities=False,
-        forbid_external=False,
-    )
+
+    try:
+        parseString(
+            enbody.encode("utf8"),
+            p,
+            forbid_dtd=False,
+            forbid_entities=False,
+            forbid_external=False,
+        )
+    except SAXParseException as e:
+        raise EvernoteMalformedNoteError(e)
 
     return p.getResult()
