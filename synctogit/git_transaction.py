@@ -72,7 +72,6 @@ class GitTransaction:
             return
 
     def _scan_get_notes_metadata(self):
-
         def _rem(f, d=None):
             logging.warning("Corrupted note is going to be removed: %s" % f)
             _rmfile(f)
@@ -92,7 +91,7 @@ class GitTransaction:
                 cur = {
                     'file': fn,
                     'dir': root.split(os.path.sep),
-                    'fp': os.path.join(root, fn)
+                    'fp': os.path.join(root, fn),
                 }
 
                 while cur['dir'] and cur['dir'][0] != "Notes":
@@ -149,7 +148,9 @@ class GitTransaction:
 
     def _stash(self):
         if self.git.is_dirty(untracked_files=True):
-            logging.warning("Git repo is dirty. Working copy is going to be be stashed.")
+            logging.warning(
+                "Git repo is dirty. Working copy is going to be be stashed."
+            )
 
             self.git.git.stash()
 
@@ -217,21 +218,24 @@ class GitTransaction:
             'new': {},
             'update': {},
             'delete': {},
-            'result': []
+            'result': [],
         }
 
         oldguids = copy(old)
         for guid in new:
-            res['result'].append([new[guid]['dir'] +
-                                  [new[guid]['file']], new[guid]['name']])
+            res['result'].append(
+                [new[guid]['dir'] + [new[guid]['file']], new[guid]['name']]
+            )
             if guid not in old:
                 res['new'][guid] = new[guid]
             else:
                 if new[guid]['file'] != old[guid]['file']:
                     res['delete'][guid] = old[guid]
                     res['new'][guid] = new[guid]
-                elif force_update or new[guid]['updateSequenceNum'] \
-                        != old[guid]['updateSequenceNum']:
+                elif (
+                    force_update
+                    or new[guid]['updateSequenceNum'] != old[guid]['updateSequenceNum']
+                ):
                     res['update'][guid] = new[guid]
 
                 oldguids.pop(guid, 0)
@@ -250,8 +254,9 @@ class GitTransaction:
 
     def get_relative_resources_url(self, noteguid, metadata):
         # utf8 encoded
-        return '/'.join(([".."] * (len(metadata['dir']) + 1)) +
-                        ["Resources", noteguid, ""])
+        return '/'.join(
+            ([".."] * (len(metadata['dir']) + 1)) + ["Resources", noteguid, ""]
+        )
 
     # return os.path.join(*(([".."] * (len(metadata['dir']) + 1))
     # + ["Resources", noteguid, ""]))

@@ -29,7 +29,7 @@ class Git:
         self.conf = {
             'repo_dir': repo_dir,
             'branch': branch,
-            'push': push
+            'push': push,
         }
         self.git = self._check_init_git(repo_dir)
 

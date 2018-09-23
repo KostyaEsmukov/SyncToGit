@@ -86,8 +86,13 @@ class _EvernoteNoteParser(ContentHandler):
         self.hierarchy[0].st['latest_child'] = None
 
         self._startElement("head")
-        self._startElement("meta", attrib={'http-equiv': 'Content-Type',
-                                           'content': 'text/html; charset=UTF-8'})
+        self._startElement(
+            "meta",
+            attrib={
+                'http-equiv': 'Content-Type',
+                'content': 'text/html; charset=UTF-8',
+            },
+        )
         self._endElement()
 
         self._startElement("title", text=title)
@@ -182,14 +187,16 @@ class _EvernoteNoteParser(ContentHandler):
 
                 src = ''.join([self.resources_base, attrs['hash'], ".", subtype])
                 if toptype == "image":
-                    a = _copy_preserve(attrs, ["alt", "style", "width", "height"],
-                                       {'src': src})
+                    a = _copy_preserve(
+                        attrs, ["alt", "style", "width", "height"], {'src': src}
+                    )
                     self._startElement("img", attrib=a)
                 else:
                     # TODO other types
 
-                    self._startElement("a", text="Document of type " + attrs['type'],
-                                       href=src)
+                    self._startElement(
+                        "a", text="Document of type " + attrs['type'], href=src
+                    )
 
             elif tag == 'en-crypt':
                 self.include_encrypted_js = True
@@ -197,15 +204,15 @@ class _EvernoteNoteParser(ContentHandler):
                 a = {
                     'href': '#',
                     'onclick': 'return evernote_decrypt(this);',
-                    'data-body': ''
+                    'data-body': '',
                 }
                 for k in ['cipher', 'length', 'hint']:
                     if k in attrs:
                         a['data-' + k] = attrs[k]
 
-                self._startElement("a",
-                                   text="Encrypted content. Click here to decrypt.",
-                                   attrib=a)
+                self._startElement(
+                    "a", text="Encrypted content. Click here to decrypt.", attrib=a
+                )
                 self.hierarchy[-1].st['en-crypt'] = True
             else:
                 self._startElement(tag, attrib=attrs)
@@ -235,14 +242,20 @@ class _EvernoteNoteParser(ContentHandler):
 
         if self.include_encrypted_js:
             # avoid dealing with XML text escapes
-            r = r.replace(b"</body>",
-                          b"<script>" + _ENCRYPTED_JS + b"</script></body>", 1)
+            r = r.replace(
+                b"</body>", b"<script>" + _ENCRYPTED_JS + b"</script></body>", 1
+            )
         return r
 
 
 def parse(resources_base_path, enbody, title):
     p = _EvernoteNoteParser(resources_base_path, title)
-    sax.parseString(enbody.encode("utf8"), p, forbid_dtd=False,
-                    forbid_entities=False, forbid_external=False)
+    sax.parseString(
+        enbody.encode("utf8"),
+        p,
+        forbid_dtd=False,
+        forbid_entities=False,
+        forbid_external=False,
+    )
 
     return p.getResult()

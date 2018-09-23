@@ -67,8 +67,10 @@ def _IORetry(f):
                 else:
                     raise
             except Errors.EDAMUserException as e:
-                if e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED \
-                        or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT:
+                if (
+                    e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED
+                    or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT
+                ):
                     logging.debug(repr(e))
                     raise EvernoteTokenExpired()
                 else:
@@ -94,7 +96,7 @@ class Evernote:
             client = EvernoteClient(
                 consumer_key=consumer_key,
                 consumer_secret=consumer_secret,
-                sandbox=self.sandbox
+                sandbox=self.sandbox,
             )
 
             request_token = client.get_request_token(callback_url)
@@ -115,7 +117,7 @@ class Evernote:
             return client.get_access_token(
                 request_token['oauth_token'],
                 request_token['oauth_token_secret'],
-                oauth_verifier
+                oauth_verifier,
             )
         except Exception as e:
             raise EvernoteAuthException(e)
@@ -135,7 +137,7 @@ class Evernote:
             res[n.guid] = {
                 'name': n.name,
                 'updateSequenceNum': n.updateSequenceNum,
-                'stack': n.stack if n.stack is not None else None
+                'stack': n.stack if n.stack is not None else None,
             }
 
         return res
@@ -161,10 +163,7 @@ class Evernote:
         while True:
 
             metadata = note_store.findNotesMetadata(
-                noteFilter,
-                offset,
-                Constants.EDAM_USER_NOTES_MAX,
-                spec,
+                noteFilter, offset, Constants.EDAM_USER_NOTES_MAX, spec
             )
 
             for n in metadata.notes:
@@ -175,7 +174,7 @@ class Evernote:
                     'tagGuids': n.tagGuids,
                     'updated': n.updated,
                     'created': n.created,
-                    'deleted': n.deleted
+                    'deleted': n.deleted,
                 }
 
             offset = metadata.startIndex + len(metadata.notes)
@@ -195,9 +194,11 @@ class Evernote:
             res[guid] = {
                 'dir': [_normalize_filename(s) for s in st],
                 'file': _normalize_filename(
-                    n['title'][0:_MAXLEN_TITLE_FILENAME] + "." + guid) + ".html",
+                    n['title'][0:_MAXLEN_TITLE_FILENAME] + "." + guid
+                )
+                + ".html",
                 'name': [s for s in (st + [n['title']])],
-                'updateSequenceNum': n['updateSequenceNum']
+                'updateSequenceNum': n['updateSequenceNum'],
             }
 
         return res
@@ -212,9 +213,7 @@ class Evernote:
         note = note_store.getNote(guid, True, True, False, False)
 
         note_parsed = evernote_note_parser.parse(
-            resources_base,
-            note.content,
-            note.title,
+            resources_base, note.content, note.title
         )
 
         resources = {}
@@ -224,7 +223,7 @@ class Evernote:
                 resources[chash] = {
                     'body': r.data.body,
                     'mime': r.mime,
-                    'filename': ''.join([chash, '.', r.mime.split('/', 2)[1]])
+                    'filename': ''.join([chash, '.', r.mime.split('/', 2)[1]]),
                 }
 
         return {
@@ -234,5 +233,5 @@ class Evernote:
             'created': note.created,
             'updated': note.updated,
             'html': note_parsed,
-            'resources': resources
+            'resources': resources,
         }
