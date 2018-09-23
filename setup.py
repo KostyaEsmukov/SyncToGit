@@ -44,6 +44,7 @@ setup(
     },
     install_requires=[
         "GitPython==2.1.11",
+        "click==6.7",
         "defusedxml==0.5.0",
         "evernote3==1.25.12",
         "oauth2==1.9.0.post1",

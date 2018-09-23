@@ -1,8 +1,9 @@
-import argparse
 import base64
 import logging
 import os
 import threading
+
+import click
 
 from . import index_generator
 from .config import Config
@@ -16,29 +17,46 @@ _CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
 _CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="SyncToGit. Sync your Evernote notes to a local git repository"
-    )
-    parser.add_argument('-b', '--batch', action='store_true',
-                        help='Non-interactive mode')
-    parser.add_argument('-f', '--force-update', action='store_true',
-                        help='Force download all notes')
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help='Do not print anything unless exit code is non-zero')
-    parser.add_argument('config', help='Path to config file')
-    pargs = parser.parse_args()
+@click.command()
+@click.option(
+    "-b",
+    "--batch",
+    is_flag=True,
+    help='Non-interactive mode',
+)
+@click.option(
+    "-f",
+    "--force-update",
+    is_flag=True,
+    help='Force download all notes',
+)
+@click.option(
+    "-q",
+    "--quiet",
+    is_flag=True,
+    help='Do not print anything unless exit code is non-zero',
+)
+@click.argument(
+    'config',
+    type=click.Path(exists=True),
+)
+def main(batch, force_update, quiet, config):
+    """SyncToGit. Sync your Evernote notes to a local git repository.
 
-    if pargs.quiet:
+    CONFIG should point to an existing config file. Note that this file
+    might be overwritten by synctogit.
+    """
+
+    if quiet:
         with PrintOnExceptionOnly(logging.INFO):
-            run(pargs)
+            run(batch, force_update, config)
     else:
         logging.basicConfig(level=logging.INFO)
-        run(pargs)
+        run(batch, force_update, config)
 
 
-def run(pargs):
-    config = Config(pargs.config)
+def run(batch, force_update, config):
+    config = Config(config)
 
     gc = {
         'repo_dir': config.get_string('git', 'repo_dir'),
@@ -48,16 +66,16 @@ def run(pargs):
     git = Git(**gc)
     evernote = Evernote(config.get_boolean('evernote', 'sandbox', False))
 
-    while _sync(git, evernote, config, pargs):
+    while _sync(git, evernote, config, batch, force_update):
         pass
 
 
-def _sync(git, evernote, config, pargs):
+def _sync(git, evernote, config, batch, force_update):
     try:
         token = base64.b64decode(config.get_string('evernote', 'token')).decode()
     except Exception as e:
         logging.info("No valid token found.")
-        if pargs.batch:
+        if batch:
             raise Exception("Unable to proceed due to running batch mode.", e)
 
         c = {
@@ -86,7 +104,7 @@ def _sync(git, evernote, config, pargs):
             with git.transaction() as t:
                 logging.info("Calculating changes...")
                 update = t.calculate_changes(
-                    evernote.get_actual_metadata(), pargs.force_update
+                    evernote.get_actual_metadata(), force_update
                 )
                 logging.info("Applying changes...")
 
