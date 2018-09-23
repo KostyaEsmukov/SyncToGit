@@ -186,7 +186,9 @@ def _sync(git, evernote, config, batch, force_update):
 
                 index_generator.generate(
                     update['result'],
-                    os.path.join(config.get_str('git', 'repo_dir'), "index.html"),
+                    index_generator.file_writer(
+                        os.path.join(config.get_str('git', 'repo_dir'), "index.html")
+                    ),
                 )
                 logger.info("Sync loop ended.")
                 logger.info(

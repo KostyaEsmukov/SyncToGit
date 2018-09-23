@@ -47,6 +47,7 @@ setup(
         "click==6.7",
         "defusedxml==0.5.0",
         "evernote3==1.25.12",
+        "jinja2==2.10",
         "oauth2==1.9.0.post1",
         "regex==2018.08.29",
     ],

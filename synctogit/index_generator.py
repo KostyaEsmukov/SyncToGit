@@ -1,93 +1,41 @@
+import operator
 import os
 import urllib.parse
+from pathlib import Path
+from typing import Callable
 from xml.sax.saxutils import escape
 
-_note_el = (
-    '<li><a href="%(url)s" onclick="return frmLocation(\'%(url)s\');">%(text)s</a></li>'
-)
+import jinja2
 
-_index_html = """
-<!doctype html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>SyncToGit index</title>
+template_path = str(Path(os.path.dirname(__file__)) / 'templates')
+template_loader = jinja2.FileSystemLoader(searchpath=template_path)
+template_env = jinja2.Environment(loader=template_loader)
 
-<style>
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-.left, .right {
-    height: 100%;
-    float: left;
-    box-sizing: border-box;
-}
-.left ul {
-    margin: 0;
-    padding-left: 10px;
-}
-.left {
-    width: 20%;
-    overflow-y: scroll;
-    padding: 10px;
-}
-.right {
-    width: 80%;
-}
-.left a {
-    margin: 5px 5px;
-}
-#frm {
-    width: 100%;
-    height: 100%;
-}
-</style>
-</head>
-<body>
-
-<div class="left">
-<ul>
-{NOTES_LIST}
-</ul>
-</div>
-
-<div class="right">
-<iframe id="frm"></iframe>
-</div>
-
-<script>
-var frmLocation = (function() {
-    var frm = document.getElementById("frm");
-    return function(l) {
-        frm.src = l;
-        return false;
-    }
-})();
-</script>
-</body>
-</html>
-"""
+_index_template = template_env.get_template("index.j2")
 
 
-def generate(notes, output_filepath):
+def file_writer(output_filepath) -> Callable[[bytes], None]:  # pragma: no cover
     output_filepath = os.path.realpath(output_filepath)
 
+    def write(data: bytes) -> None:
+        with open(output_filepath, 'wb') as f:
+            f.write(data)
+    return write
+
+
+# XXX refactor notes
+def generate(notes, writer: Callable[[bytes], None]) -> None:
     r = []
     for l in notes:
         text = ' &rarr; '.join(map(escape, l[1]))
 
-        parts = map(lambda s: urllib.parse.quote(s.encode("utf8")), ["Notes"] + l[0])
+        parts = map(lambda s: urllib.parse.quote(s.encode("utf8")),
+                    ["Notes"] + l[0])
         url = './' + '/'.join(parts)
 
-        r.append(_note_el % {'text': text, 'url': url})
+        r.append({'text': text, 'url': url})
 
-    r = sorted(r)
+    r = sorted(r, key=operator.itemgetter('url'))
+    b = _index_template.render(dict(notes=r))
 
-    b = _index_html.replace("{NOTES_LIST}", '\n'.join(r))
-
-    with open(output_filepath, 'wb') as f:
-        f.write(b.encode("utf8"))
+    writer(b.encode("utf8"))
