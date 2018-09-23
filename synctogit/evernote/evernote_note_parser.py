@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from xml.sax import ContentHandler
@@ -20,7 +21,8 @@ def _copy_preserve(orig, preserve, merge=None):
 
 
 def _get_file_contents(p):  # relative to this file path
-    tp = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + os.sep + '' + p)
+    tp = str(Path(os.path.dirname(__file__)) / '..' / 'templates' / 'evernote' / p)
+
     with open(tp, "rb") as f:
         s = f.read()
     return s

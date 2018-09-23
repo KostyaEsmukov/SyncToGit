@@ -7,7 +7,7 @@ import click
 
 from . import index_generator
 from .config import Config, FilesystemConfigReadWriter
-from .evernote import Evernote, EvernoteTokenExpired
+from .evernote.evernote import Evernote, EvernoteTokenExpired
 from .git import Git
 from .print_on_exception_only import PrintOnExceptionOnly
 

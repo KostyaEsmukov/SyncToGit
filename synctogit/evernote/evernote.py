@@ -11,6 +11,7 @@ import regex
 from evernote.api.client import EvernoteClient
 
 from . import evernote_note_parser
+from ..filename_sanitizer import normalize_filename
 
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types
@@ -24,26 +25,6 @@ _MAXLEN_TITLE_FILENAME = 30
 # required API permissions:
 # Read existing notebooks
 # Read existing notes
-
-
-def _normalize_filename(fn):
-    ec = "_"
-    fn = fn.replace(ec, ec * 2)  # escape all escape chars
-    if fn.strip() is '':
-        fn = ec + fn + ec
-
-    # https://msdn.microsoft.com/en-us/library/aa365247.aspx
-    dev = ["CON", "COM[0-9]", "LPT[0-9]", "PRN", "AUX", "NUL"]  # special msdos devices
-    for s in dev:
-        if regex.match("^" + s, fn, regex.IGNORECASE):
-            fn = ec + fn
-            break
-
-    p = regex.compile('[^\p{L}0-9\-_\. \[\]\(\)]', regex.UNICODE)
-
-    fn = p.sub(lambda m: ec + ("%04x" % ord(m.group(0))), fn)
-
-    return fn
 
 
 class EvernoteTokenExpired(Exception):
@@ -193,8 +174,8 @@ class Evernote:
 
             st = ([nb['stack']] if nb['stack'] else []) + [nb['name']]
             res[guid] = {
-                'dir': [_normalize_filename(s) for s in st],
-                'file': _normalize_filename(
+                'dir': [normalize_filename(s) for s in st],
+                'file': normalize_filename(
                     n['title'][0:_MAXLEN_TITLE_FILENAME] + "." + guid
                 )
                 + ".html",
