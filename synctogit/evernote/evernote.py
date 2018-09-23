@@ -13,7 +13,7 @@ import pytz
 from cached_property import cached_property
 from evernote.api.client import EvernoteClient
 
-from . import evernote_note_parser, exc, models
+from . import exc, models, note_parser
 from ..filename_sanitizer import normalize_filename
 
 # import evernote.edam.userstore.constants as UserStoreConstants
@@ -203,7 +203,7 @@ class Evernote:
             False,
         )
 
-        note_parsed = evernote_note_parser.parse(
+        note_parsed = note_parser.parse(
             resources_base, note.content, note.title
         )
 

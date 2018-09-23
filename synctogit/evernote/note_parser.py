@@ -1,57 +1,27 @@
-import os
 import re
-from pathlib import Path
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from xml.sax import ContentHandler
 
-import defusedxml.sax as sax
+from synctogit.index_generator import template_env
+from synctogit.xmlutils import parseString
+
+from .exc import EvernoteMalformedNoteError
 
 
 def _copy_preserve(orig, preserve, merge=None):
     # return keys $preserve from $orig and merge with $merge
-    res = {}
-    for k in preserve:
-        if k in orig:
-            res[k] = orig[k]
-
+    res = {k: orig[k] for k in preserve if k in orig}
     res.update(merge or {})
-
     return res
 
-
-def _get_file_contents(p):  # relative to this file path
-    tp = str(Path(os.path.dirname(__file__)) / '..' / 'templates' / 'evernote' / p)
-
-    with open(tp, "rb") as f:
-        s = f.read()
-    return s
-
-
-_ENCRYPTED_JS = b"""
-
-
-// This is a set of scripts required for decrypting encrypted content. Please don't touch it.
-
-
-function evernote_decrypt(o) {
-    var h = o.dataset.hint ? " Hint: " + o.dataset.hint : "";
-    var p = prompt("Enter the passphrase." + h);
-    try {
-        o.outerHTML = decrypt(o.dataset.cipher || "AES", o.dataset.length, p, o.dataset.body);
-    }
-    catch(e) {
-        alert("Failed: " + e);
-    }
-    return false;
-}
-
-""" + _get_file_contents("js/decrypt.min.js")  # noqa: E501
 
 _AN_PATTERN = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 _BN_PATTERN = re.compile("<(/head|/body|title)[^>]*>")
 
 _ENTITY_PATTERN = re.compile("&#?\w+;")
+
+_note_tail_template = template_env.get_template('evernote/body_tail.j2')
 
 
 def _unescape_entities(text):
@@ -155,7 +125,9 @@ class _EvernoteNoteParser(ContentHandler):
             self.body_started = True
         else:
             if not self.body_started:
-                raise Exception('Malformed note: tag %s appeared before en-note' % tag)
+                raise EvernoteMalformedNoteError(
+                    'Malformed note: tag %s appeared before en-note' % tag
+                )
 
             if tag == 'en-todo':
                 a = {'type': "checkbox", 'disabled': "disabled"}
@@ -230,7 +202,7 @@ class _EvernoteNoteParser(ContentHandler):
 
     def getResult(self):  # utf8-encoded
         if len(self.hierarchy) != 1:
-            raise Exception(
+            raise RuntimeError(
                 "Note is not parsed yet: hierarchy size is %d" % len(self.hierarchy)
             )
 
@@ -242,17 +214,19 @@ class _EvernoteNoteParser(ContentHandler):
         r = _unescape_entities(r)
         r = r.encode("utf8")
 
-        if self.include_encrypted_js:
-            # avoid dealing with XML text escapes
-            r = r.replace(
-                b"</body>", b"<script>" + _ENCRYPTED_JS + b"</script></body>", 1
-            )
+        tail = _note_tail_template.render(dict(
+            include_encrypted_js=self.include_encrypted_js,
+        ))
+
+        r = r.replace(
+            b"</body>", tail.encode("utf8") + b"</body>", 1
+        )
         return r
 
 
-def parse(resources_base_path, enbody, title):
+def parse(resources_base_path, enbody: str, title):
     p = _EvernoteNoteParser(resources_base_path, title)
-    sax.parseString(
+    parseString(
         enbody.encode("utf8"),
         p,
         forbid_dtd=False,

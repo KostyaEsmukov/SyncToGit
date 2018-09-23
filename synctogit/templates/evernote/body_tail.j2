@@ -1,0 +1,22 @@
+{% if include_encrypted_js %}
+<script>
+
+
+// This is a set of scripts required for decrypting encrypted content. Please don't touch it.
+
+
+function evernote_decrypt(o) {
+    var h = o.dataset.hint ? " Hint: " + o.dataset.hint : "";
+    var p = prompt("Enter the passphrase." + h);
+    try {
+        o.outerHTML = decrypt(o.dataset.cipher || "AES", o.dataset.length, p, o.dataset.body);
+    }
+    catch(e) {
+        alert("Failed: " + e);
+    }
+    return false;
+}
+
+{{ include_file("evernote/js/decrypt.min.js") }}
+</script>
+{% endif %}
