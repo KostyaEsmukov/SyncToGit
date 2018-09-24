@@ -1,7 +1,6 @@
 import binascii
 import datetime
 import logging
-import urllib.parse
 from functools import wraps
 from socket import error as socketerror
 from typing import Mapping, Optional
@@ -60,38 +59,6 @@ class Evernote:
     def __init__(self, sandbox=True):
         self.sandbox = sandbox
         self.client = None
-
-    @translate_exceptions
-    def retrieve_token(self, consumer_key, consumer_secret, callback_url) -> str:
-        try:
-            client = EvernoteClient(
-                consumer_key=consumer_key,
-                consumer_secret=consumer_secret,
-                sandbox=self.sandbox,
-            )
-
-            request_token = client.get_request_token(callback_url)
-
-            print("Open this link in your browser: ")
-            print(client.get_authorize_url(request_token))
-            print(
-                "After giving access you will be redirected to "
-                "a non-existing page. It's OK."
-            )
-            url = input("Paste the URL of that page here: ")
-
-            oauth_verifier = (
-                urllib.parse
-                .parse_qs(urllib.parse.urlsplit(url).query)['oauth_verifier'][0]
-            )
-
-            return client.get_access_token(
-                request_token["oauth_token"],
-                request_token["oauth_token_secret"],
-                oauth_verifier,
-            )
-        except Exception as e:
-            raise exc.EvernoteAuthError(e)
 
     @translate_exceptions
     def auth(self, access_token: str) -> None:

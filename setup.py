@@ -50,6 +50,7 @@ setup(
         "evernote3==1.25.12",
         "jinja2==2.10",
         "oauth2==1.9.0.post1",
+        "prompt_toolkit==2.0.4",
         "pytz",
         "regex==2018.08.29",
     ],

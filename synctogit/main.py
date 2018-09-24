@@ -7,6 +7,7 @@ import click
 
 from . import index_generator
 from .config import Config, FilesystemConfigReadWriter
+from .evernote.auth import Auth as EvernoteAuth, UserCancelledError
 from .evernote.evernote import Evernote
 from .evernote.exc import EvernoteTokenExpiredError
 from .git import Git
@@ -63,13 +64,14 @@ def run(batch, force_update, config):
         'push': config.get_bool('git', 'push', False),
     }
     git = Git(**gc)
-    evernote = Evernote(config.get_bool('evernote', 'sandbox', False))
+    sandbox = config.get_bool('evernote', 'sandbox', False)
+    evernote = Evernote(sandbox)
 
-    while _sync(git, evernote, config, batch, force_update):
+    while _sync(git, evernote, config, batch, force_update, sandbox):
         pass
 
 
-def _sync(git, evernote, config, batch, force_update):
+def _sync(git, evernote, config, batch, force_update, sandbox):
     try:
         token = base64.b64decode(config.get_str('evernote', 'token')).decode()
     except Exception as e:
@@ -87,9 +89,14 @@ def _sync(git, evernote, config, batch, force_update):
             'callback_url': config.get_str(
                 "evernote", "callback_url", _CALLBACK_URL
             ),
+            'sandbox': sandbox,
         }
-        token = evernote.retrieve_token(**c)
-        config.set('evernote', 'token', base64.b64encode(token))
+        try:
+            token = EvernoteAuth(**c).run()
+        except UserCancelledError as e:
+            logger.info(str(e))
+            return False
+        config.set('evernote', 'token', base64.b64encode(token.encode()).decode())
 
     try:
         logger.info("Authenticating...")
