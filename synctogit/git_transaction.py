@@ -1,29 +1,17 @@
-import errno
 import logging
 import os
 import re
 import shutil
 from copy import copy
 from datetime import datetime
-from typing import Mapping
+from pathlib import Path
+from typing import Mapping, Sequence
 
 import git
 
 from synctogit.evernote.models import Note, NoteGuid, NoteMetadata
 
 logger = logging.getLogger(__name__)
-
-
-def _mkdir_p(d):
-    # `mkdir -p $d`
-
-    try:
-        os.makedirs('' + d)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and os.path.isdir(d):
-            pass
-        else:
-            raise
 
 
 def _rmfile(fp):
@@ -33,9 +21,12 @@ def _rmfile(fp):
         logger.warn("Unable to delete %s file: %s" % (fp, repr(e)))
 
 
-def _write_to_file(fn: str, body: str):
-    with open(fn, 'wb') as f:
-        f.write(body)
+def _seq_to_path(parts: Sequence[str]) -> Path:
+    p = Path('')
+    for part in parts:
+        assert part not in ('.', '..')
+        p = p / part
+    return p
 
 
 class GitSimultaneousTransaction(Exception):
@@ -46,29 +37,29 @@ class GitTransaction:
     # Must be thread-safe.
 
     def __init__(self, repo: git.Repo, push: bool) -> None:
-        self.repo_dir = repo.working_tree_dir
-        self.push = push
+        self.repo_dir = Path(repo.working_tree_dir)
+        self.notes_dir = self.repo_dir / "Notes"
+        self.resources_dir = self.repo_dir / "Resources"
+        self.lockfile_path = self.repo_dir / ".synctogit.lockfile"
 
         self.git = repo
+        self.push = push
 
-    def _remove_dirs_until_not_empty(self, d):
-        d = copy(d)
-        try:
-            while d:
-                os.rmdir(self._abspath(d))
-                d.pop()
-        except Exception:
-            pass
+    def _remove_dirs_until_not_empty(self, path: Path) -> None:
+        assert self.repo_dir.is_absolute()
 
-    def _abspath(self, l):
-        r = str(os.path.join(*([self.repo_dir] + l)))
-        if not r.startswith(self.repo_dir):
-            raise Exception("Foreign path has been chosen!")
-        return r
+        # raises ValueError if path is not within repo_dir
+        path.relative_to(self.repo_dir)
+
+        while path != self.repo_dir:
+            try:
+                path.rmdir()  # raises if directory is not empty
+            except OSError:
+                break
 
     def _delete_non_existing_resources(self, metadata):
         try:
-            root, dirs, _ = next(os.walk(self._abspath(["Resources"])))
+            root, dirs, _ = next(os.walk(str(self.resources_dir)))
 
             for d in dirs:
                 if d not in metadata:
@@ -84,12 +75,12 @@ class GitTransaction:
             logger.warning("Corrupted note is going to be removed: %s" % f)
             _rmfile(f)
             if d:
-                self._remove_dirs_until_not_empty(["Notes"] + d)
+                self._remove_dirs_until_not_empty(self.notes_dir / _seq_to_path(d))
 
         metadata = {}
         corrupted = {}
 
-        for root, dirs, files in os.walk(self._abspath(["Notes"])):
+        for root, dirs, files in os.walk(str(self.notes_dir)):
             for fn in files:
                 _, ext = os.path.splitext(fn)
 
@@ -180,25 +171,21 @@ class GitTransaction:
         self.git.git.add(["-A", "."])
         self.git.index.commit("Sync at " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-    def _lockfile_location(self):
-        return self._abspath([".synctogit.lockfile"])
-
     def _lockfile_create(self):
-        with open(self._lockfile_location(), "wb") as f:
-            f.write(b"1")
+        self.lockfile_path.write_bytes(b"1")
 
     def _lockfile_exists(self):
-        return os.path.isfile(self._lockfile_location())
+        return self.lockfile_path.is_file()
 
     def _lockfile_remove(self):
-        _rmfile(self._lockfile_location())
+        _rmfile(str(self.lockfile_path))
 
     def __enter__(self):
         if self._lockfile_exists():
             raise GitSimultaneousTransaction(
                 "Lockfile exists. Another copy of program is probably running. "
                 "Remove this file if you are sure that this is "
-                "a mistake: %s" % self._lockfile_location()
+                "a mistake: %s" % self.lockfile_path
             )
 
         self._check_repo_state()
@@ -264,10 +251,11 @@ class GitTransaction:
 
     def delete_files(self, files: Mapping[NoteGuid, NoteMetadata]):
         for note in files.values():
-            fp = self._abspath(["Notes"] + note.dir + [note.file])
-            _rmfile(fp)
+            note_dir = self.notes_dir / _seq_to_path(note.dir)
+            p = note_dir / note.file
+            _rmfile(str(p))
 
-            self._remove_dirs_until_not_empty(["Notes"] + note.dir)
+            self._remove_dirs_until_not_empty(note_dir)
 
     def get_relative_resources_url(self, noteguid: NoteGuid, metadata: NoteMetadata):
         # utf8 encoded
@@ -275,11 +263,10 @@ class GitTransaction:
             ([".."] * (len(metadata.dir) + 1)) + ["Resources", noteguid, ""]
         )
 
-    # return os.path.join(*(([".."] * (len(metadata['dir']) + 1))
-    # + ["Resources", noteguid, ""]))
-
     def save_note(self, note: Note, metadata: NoteMetadata):
-        _mkdir_p(self._abspath(["Notes"] + metadata.dir))
+        note_dir = self.notes_dir / _seq_to_path(metadata.dir)
+        resources_dir = self.resources_dir / note.guid
+        os.makedirs(str(note_dir), exist_ok=True)
 
         header = []
         header += ["<!doctype html>"]
@@ -299,18 +286,17 @@ class GitTransaction:
 
         body = '\n'.join(header).encode() + note.html  # type: bytes
 
-        f = self._abspath(["Notes"] + metadata.dir + [metadata.file])
-        _write_to_file(f, body)
+        note_path = note_dir / metadata.file
+        note_path.write_bytes(body)
 
-        p = ["Resources"] + [note.guid]
         try:
-            shutil.rmtree(self._abspath(p))
+            shutil.rmtree(str(resources_dir))
         except Exception:
             pass
 
         if note.resources:
-            _mkdir_p(self._abspath(p))
+            os.makedirs(str(resources_dir), exist_ok=True)
 
             for m in note.resources.values():
-                f = self._abspath(p + [m.filename])
-                _write_to_file(f, m.body)
+                resource_path = resources_dir / m.filename
+                resource_path.write_bytes(m.body)

@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Mapping, NamedTuple, NewType, Optional
+from typing import Any, Iterable, Mapping, NamedTuple, NewType, Optional, Sequence
 
 NotebookGuid = NewType("NotebookGuid", str)
 NoteGuid = NewType("NoteGuid", str)
@@ -34,7 +34,7 @@ NoteInfo = NamedTuple(
 NoteMetadata = NamedTuple(
     "NoteMetadata",
     [
-        ("dir", str),
+        ("dir", Sequence[str]),
         ("file", str),
         ("name", str),
         ("update_sequence_num", int),
