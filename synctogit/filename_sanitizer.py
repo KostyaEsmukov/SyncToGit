@@ -17,14 +17,14 @@ def is_msdos_filename(filename: str):
 
 
 def normalize_filename(filename: str) -> str:
+    if not filename:
+        raise ValueError("File name cannot be empty")
+
     escape_char = "_"
     # escape all escape chars
     filename = filename.replace(escape_char, escape_char * 2)
     if not filename.strip():
         filename = "%(escape_char)s%(filename)s%(escape_char)s" % locals()
-
-    if not filename:
-        return ""
 
     if is_msdos_filename(filename) or filename[0] == '.':
         filename = "%(escape_char)s%(filename)s" % locals()
