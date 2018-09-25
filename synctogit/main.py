@@ -10,7 +10,8 @@ from .config import Config, FilesystemConfigReadWriter
 from .evernote.auth import Auth as EvernoteAuth, UserCancelledError
 from .evernote.evernote import Evernote
 from .evernote.exc import EvernoteTokenExpiredError
-from .git import Git
+from .git_factory import git_factory
+from .git_transaction import GitTransaction
 from .print_on_exception_only import PrintOnExceptionOnly
 
 logger = logging.getLogger(__name__)
@@ -59,19 +60,26 @@ def run(batch, force_update, config):
     config = Config(FilesystemConfigReadWriter(config))
 
     gc = {
-        'repo_dir': config.get_str('git', 'repo_dir'),
         'branch': config.get_str('git', 'branch', 'master'),
         'push': config.get_bool('git', 'push', False),
+        'remote': config.get_str('git', 'remote', None) or None,
+        'remote_name': config.get_str('git', 'remote_name', 'origin'),
+        'repo_dir': config.get_str('git', 'repo_dir'),
     }
-    git = Git(**gc)
+    git = git_factory(
+        repo_dir=gc['repo_dir'],
+        branch=gc['branch'],
+        remote_name=gc['remote_name'],
+        remote=gc['remote'],
+    )
     sandbox = config.get_bool('evernote', 'sandbox', False)
     evernote = Evernote(sandbox)
 
-    while _sync(git, evernote, config, batch, force_update, sandbox):
+    while _sync(git, gc, evernote, config, batch, force_update, sandbox):
         pass
 
 
-def _sync(git, evernote, config, batch, force_update, sandbox):
+def _sync(git, git_conf, evernote, config, batch, force_update, sandbox):
     try:
         token = base64.b64decode(config.get_str('evernote', 'token')).decode()
     except Exception as e:
@@ -107,7 +115,8 @@ def _sync(git, evernote, config, batch, force_update, sandbox):
         while updates[0]:
             updates[0] = False
 
-            with git.transaction() as t:
+            with GitTransaction(git, repo_dir=git_conf["repo_dir"],
+                                push=git_conf["push"]) as t:
                 logger.info("Calculating changes...")
                 update = t.calculate_changes(
                     evernote.get_actual_metadata(), force_update

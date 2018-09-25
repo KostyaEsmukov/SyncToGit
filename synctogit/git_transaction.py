@@ -7,6 +7,8 @@ from copy import copy
 from datetime import datetime
 from typing import Mapping
 
+import git
+
 from synctogit.evernote.models import Note, NoteGuid, NoteMetadata
 
 logger = logging.getLogger(__name__)
@@ -41,12 +43,11 @@ class GitSimultaneousTransaction(Exception):
 
 
 class GitTransaction:
-    def __init__(self, git, repo_dir, branch, push):
+    def __init__(self, repo: git.Repo, repo_dir: str, push: bool) -> None:
         self.repo_dir = str(repo_dir)
-        self.branch = branch
         self.push = push
 
-        self.git = git
+        self.git = repo
 
     def _remove_dirs_until_not_empty(self, d):
         d = copy(d)
@@ -170,10 +171,6 @@ class GitTransaction:
 
     def _check_repo_state(self):
         self._stash()
-
-        if self.branch != self.git.active_branch.name:
-            logger.info("Switching branch")
-            self.git.git.checkout("-b", self.branch)
 
     def _commit_changes(self):
         # there are problems with charset under windows when using
