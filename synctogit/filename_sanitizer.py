@@ -23,7 +23,10 @@ def normalize_filename(filename: str) -> str:
     if not filename.strip():
         filename = "%(escape_char)s%(filename)s%(escape_char)s" % locals()
 
-    if is_msdos_filename(filename):
+    if not filename:
+        return ""
+
+    if is_msdos_filename(filename) or filename[0] == '.':
         filename = "%(escape_char)s%(filename)s" % locals()
 
     filename = _STRIP_CHARS_FILENAME_PATTERN.sub(

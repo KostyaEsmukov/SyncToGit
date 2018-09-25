@@ -12,6 +12,10 @@ from synctogit.filename_sanitizer import normalize_filename
         ("\t", "__0009_"),
         ("con", "_con"),
         (r"раз/два\три", "раз_002fдва_005cтри"),
+        (".", "_."),
+        ("..", "_.."),
+        ("...", "_..."),
+        (".my-not-hidden-file", "_.my-not-hidden-file"),
     ],
 )
 def test_normalize_filename(raw, expected):
