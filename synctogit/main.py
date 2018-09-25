@@ -1,16 +1,16 @@
 import logging
-import os
-import threading
 
 import click
 
-from . import index_generator
 from .config import Config, FilesystemConfigReadWriter
-from .evernote import EvernoteAuth, EvernoteAuthSession, UserCancelledError
-from .evernote.evernote import Evernote
+from .evernote import (
+    EvernoteAuth,
+    EvernoteAuthSession,
+    EvernoteSync,
+    UserCancelledError,
+)
 from .evernote.exc import EvernoteTokenExpiredError
 from .git_factory import git_factory
-from .git_transaction import GitTransaction
 from .print_on_exception_only import PrintOnExceptionOnly
 from .service import InvalidAuthSession
 
@@ -67,14 +67,12 @@ def run(batch, force_update, config):
         remote_name=gc['remote_name'],
         remote=gc['remote'],
     )
-    sandbox = config.get_bool('evernote', 'sandbox', False)
-    evernote = Evernote(sandbox)
 
-    while _sync(git, gc, evernote, config, batch, force_update):
+    while _sync(git, gc, config, batch, force_update):
         pass
 
 
-def _sync(git, git_conf, evernote, config, batch, force_update):
+def _sync(git, git_conf, config, batch, force_update):
     try:
         session = EvernoteAuthSession.load_from_config(config)
     except InvalidAuthSession as e:
@@ -91,124 +89,17 @@ def _sync(git, git_conf, evernote, config, batch, force_update):
 
     try:
         logger.info("Authenticating...")
-        evernote.auth(session.token)
-
-        any_fail = False
-        updates = [True]
-        while updates[0]:
-            updates[0] = False
-
-            with GitTransaction(git, repo_dir=git_conf["repo_dir"],
-                                push=git_conf["push"]) as t:
-                logger.info("Calculating changes...")
-                update = t.calculate_changes(
-                    evernote.get_actual_metadata(), force_update
-                )
-                logger.info("Applying changes...")
-
-                t.delete_files(update['delete'])
-
-                queue = []
-                for op in ['new', 'update']:
-                    for guid in update[op]:
-                        queue.append([op, guid, update[op][guid]])
-
-                total = len(queue)
-                saved = [0]
-                failed = [0]
-
-                lock = threading.Lock()
-
-                def job():
-                    while True:
-                        lock.acquire()
-                        try:
-                            j = queue.pop()
-                            i = total - len(queue)
-                        except Exception:
-                            return
-                        finally:
-                            lock.release()
-
-                        guid = j[1]
-                        d = j[2]
-                        logger.info(
-                            "Getting note (%d/%d) contents: %s...", i, total, guid
-                        )
-
-                        try:
-                            note = evernote.get_note(
-                                guid, t.get_relative_resources_url(guid, d)
-                            )
-                        except Exception as e:
-                            logger.warning(
-                                "Unable to get the note %s: %s", guid, repr(e)
-                            )
-                            lock.acquire()
-                            failed[0] += 1
-                            lock.release()
-                            continue
-
-                        lock.acquire()
-                        try:
-                            saved[0] += 1
-                            if note.update_sequence_num == d.update_sequence_num:
-                                logger.info(
-                                    "Saving note (%d/%d) contents: %s...",
-                                    saved[0],
-                                    total,
-                                    guid,
-                                )
-                                t.save_note(note, d)
-                            else:
-                                logger.info(
-                                    "Skipping note (%d/%d) because it has changed "
-                                    "during sync: %s...",
-                                    saved[0],
-                                    total,
-                                    guid,
-                                )
-                                updates[0] = True
-                        finally:
-                            lock.release()
-
-                jobs = []
-                for j in range(
-                    config.get_int("internals", "notes_download_threads", 30)
-                ):
-                    jobs.append(threading.Thread(target=job))
-
-                for j in jobs:
-                    j.start()
-
-                for j in jobs:
-                    j.join()
-
-                index_generator.generate(
-                    update['result'],
-                    index_generator.file_writer(
-                        os.path.join(config.get_str('git', 'repo_dir'), "index.html")
-                    ),
-                )
-                logger.info("Sync loop ended.")
-                logger.info(
-                    "Target was: delete: %d, create: %d, update: %d",
-                    len(update['delete']),
-                    len(update['new']),
-                    len(update['update']),
-                )
-                logger.info("Result: saved: %d, failed: %d", saved[0], failed[0])
-                any_fail = failed[0] != 0
-
-        logger.info("Done")
-
-        if any_fail:
-            raise Exception("Sync done with fails")
-
+        sync = EvernoteSync(
+            config=config,
+            auth_session=session,
+            git=git,
+            force_full_resync=force_update,
+        )
+        sync.run_sync()
         return False
     except EvernoteTokenExpiredError:
         logger.warning("Auth token expired.")
-        config.unset('evernote', 'token')
+        session.remove_session_from_config(config)
         return True
 
 

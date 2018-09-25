@@ -1,6 +1,8 @@
 import abc
 from typing import Generic, Type, TypeVar
 
+import git
+
 from .config import Config
 
 
@@ -22,10 +24,28 @@ class BaseAuthSession(abc.ABC):
     def save_to_config(self, config: Config) -> None:
         pass
 
+    @abc.abstractmethod
+    def remove_session_from_config(self, config: Config) -> None:
+        pass
+
 
 class BaseAuth(abc.ABC, Generic[T]):
 
     @classmethod
     @abc.abstractmethod
     def interactive_auth(cls, config: Config) -> T:
+        pass
+
+
+class BaseSync(abc.ABC, Generic[T]):
+
+    def __init__(self, config: Config, auth_session: T, git: git.Repo,
+                 force_full_resync: bool) -> None:
+        self.config = config
+        self.auth_session = auth_session
+        self.git = git
+        self.force_full_resync = force_full_resync
+
+    @abc.abstractmethod
+    def run_sync(self) -> None:
         pass

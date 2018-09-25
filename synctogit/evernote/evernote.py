@@ -56,6 +56,8 @@ def translate_exceptions(f):
 
 
 class Evernote:
+    # Must be thread-safe.
+
     def __init__(self, sandbox=True):
         self.sandbox = sandbox
         self.client = None

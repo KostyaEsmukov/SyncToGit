@@ -43,8 +43,10 @@ class GitSimultaneousTransaction(Exception):
 
 
 class GitTransaction:
-    def __init__(self, repo: git.Repo, repo_dir: str, push: bool) -> None:
-        self.repo_dir = str(repo_dir)
+    # Must be thread-safe.
+
+    def __init__(self, repo: git.Repo, push: bool) -> None:
+        self.repo_dir = repo.working_tree_dir
         self.push = push
 
         self.git = repo
