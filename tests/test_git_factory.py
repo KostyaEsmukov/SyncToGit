@@ -1,33 +1,9 @@
 import os
-import subprocess
-import tempfile
 from pathlib import Path
 
 import pytest
 
 from synctogit.git_factory import GitError, git_factory
-
-
-@pytest.fixture
-def temp_dir():
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        yield os.path.realpath(tmpdirname)
-
-
-def call_git(shell_command, *, cwd):
-    # NOTE! That shell_command must be compatible with Windows.
-    # Have fun.
-
-    try:
-        p = subprocess.run(shell_command,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT,
-                           cwd=cwd,
-                           shell=True, check=True, timeout=5)
-        return p.stdout.decode().strip()
-    except subprocess.CalledProcessError as e:
-        print(e.stdout.decode())
-        raise
 
 
 def remotes_dump(remote_name, remote):
@@ -47,7 +23,7 @@ def test_git_missing_dir(temp_dir):
     ('origin', None),
     ('angel', 'git@github.com:KostyaEsmukov/SyncToGit.git'),
 ])
-def test_git_new_existing_empty_dir(temp_dir, remote_name, remote):
+def test_git_new_existing_empty_dir(call_git, temp_dir, remote_name, remote):
     branch = 'spooky'
     d = str(Path(temp_dir) / 'myrepo')
     os.mkdir(d)
@@ -86,7 +62,7 @@ def test_git_new_existing_dirty_dir(temp_dir):
         git_factory(d)
 
 
-def test_git_load_existing_empty(temp_dir):
+def test_git_load_existing_empty(call_git, temp_dir):
     d = str(Path(temp_dir) / 'myrepo')
     os.mkdir(d)
     call_git('git init', cwd=d)
@@ -101,7 +77,8 @@ def test_git_load_existing_empty(temp_dir):
     ('angel', 'git@github.com:new/remote.git', 'git@github.com:old/remote.git'),
     ('angel', 'git@github.com:same/remote.git', 'git@github.com:same/remote.git'),
 ])
-def test_git_load_existing_not_empty(temp_dir, remote_name, remote,
+def test_git_load_existing_not_empty(call_git, temp_dir,
+                                     remote_name, remote,
                                      shadow_remote):
     p = Path(temp_dir) / 'myrepo'
     d = str(p)
@@ -134,7 +111,7 @@ def test_git_load_existing_not_empty(temp_dir, remote_name, remote,
         git_factory(d, branch='some-other-branch')
 
 
-def test_git_nested(temp_dir):
+def test_git_nested(call_git, temp_dir):
     root = Path(temp_dir) / 'myroot'
     inner = root / 'myinner'
 

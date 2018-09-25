@@ -1,10 +1,14 @@
+import datetime
 import logging
-from datetime import datetime
 from pathlib import Path
 
 import git
 
 logger = logging.getLogger(__name__)
+
+
+def _datetime_now():  # pragma: no cover  # mocked in tests
+    return datetime.datetime.now()
 
 
 def rmfile_silent(path: Path) -> None:
@@ -18,12 +22,18 @@ class GitSimultaneousTransaction(Exception):
     pass
 
 
+class GitPushError(Exception):
+    pass
+
+
 class GitTransaction:
     # Must be thread-safe.
 
-    def __init__(self, repo: git.Repo, push: bool, remote_name: str) -> None:
+    def __init__(self, repo: git.Repo, *,
+                 push: bool = False, remote_name: str = 'origin') -> None:
         self.git = repo
         self.push = push
+        self.remote_name = remote_name
 
         self.repo_dir = Path(repo.working_tree_dir)
         self.lockfile_path = self.repo_dir / ".synctogit.lockfile"
@@ -60,14 +70,18 @@ class GitTransaction:
         assert self.repo_dir.is_absolute()
         assert path.is_absolute()
 
-        # raises ValueError if path is not within repo_dir
-        path.relative_to(self.repo_dir)
-
         while path != self.repo_dir:
+            # raises ValueError if path is not within repo_dir
+            path.relative_to(self.repo_dir)
+
             try:
                 path.rmdir()  # raises if directory is not empty
-            except OSError:
-                break
+            except OSError as e:
+                # The current directory is either not empty or doesn't exist.
+                # In the latter case we might want to check the upper level
+                # ones, in case they do exist and are empty.
+                pass
+            path = path.parents[0]
 
     def _stash(self):
         if self.git.is_dirty(untracked_files=True):
@@ -83,13 +97,18 @@ class GitTransaction:
         self.git.git.add(["-A", "."])
         message = self.transaction_commit_message
         if not message:
-            message = "Sync at %s" % datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            message = "Sync at %s" % _datetime_now().strftime('%Y-%m-%d %H:%M:%S')
         self.git.index.commit(message)
 
     def _push(self):
         if not self.push:
             return
         try:
-            self.git.remotes[self.remote_name].push()
+            remote = self.git.remotes[self.remote_name]
+            pushinfo_list = remote.push(self.git.active_branch.name)
+            assert len(pushinfo_list) == 1
+            for pushinfo in pushinfo_list:
+                if pushinfo.flags & git.PushInfo.ERROR:
+                    raise ValueError(pushinfo.summary)
         except Exception as e:
-            logger.warning("Failed to git push: %s", repr(e))
+            raise GitPushError("Unable to git push: %s" % repr(e))
