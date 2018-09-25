@@ -1,15 +1,16 @@
 import base64
-import threading
-import os
 import logging
+import os
+import threading
 
 from synctogit.config import Config
-from synctogit.service import InvalidAuthSession, BaseAuthSession, BaseAuth, BaseSync
-from .auth import InteractiveAuth, UserCancelledError
+from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
 
-from .evernote import Evernote
-from ..git_transaction import GitTransaction
 from .. import index_generator
+from ..git_transaction import GitTransaction
+from .auth import InteractiveAuth, UserCancelledError
+from .evernote import Evernote
+from .working_copy import EvernoteWorkingCopy
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
     def _god_sync(self, evernote):
         git_conf = {
             'push': self.config.get_bool('git', 'push', False),
+            'remote_name': self.config.get_str('git', 'remote_name', 'origin'),
         }
 
         any_fail = False
@@ -91,14 +93,16 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
             updates[0] = False
 
             with GitTransaction(self.git,
+                                remote_name=git_conf["remote_name"],
                                 push=git_conf["push"]) as t:
+                wc = EvernoteWorkingCopy(t)
                 logger.info("Calculating changes...")
-                update = t.calculate_changes(
+                update = wc.calculate_changes(
                     evernote.get_actual_metadata(), self.force_full_resync
                 )
                 logger.info("Applying changes...")
 
-                t.delete_files(update['delete'])
+                wc.delete_files(update['delete'])
 
                 queue = []
                 for op in ['new', 'update']:
@@ -130,7 +134,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
 
                         try:
                             note = evernote.get_note(
-                                guid, t.get_relative_resources_url(guid, d)
+                                guid, wc.get_relative_resources_url(guid, d)
                             )
                         except Exception as e:
                             logger.warning(
@@ -151,7 +155,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                                     total,
                                     guid,
                                 )
-                                t.save_note(note, d)
+                                wc.save_note(note, d)
                             else:
                                 logger.info(
                                     "Skipping note (%d/%d) because it has changed "
