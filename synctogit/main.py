@@ -1,4 +1,3 @@
-import base64
 import logging
 import os
 import threading
@@ -7,19 +6,15 @@ import click
 
 from . import index_generator
 from .config import Config, FilesystemConfigReadWriter
-from .evernote.auth import Auth as EvernoteAuth, UserCancelledError
+from .evernote import EvernoteAuth, EvernoteAuthSession, UserCancelledError
 from .evernote.evernote import Evernote
 from .evernote.exc import EvernoteTokenExpiredError
 from .git_factory import git_factory
 from .git_transaction import GitTransaction
 from .print_on_exception_only import PrintOnExceptionOnly
+from .service import InvalidAuthSession
 
 logger = logging.getLogger(__name__)
-
-# python -c "import base64; print base64.b64encode('123')"
-_CONSUMER_KEY = 'kostya0shift-0653'
-_CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
-_CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
 
 
 @click.command()
@@ -75,40 +70,28 @@ def run(batch, force_update, config):
     sandbox = config.get_bool('evernote', 'sandbox', False)
     evernote = Evernote(sandbox)
 
-    while _sync(git, gc, evernote, config, batch, force_update, sandbox):
+    while _sync(git, gc, evernote, config, batch, force_update):
         pass
 
 
-def _sync(git, git_conf, evernote, config, batch, force_update, sandbox):
+def _sync(git, git_conf, evernote, config, batch, force_update):
     try:
-        token = base64.b64decode(config.get_str('evernote', 'token')).decode()
-    except Exception as e:
-        logger.info("No valid token found.")
+        session = EvernoteAuthSession.load_from_config(config)
+    except InvalidAuthSession as e:
+        logger.info("Invalid auth session: %s", str(e))
         if batch:
             raise Exception("Unable to proceed due to running batch mode.", e)
 
-        c = {
-            'consumer_key': config.get_str(
-                "evernote", "consumer_key", _CONSUMER_KEY
-            ),
-            'consumer_secret': config.get_str(
-                "evernote", "consumer_secret", _CONSUMER_SECRET
-            ),
-            'callback_url': config.get_str(
-                "evernote", "callback_url", _CALLBACK_URL
-            ),
-            'sandbox': sandbox,
-        }
         try:
-            token = EvernoteAuth(**c).run()
+            session = EvernoteAuth.interactive_auth(config)
         except UserCancelledError as e:
             logger.info(str(e))
             return False
-        config.set('evernote', 'token', base64.b64encode(token.encode()).decode())
+        session.save_to_config(config)
 
     try:
         logger.info("Authenticating...")
-        evernote.auth(token)
+        evernote.auth(session.token)
 
         any_fail = False
         updates = [True]

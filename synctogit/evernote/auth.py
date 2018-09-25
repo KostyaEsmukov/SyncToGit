@@ -21,7 +21,7 @@ def _wait_for_enter() -> None:
     input()
 
 
-class Auth:
+class InteractiveAuth:
     def __init__(
         self,
         consumer_key: str,

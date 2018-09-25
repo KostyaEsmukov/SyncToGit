@@ -5,7 +5,7 @@ import pytest
 from evernote.api.client import EvernoteClient
 
 import synctogit.evernote.auth
-from synctogit.evernote.auth import Auth
+from synctogit.evernote.auth import InteractiveAuth
 
 
 @pytest.fixture
@@ -42,7 +42,9 @@ def auth_params():
 def mock_evernote_client():
     evernote_client = Mock(spec=EvernoteClient)
     with patch.object(
-        synctogit.evernote.auth.Auth, "_evernote_client", return_value=evernote_client
+        synctogit.evernote.auth.InteractiveAuth,
+        "_evernote_client",
+        return_value=evernote_client,
     ):
         yield evernote_client
 
@@ -70,7 +72,7 @@ def test_flow_bundled_oauth(mock_evernote_client, mock_prompt_toolkit, auth_para
         "https://www.evernote.com/OAuth.action?oauth_token=AAAAAA.OOOOOOO.UUUUUUUU",
     ]
     mock_evernote_client.get_access_token.side_effect = ["YOU.WON.THIS.TOKEN"]
-    auth = Auth(**auth_params)
+    auth = InteractiveAuth(**auth_params)
     assert auth.run() == "YOU.WON.THIS.TOKEN"
 
     mock_evernote_client.get_access_token.call_args == call("AA", "WHOAH", "BB")
