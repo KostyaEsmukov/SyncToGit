@@ -1,3 +1,5 @@
+import contextlib
+import threading
 import urllib.request
 from functools import lru_cache
 from io import BytesIO
@@ -7,15 +9,44 @@ from xml.sax.handler import EntityResolver
 from defusedxml.sax import make_parser
 
 
+class _LockedMap:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._map = dict()
+
+    @contextlib.contextmanager
+    def acquire(self, key):
+        is_leader = False
+        with self._lock:
+            event = self._map.get(key)
+            if event is None:
+                self._map[key] = threading.Event()
+                is_leader = True
+        if not is_leader:
+            event.wait()
+        yield
+        with self._lock:
+            if is_leader:
+                self._map[key].set()
+                del self._map[key]
+
+
 class _CachingEntityResolver(EntityResolver):
     """This class caches DTD contents so they aren't
     requested for each parsed XML document.
     """
     # must be thread-safe.
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._locked_map = _LockedMap()
+
     def resolveEntity(self, publicId, systemId):
         if systemId.lower().startswith(('http://', 'https://')):
-            systemId = BytesIO(self.loadRemote(systemId).encode('ascii'))
+            with self._locked_map.acquire(systemId):
+                # TODO lock only for downloads??
+                data_str = self.loadRemote(systemId)
+            systemId = BytesIO(data_str.encode('ascii'))
         return systemId
 
     @lru_cache(maxsize=32)
