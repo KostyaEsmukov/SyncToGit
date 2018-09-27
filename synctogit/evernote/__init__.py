@@ -2,6 +2,7 @@ import base64
 import logging
 import os
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from synctogit.config import Config
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
@@ -97,17 +98,30 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                                 push=git_conf["push"]) as t:
                 wc = EvernoteWorkingCopy(t)
                 logger.info("Calculating changes...")
+
+                # Gather metadata from both Evernote and the git repo simultaneously.
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    working_copy_metadata, evernote_metadata = pool.map(
+                        lambda f: f(),
+                        (
+                            wc.get_working_copy_metadata,
+                            evernote.get_actual_metadata,
+                        )
+                    )
+
                 update = wc.calculate_changes(
-                    evernote.get_actual_metadata(), self.force_full_resync
+                    working_copy_metadata=working_copy_metadata,
+                    evernote_metadata=evernote_metadata,
+                    force_update=self.force_full_resync,
                 )
                 logger.info("Applying changes...")
 
-                wc.delete_files(update['delete'])
+                wc.delete_notes(update.delete)
 
                 queue = []
                 for op in ['new', 'update']:
-                    for guid in update[op]:
-                        queue.append([op, guid, update[op][guid]])
+                    for guid in getattr(update, op):
+                        queue.append([op, guid, getattr(update, op)[guid]])
 
                 total = len(queue)
                 saved = [0]
@@ -180,8 +194,12 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 for j in jobs:
                     j.join()
 
+                note_links = [
+                    (note.dir + (note.file,), note.name)
+                    for note in evernote_metadata.values()
+                ]
                 index_generator.generate(
-                    update['result'],
+                    note_links,
                     index_generator.file_writer(
                         os.path.join(self.config.get_str('git', 'repo_dir'), "index.html")
                     ),
@@ -189,9 +207,9 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 logger.info("Sync loop ended.")
                 logger.info(
                     "Target was: delete: %d, create: %d, update: %d",
-                    len(update['delete']),
-                    len(update['new']),
-                    len(update['update']),
+                    len(update.delete),
+                    len(update.new),
+                    len(update.update),
                 )
                 logger.info("Result: saved: %d, failed: %d", saved[0], failed[0])
                 any_fail = failed[0] != 0

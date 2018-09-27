@@ -167,9 +167,9 @@ class Evernote:
             )
 
             res[note_guid] = models.NoteMetadata(
-                dir=normalized_note_location[:-1],
-                name=note_location,
-                update_sequence_num=note_info.update_sequence_num,
+                dir=tuple(normalized_note_location[:-1]),
+                name=tuple(note_location),
+                update_sequence_num=int(note_info.update_sequence_num),
                 file=file,
             )
 

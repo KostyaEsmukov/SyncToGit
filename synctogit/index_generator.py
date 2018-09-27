@@ -38,7 +38,7 @@ def generate(notes, writer: Callable[[bytes], None]) -> None:
         text = ' &rarr; '.join(map(escape, l[1]))
 
         parts = map(lambda s: urllib.parse.quote(s.encode("utf8")),
-                    ["Notes"] + l[0])
+                    ("Notes",) + l[0])
         url = './' + '/'.join(parts)
 
         r.append({'text': text, 'url': url})

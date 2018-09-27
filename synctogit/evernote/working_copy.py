@@ -1,13 +1,15 @@
+import concurrent.futures
 import logging
 import os
-import re
 import shutil
-from copy import copy
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Mapping, NamedTuple, Sequence
 
 from synctogit.evernote.models import Note, NoteGuid, NoteMetadata
 from synctogit.git_transaction import GitTransaction, rmfile_silent
+
+from .working_copy_note_parser import CorruptedNoteError, WorkingCopyNoteParser
 
 logger = logging.getLogger(__name__)
 
@@ -21,194 +23,72 @@ def _seq_to_path(parts: Sequence[str]) -> Path:
 
 
 class EvernoteWorkingCopy:
+    # This class must be thread-safe
+    notes_dir_name = "Notes"
+    resources_dir_name = "Resources"
+
     def __init__(self, git_transaction: GitTransaction) -> None:
         self.git_transaction = git_transaction
         self.repo_dir = git_transaction.repo_dir
-        self.notes_dir = self.repo_dir / "Notes"
-        self.resources_dir = self.repo_dir / "Resources"
+        self.notes_dir = self.repo_dir / self.notes_dir_name
+        self.resources_dir = self.repo_dir / self.resources_dir_name
 
-    def _delete_non_existing_resources(self, metadata):
-        try:
-            root, dirs, _ = next(os.walk(str(self.resources_dir)))
+    @classmethod
+    def get_relative_resources_url(cls,
+                                   noteguid: NoteGuid,
+                                   metadata: NoteMetadata) -> str:
+        """Returns a relative URL from a Note to its Resources directory.
+        Intended to be used in the generated HTML pages of the notes.
+        """
+        ups = [".."] * (len(metadata.dir) + 1)
+        path = [cls.resources_dir_name, noteguid, ""]
+        return '/'.join(ups + path)
 
-            for d in dirs:
-                if d not in metadata:
-                    logger.warning(
-                        "Resources for non-existing note %s are going to be removed." % d
-                    )
-                    shutil.rmtree(os.path.join(root, d))
-        except StopIteration:
-            return
-
-    def _scan_get_notes_metadata(self) -> Mapping[NoteGuid, NoteMetadata]:
-        def _rem(f, d=None):
-            logger.warning("Corrupted note is going to be removed: %s" % f)
-            rmfile_silent(Path(f))
-            if d:
-                self.git_transaction.remove_dirs_until_not_empty(
-                    self.notes_dir / _seq_to_path(d)
-                )
-
-        metadata = {}
-        corrupted = {}
-
-        for root, dirs, files in os.walk(str(self.notes_dir)):
-            for fn in files:
-                _, ext = os.path.splitext(fn)
-
-                if ext != ".html":
-                    continue
-
-                cur = {
-                    'file': fn,
-                    'dir': root.split(os.path.sep),
-                    'fp': os.path.join(root, fn),
-                }
-
-                while cur['dir'] and cur['dir'][0] != "Notes":
-                    cur['dir'] = cur['dir'][1:]
-
-                if not (2 <= len(cur['dir']) <= 3):
-                    _rem(cur['fp'])
-                    continue
-
-                cur['dir'] = cur['dir'][1:]
-
-                try:
-                    # guid, updateSequenceNum
-                    with open(cur['fp'], "r") as f:
-                        while len(cur) != 5:
-                            line = f.readline()
-
-                            if line is '':
-                                break
-
-                            g = re.search('^<!--[-]+-->$', line)
-                            if g is not None:
-                                break
-
-                            g = re.search('^<!-- ([^:]+): (.+) -->$', line)
-                            if g is not None:
-                                k = g.group(1)
-                                v = g.group(2)
-
-                                if k in ["guid"]:
-                                    cur[k] = v
-                                if k in ["updateSequenceNum"]:
-                                    cur[k] = int(v)
-                except Exception as e:
-                    logger.warn("Unable to parse the note. Discarding it. %s", repr(e))
-
-                if len(cur) != 5:
-                    _rem(cur['fp'], cur['dir'])
-                    continue
-
-                if cur['guid'] in metadata:
-                    _rem(cur['fp'], cur['dir'])
-                    _rem(metadata[cur['guid']]['fp'], metadata[cur['guid']]['dir'])
-                    del metadata[cur['guid']]
-                    corrupted[cur['guid']] = True
-                elif cur['guid'] in corrupted:
-                    _rem(cur['fp'], cur['dir'])
-                else:
-                    metadata[cur['guid']] = cur
-
-        self._delete_non_existing_resources(metadata)
-
-        return {
-            guid: NoteMetadata(
-                dir=note['dir'],
-                name=None,  # XXX
-                update_sequence_num=note['updateSequenceNum'],
-                file=note['file'],
-            )
-            for guid, note in metadata.items()
-        }
-        return metadata
-
+    @staticmethod
     def calculate_changes(
-        self,
+        *,
         evernote_metadata: Mapping[NoteGuid, NoteMetadata],
-        force_update: bool,
-    ):
-        new = evernote_metadata
-        old = self._scan_get_notes_metadata()
+        working_copy_metadata: Mapping[NoteGuid, NoteMetadata],
+        force_update: bool
+    ) -> 'Changeset':
+        changeset = Changeset(new={}, update={}, delete={})
 
-        res = {
-            'new': {},
-            'update': {},
-            'delete': {},
-            'result': [],
-        }
+        deleted_note_guids = set(working_copy_metadata.keys())
 
-        oldguids = copy(old)
-        for guid, note in new.items():
-            res['result'].append(
-                [note.dir + [note.file], note.name]
-            )
-            if guid not in old:
-                res['new'][guid] = note
+        for note_guid, note_metadata in evernote_metadata.items():
+            if note_guid not in working_copy_metadata:
+                changeset.new[note_guid] = note_metadata
             else:
-                if note.file != old[guid].file:
-                    res['delete'][guid] = old[guid]
-                    res['new'][guid] = note
+                deleted_note_guids.discard(note_guid)
+                old = working_copy_metadata[note_guid]
+                new = note_metadata
+                if old.name != new.name:
+                    # Note has been renamed
+                    changeset.delete[note_guid] = old
+                    changeset.new[note_guid] = new
                 elif (
                     force_update
-                    or note.update_sequence_num != old[guid].update_sequence_num
+                    or old.update_sequence_num != new.update_sequence_num
                 ):
-                    res['update'][guid] = note
+                    changeset.update[note_guid] = new
 
-                oldguids.pop(guid, 0)
-
-        for guid in oldguids:
-            res['delete'][guid] = oldguids[guid]
-
-        return res
-
-    def get_relative_resources_url(self, noteguid: NoteGuid, metadata: NoteMetadata):
-        # utf8 encoded
-        return '/'.join(
-            ([".."] * (len(metadata.dir) + 1)) + ["Resources", noteguid, ""]
-        )
-
-    def delete_files(self, files: Mapping[NoteGuid, NoteMetadata]):
-        for note in files.values():
-            note_dir = self.notes_dir / _seq_to_path(note.dir)
-            p = note_dir / note.file
-            rmfile_silent(p)
-
-            self.git_transaction.remove_dirs_until_not_empty(note_dir)
+        changeset.delete.update({
+            guid: working_copy_metadata[guid]
+            for guid in deleted_note_guids
+        })
+        return changeset
 
     def save_note(self, note: Note, metadata: NoteMetadata):
         note_dir = self.notes_dir / _seq_to_path(metadata.dir)
         resources_dir = self.resources_dir / note.guid
         os.makedirs(str(note_dir), exist_ok=True)
 
-        header = []
-        header += ["<!doctype html>"]
-        header += ["<!-- PLEASE DO NOT EDIT THIS FILE -->"]
-        header += ["<!-- All changes you've done here will be stashed on next sync -->"]
-        header += ["<!--+++++++++++++-->"]
-        for k in ["guid", "updateSequenceNum", "title", "created", "updated"]:
-            k_ = re.sub('([A-Z]+)', r'_\1', k).lower()
-            v = getattr(note, k_)
-            if k in ["created", "updated"]:
-                v = v.strftime('%Y-%m-%d %H:%M:%S')
-
-            header += ["<!-- %s: %s -->" % (k, v)]
-
-        header += ["<!----------------->"]
-        header += [""]
-
-        body = '\n'.join(header).encode() + note.html  # type: bytes
-
+        html_body = WorkingCopyNoteParser.note_to_html(note)
         note_path = note_dir / metadata.file
-        note_path.write_bytes(body)
+        note_path.write_bytes(html_body)
 
-        try:
+        if resources_dir.is_dir():
             shutil.rmtree(str(resources_dir))
-        except Exception:
-            pass
 
         if note.resources:
             os.makedirs(str(resources_dir), exist_ok=True)
@@ -216,3 +96,105 @@ class EvernoteWorkingCopy:
             for m in note.resources.values():
                 resource_path = resources_dir / m.filename
                 resource_path.write_bytes(m.body)
+
+    def get_working_copy_metadata(
+        self,
+        worker_threads: int = 20,
+    ) -> Mapping[NoteGuid, NoteMetadata]:
+        note_metadata_futures = []
+
+        with ThreadPoolExecutor(max_workers=worker_threads) as pool:
+            for root, _, files in os.walk(str(self.notes_dir)):
+                for fn in files:
+                    _, ext = os.path.splitext(fn)
+                    if ext != ".html":
+                        # XXX delete it?
+                        continue
+
+                    note_path = Path(root) / fn
+                    fut = pool.submit(
+                        WorkingCopyNoteParser.get_stored_note_metadata,
+                        self.notes_dir,
+                        note_path,
+                    )
+                    note_metadata_futures.append((note_path, fut))
+
+        return self._process_note_metadata_futures(note_metadata_futures)
+
+    def _process_note_metadata_futures(
+        self,
+        note_metadata_futures: Sequence[concurrent.futures.Future],
+    ) -> Mapping[NoteGuid, NoteMetadata]:
+        note_guid_to_metadata = {}
+        corrupted_note_guids = set()
+
+        for note_path, note_metadata_future in note_metadata_futures:
+            try:
+                note_guid, note_metadata = note_metadata_future.result()
+            except CorruptedNoteError as e:
+                logger.warning("%s; removing corrupted note %s", str(e), note_path)
+                self._delete_note(note_path)
+            else:
+                if note_guid in note_guid_to_metadata:
+                    n1 = note_guid_to_metadata[note_guid]
+                    n2 = note_metadata
+                    logger.warning(
+                        "Found two notes with the same GUIDs '%s', "
+                        "removing both: %s and %s",
+                        note_guid, n1, n2
+                    )
+                    self.delete_notes([n1, n2])
+                    del note_guid_to_metadata[note_guid]
+                    corrupted_note_guids.add(note_guid)
+                elif note_guid in corrupted_note_guids:
+                    logger.warning(
+                        "Removing note with GUID '%s' as an another "
+                        "conflict: %s",
+                        note_guid, note_metadata
+                    )
+                    self.delete_notes([note_metadata])
+                else:
+                    note_guid_to_metadata[note_guid] = note_metadata
+
+        self._delete_non_existing_resources(note_guid_to_metadata)
+        return note_guid_to_metadata
+
+    def _delete_non_existing_resources(
+        self,
+        metadata: Mapping[NoteGuid, NoteMetadata],
+    ) -> None:
+        try:
+            root, dirs, _ = next(os.walk(str(self.resources_dir)))
+        except StopIteration:
+            # Resources dir doesn't exist -- no resources to delete, great.
+            return
+
+        for note_guid in dirs:
+            if note_guid not in metadata:
+                logger.warning(
+                    "Resources for non-existing note %s "
+                    "are going to be removed.", note_guid
+                )
+                shutil.rmtree(os.path.join(root, note_guid))
+
+    def delete_notes(self, notes: Mapping[NoteGuid, NoteMetadata]) -> None:
+        for note in notes.values():
+            note_dir = self.notes_dir / _seq_to_path(note.dir)
+            note_path = note_dir / note.file
+            self._delete_note(note_path)
+
+    def _delete_note(self, note_path: Path) -> None:
+        rmfile_silent(note_path)
+        note_dir = note_path.parents[0]
+        # XXX Remove note's resources
+        self.git_transaction.remove_dirs_until_not_empty(note_dir)
+
+
+Changeset = NamedTuple(
+    'Changeset',
+    [
+        ('new', Mapping[NoteGuid, NoteMetadata]),
+        ('update', Mapping[NoteGuid, NoteMetadata]),
+        ('delete', Mapping[NoteGuid, NoteMetadata]),
+    ]
+)

@@ -71,12 +71,12 @@ var frmLocation = (function() {
 
 SAMPLE_NOTES = [
     [
-        ['Projects', 'P - _0A (Й)', 'жизнь.04d42576-e960-4184-aade-9798b1fe403f.html'],
-        ['Projects', 'P - !Z (Щ)', 'жизнь'],
+        ('Projects', 'P - _0A (Й)', 'жизнь.04d42576-e960-4184-aade-9798b1fe403f.html'),
+        ('Projects', 'P - !Z (Щ)', 'жизнь'),
     ],
     [
-        ['Learning', 'Книги', 'мои.b04b7672-f020-4203-ad1e-6c361c35c9ac.html'],
-        ['Learning', 'Книги', 'мои'],
+        ('Learning', 'Книги', 'мои.b04b7672-f020-4203-ad1e-6c361c35c9ac.html'),
+        ('Learning', 'Книги', 'мои'),
     ],
 ]
 

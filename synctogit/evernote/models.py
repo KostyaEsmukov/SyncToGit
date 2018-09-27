@@ -1,4 +1,5 @@
-from typing import Any, Iterable, Mapping, NamedTuple, NewType, Optional, Sequence
+import datetime
+from typing import Iterable, Mapping, NamedTuple, NewType, Optional, Sequence
 
 NotebookGuid = NewType("NotebookGuid", str)
 NoteGuid = NewType("NoteGuid", str)
@@ -24,9 +25,9 @@ NoteInfo = NamedTuple(
         ("notebook_guid", NotebookGuid),
         ("update_sequence_num", int),
         ("tag_guids", Iterable[TagGuid]),
-        ("updated", Any),
-        ("created", Any),
-        ("deleted", Any),
+        ("updated", datetime.datetime),
+        ("created", datetime.datetime),
+        ("deleted", datetime.datetime),
     ],
 )
 
@@ -58,8 +59,8 @@ Note = NamedTuple(
         ("title", str),
         ("update_sequence_num", int),
         ("guid", NoteGuid),
-        ("updated", Any),
-        ("created", Any),
+        ("updated", datetime.datetime),
+        ("created", datetime.datetime),
         ("html", bytes),
         ("resources", Mapping[str, NoteResource]),  # str -- resource hash
     ],
