@@ -3,6 +3,7 @@ import datetime
 import logging
 from functools import wraps
 from socket import error as socketerror
+from time import sleep
 from typing import Mapping, Optional
 
 import evernote.edam as Edam
@@ -55,6 +56,24 @@ def translate_exceptions(f):
     return c
 
 
+def retry_ratelimited(f):
+    # XXX make it configurable
+    @wraps(f)
+    def c(*args, **kwargs):
+        for i in range(_RETRIES, 0, -1):
+            try:
+                return f(*args, **kwargs)
+            except exc.EvernoteApiRateLimitError as e:
+                if i <= 1:
+                    raise
+                s = e.rate_limit_duration_seconds
+                logger.warning("Rate limit reached. Waiting %d seconds..." % s)
+                sleep(s)
+        raise RuntimeError("Should not have been reached")
+
+    return c
+
+
 class Evernote:
     # Must be thread-safe.
 
@@ -71,6 +90,7 @@ class Evernote:
         notebooks = self._get_notebooks()
         return self._process_metadata(notes_metadata, notebooks)
 
+    @retry_ratelimited
     @translate_exceptions
     def _get_notebooks(self) -> Mapping[models.NotebookGuid, models.NotebookInfo]:
         note_store = self.client.get_note_store()
@@ -84,6 +104,7 @@ class Evernote:
             for n in notebooks
         }
 
+    @retry_ratelimited
     @translate_exceptions
     def _get_all_notes_metadata(self) -> Mapping[models.NoteGuid, models.NoteInfo]:
         note_store = self.client.get_note_store()
@@ -154,6 +175,7 @@ class Evernote:
 
         return res
 
+    @retry_ratelimited
     @translate_exceptions
     def get_note(self, guid: models.NoteGuid, resources_base) -> models.Note:
         note_store = self.client.get_note_store()
