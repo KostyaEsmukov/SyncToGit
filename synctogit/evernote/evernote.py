@@ -13,8 +13,9 @@ import pytz
 from cached_property import cached_property
 from evernote.api.client import EvernoteClient
 
+from synctogit.filename_sanitizer import normalize_filename
+
 from . import exc, models, note_parser
-from ..filename_sanitizer import normalize_filename
 
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types

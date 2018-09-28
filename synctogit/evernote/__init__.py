@@ -4,11 +4,12 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+from synctogit import templates
 from synctogit.config import Config
+from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
 
-from .. import index_generator
-from ..git_transaction import GitTransaction
+from . import index_generator
 from .auth import InteractiveAuth, UserCancelledError
 from .evernote import Evernote
 from .models import NoteGuid, NoteMetadata
@@ -223,12 +224,15 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
 
     def _update_index(self, evernote_metadata) -> None:
         note_links = [
-            (note.dir + (note.file,), note.name)
+            index_generator.IndexLink(
+                filesystem_path_parts=note.dir + (note.file,),
+                name_parts=note.name,
+            )
             for note in evernote_metadata.values()
         ]
         index_generator.generate(
             note_links,
-            index_generator.file_writer(
+            templates.file_writer(
                 os.path.join(self.config.get_str('git', 'repo_dir'), "index.html")
             ),
         )

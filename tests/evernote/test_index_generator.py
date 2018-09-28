@@ -1,7 +1,7 @@
 import io
 from typing import BinaryIO, Callable
 
-from synctogit.index_generator import generate
+from synctogit.evernote.index_generator import IndexLink, generate
 
 EXPECTED_INDEX_EMPTY_NOTES = """
 <!doctype html>
@@ -70,14 +70,22 @@ var frmLocation = (function() {
 """.encode("utf8")
 
 SAMPLE_NOTES = [
-    [
-        ('Projects', 'P - _0A (Й)', 'жизнь.04d42576-e960-4184-aade-9798b1fe403f.html'),
-        ('Projects', 'P - !Z (Щ)', 'жизнь'),
-    ],
-    [
-        ('Learning', 'Книги', 'мои.b04b7672-f020-4203-ad1e-6c361c35c9ac.html'),
-        ('Learning', 'Книги', 'мои'),
-    ],
+    IndexLink(
+        filesystem_path_parts=(
+            "Projects",
+            "P - _0A (Й)",
+            "жизнь.04d42576-e960-4184-aade-9798b1fe403f.html",
+        ),
+        name_parts=("Projects", "P - !Z (Щ)", "жизнь"),
+    ),
+    IndexLink(
+        filesystem_path_parts=(
+            "Learning",
+            "Книги",
+            "мои.b04b7672-f020-4203-ad1e-6c361c35c9ac.html",
+        ),
+        name_parts=("Learning", "Книги", "мои"),
+    ),
 ]
 
 EXPECTED_INDEX_SAMPLE_NOTES = """

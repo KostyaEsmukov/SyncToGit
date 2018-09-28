@@ -4,7 +4,7 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from xml.sax import ContentHandler, SAXParseException
 
-from synctogit.index_generator import template_env
+from synctogit.templates import template_env
 from synctogit.xmlutils import parseString
 
 from .exc import EvernoteMalformedNoteError
