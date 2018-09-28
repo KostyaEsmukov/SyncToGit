@@ -37,7 +37,7 @@ NoteMetadata = NamedTuple(
     [
         ("dir", Sequence[str]),
         ("file", str),
-        ("name", str),
+        ("name", Sequence[str]),  # dir parts + note name
         ("update_sequence_num", int),
     ],
 )

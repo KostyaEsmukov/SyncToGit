@@ -88,7 +88,16 @@ class Evernote:
     def get_actual_metadata(self) -> Mapping[models.NoteGuid, models.NoteMetadata]:
         notes_metadata = self._get_all_notes_metadata()
         notebooks = self._get_notebooks()
-        return self._process_metadata(notes_metadata, notebooks)
+
+        res = {
+            note_guid: self._map_to_note_metadata(
+                notebooks[note_info.notebook_guid],
+                note_guid,
+                note_info,
+            )
+            for note_guid, note_info in notes_metadata.items()
+        }
+        return res
 
     @retry_ratelimited
     @translate_exceptions
@@ -96,11 +105,7 @@ class Evernote:
         note_store = self.client.get_note_store()
         notebooks = note_store.listNotebooks()
         return {
-            n.guid: models.NotebookInfo(
-                name=n.name,
-                update_sequence_num=n.updateSequenceNum,
-                stack=n.stack if n.stack is not None else None,
-            )
+            n.guid: self._map_to_notebook_info(n)
             for n in notebooks
         }
 
@@ -124,54 +129,18 @@ class Evernote:
         res = {}
         offset = 0
         while True:
-
             metadata = note_store.findNotesMetadata(
                 noteFilter, offset, Constants.EDAM_USER_NOTES_MAX, spec
             )
 
-            for n in metadata.notes:
-                res[n.guid] = models.NoteInfo(
-                    title=n.title,
-                    notebook_guid=n.notebookGuid,
-                    update_sequence_num=n.updateSequenceNum,
-                    tag_guids=list(n.tagGuids or []),
-                    updated=self._normalize_timestamp(n.updated),
-                    created=self._normalize_timestamp(n.created),
-                    deleted=self._normalize_timestamp(n.deleted),
-                )
+            res.update({
+                n.guid: self._map_to_note_info(n)
+                for n in metadata.notes
+            })
 
             offset = metadata.startIndex + len(metadata.notes)
             if offset >= metadata.totalNotes:
                 break
-
-        return res
-
-    def _process_metadata(
-        self,
-        notes_metadata: Mapping[models.NoteGuid, models.NoteInfo],
-        notebooks: Mapping[models.NotebookGuid, models.NotebookInfo],
-    ) -> Mapping[models.NoteGuid, models.NoteMetadata]:
-        res = {}
-
-        for note_guid, note_info in notes_metadata.items():
-            notebook_info = notebooks[note_info.notebook_guid]
-
-            note_location = [notebook_info.name, note_info.title]
-            if notebook_info.stack:
-                note_location = [notebook_info.stack] + note_location
-
-            normalized_note_location = [normalize_filename(s) for s in note_location]
-
-            file = normalize_filename(
-                "%s.%s.html" % (note_info.title[:_MAXLEN_TITLE_FILENAME], note_guid)
-            )
-
-            res[note_guid] = models.NoteMetadata(
-                dir=tuple(normalized_note_location[:-1]),
-                name=tuple(note_location),
-                update_sequence_num=int(note_info.update_sequence_num),
-                file=file,
-            )
 
         return res
 
@@ -194,6 +163,51 @@ class Evernote:
             False,
         )
 
+        return self._map_to_note(note, resources_base)
+
+    def _map_to_notebook_info(self, notebook) -> models.NotebookInfo:
+        n = notebook
+        return models.NotebookInfo(
+            name=n.name,
+            update_sequence_num=n.updateSequenceNum,
+            stack=n.stack if n.stack is not None else None,
+        )
+
+    def _map_to_note_info(self, note_metadata) -> models.NoteInfo:
+        n = note_metadata
+        return models.NoteInfo(
+            title=n.title,
+            notebook_guid=n.notebookGuid,
+            update_sequence_num=n.updateSequenceNum,
+            tag_guids=list(n.tagGuids or []),
+            updated=self._normalize_timestamp(n.updated),
+            created=self._normalize_timestamp(n.created),
+            deleted=self._normalize_timestamp(n.deleted),
+        )
+
+    def _map_to_note_metadata(
+        self,
+        notebook_info: models.NotebookInfo,
+        note_guid: str,
+        note_info: models.NoteInfo,
+    ) -> models.NoteMetadata:
+        note_location = [notebook_info.name, note_info.title]
+        if notebook_info.stack:
+            note_location = [notebook_info.stack] + note_location
+
+        normalized_note_location = [normalize_filename(s) for s in note_location]
+
+        file = normalize_filename(
+            "%s.%s.html" % (note_info.title[:_MAXLEN_TITLE_FILENAME], note_guid)
+        )
+        return models.NoteMetadata(
+            dir=tuple(normalized_note_location[:-1]),
+            name=tuple(note_location),
+            update_sequence_num=int(note_info.update_sequence_num),
+            file=file,
+        )
+
+    def _map_to_note(self, note, resources_base) -> models.Note:
         note_parsed = note_parser.parse(
             resources_base, note.content, note.title
         )
