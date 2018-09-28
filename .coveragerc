@@ -3,7 +3,7 @@ source = synctogit
 
 [report]
 show_missing = True
-fail_under = 50
+fail_under = 70
 exclude_lines =
     pragma: no cover
     @abstractmethod
