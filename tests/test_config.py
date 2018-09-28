@@ -179,3 +179,4 @@ a = s
     assert config.get_str('git', 'b', 'a-ha') == 'a-ha'
     assert config.get_int('git', 'b', 42) == 42
     assert config.get_bool('git', 'b', True) is True
+    assert config.get_str('git', 'b', None) is None

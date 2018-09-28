@@ -59,17 +59,17 @@ class Config:
     def get_int(self, section: str, key: str,
                 default: int = DEFAULT_SENTINEL) -> int:
         v = self._get(section, key, self.conf.getint, default)
-        return int(v)
+        return v
 
     def get_str(self, section: str, key: str,
                 default: str = DEFAULT_SENTINEL) -> str:
         v = self._get(section, key, self.conf.get, default)
-        return str(v)
+        return v
 
     def get_bool(self, section: str, key: str,
                  default: bool = DEFAULT_SENTINEL) -> bool:
         v = self._get(section, key, self.conf.getboolean, default)
-        return bool(v)
+        return v
 
     def _write(self):
         with self.config_read_writer.writer() as f:
