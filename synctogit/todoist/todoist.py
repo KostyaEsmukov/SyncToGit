@@ -90,7 +90,14 @@ class Todoist:
             date_added = self._parse_datetime(i['date_added'])
             assert date_added
 
-            due_date, due_datetime = self._parse_due_date_time(i)
+            try:
+                due_date, due_datetime = self._parse_due_date_time(i)
+            except ValueError:
+                logger.error(
+                    'Unable to parse due time, using None. Todo item: %s',
+                    i,
+                )
+                due_date, due_datetime = None, None
 
             item = models.TodoistTodoItem(
                 id=int(i['id']),
@@ -115,48 +122,44 @@ class Todoist:
     def _parse_due_date_time(
         self, item_data
     ) -> Tuple[Optional[datetime.date], Optional[datetime.datetime]]:
-        due_date_datetime = self._parse_datetime(item_data.get('due_date_utc'))
+        # The situation with due dates in the current Todoist API
+        # is deeply fucked up, so the code below is rather fragile.
         due_date = None
         due_datetime = None
-        if due_date_datetime:
-            # Now we are talking fun
-            if due_date_datetime.time() != datetime.time(23, 59, 59):
-                raise ValueError(
-                    "Unexpected due_date time `%s`: it must be "
-                    "23:59:59." % due_date_datetime.time()
-                )
-            due_date = due_date_datetime.date()
 
-            # ... nah, it's just the beginning.
-            if item_data.get('due'):
-                due = item_data['due']
+        if item_data.get('due'):
+            due = item_data['due']
 
-                # Just ... don't ask.
-                timezone = due.get('timezone')
-                timezone = pytz.timezone(timezone) if timezone else self._timezone
+            # Just ... don't ask.
+            timezone = due.get('timezone')
+            timezone = pytz.timezone(timezone) if timezone else self._timezone
 
-                # date -- is a datetime. In ISO format. Or just a date.
-                # Live with it.
-                try:
-                    fmt = "%Y-%m-%d"
-                    due_datetime = datetime.datetime.strptime(due['date'], fmt)
-                    # If it didn't raise yet -- then it's indeed just a date.
-                    # Store it for validation and drop the datetime -- we
-                    # don't need it if it doesn't contain time.
-                    due_datetime_date = due_datetime.date()
-                    due_datetime = None
-                except ValueError:
-                    # It's not a date -- thus it's a datetime.
-                    due_datetime = dateutil.parser.parse(due['date'])
-                    due_datetime = due_datetime.astimezone(timezone)
-                    due_datetime_date = due_datetime.date()
+            # date -- is a datetime. In ISO format. Or just a date.
+            # Live with it.
+            try:
+                fmt = "%Y-%m-%d"
+                due_datetime = datetime.datetime.strptime(due['date'], fmt)
+                # If it didn't raise yet -- then it's indeed just a date.
+                # Drop the datetime -- we don't need it if it doesn't
+                # contain time.
+                due_date = due_datetime.date()
+                due_datetime = None
+            except ValueError:
+                # It's not a date -- thus it's a full datetime.
+                due_datetime = dateutil.parser.parse(due['date'])
+                due_datetime = due_datetime.astimezone(timezone)
+                due_date = due_datetime.date()
 
-                if due_datetime_date != due_date:
+        if due_date is None:
+            due_date_datetime = self._parse_datetime(item_data.get('due_date_utc'))
+            if due_date_datetime:
+                # Now we are talking fun
+                if due_date_datetime.time() != datetime.time(23, 59, 59):
                     raise ValueError(
-                        "Unexpected due date part: `%s` is different from due_date "
-                        "`%s`." % (due_datetime_date, due_date)
+                        "Unexpected due_date time `%s`: it must be "
+                        "23:59:59." % due_date_datetime.time()
                     )
-
+                due_date = due_date_datetime.date()
         return due_date, due_datetime
 
     @staticmethod

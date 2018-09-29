@@ -427,6 +427,22 @@ def test_get_todo_items(todoist, todoist_user_timezone):
             date(2018, 9, 29),
             None,
         ),
+        (
+            {
+                # This is a real example. The shown date is `30 Sept`.
+                "date_string": "29 Sep",
+                "due": {
+                    "lang": "en",
+                    "string": "30 Sep",
+                    "timezone": None,
+                    "is_recurring": False,
+                    "date": "2018-09-30",
+                },
+                "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
+            },
+            date(2018, 9, 30),
+            None,
+        ),
     ],
 )
 def test_parse_due_time(
@@ -441,16 +457,6 @@ def test_parse_due_time(
     "todo_item",
     [
         {"due_date_utc": "Sat 29 Sep 2018 10:00:00 +0000"},  # must be 23:59:59
-        {
-            "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
-            "due": {
-                "date": "2018-09-10T13:00:00Z",  # date must not differ from due_date_utc
-                "is_recurring": False,
-                "lang": "en",
-                "string": "29 Sep 16:00",
-                "timezone": "Europe/Moscow",
-            },
-        },
     ],
 )
 def test_parse_due_time_raises(todoist, todo_item):
