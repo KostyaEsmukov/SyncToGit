@@ -5,7 +5,7 @@ _max_filename_len = 250  # https://stackoverflow.com/q/1065993
 
 # special msdos devices
 # https://msdn.microsoft.com/en-us/library/aa365247.aspx
-_MSDOS_FILENAME_PATTERN = regex.compile(r'^(%s)' % '|'.join(
+_MSDOS_FILENAME_PATTERN = regex.compile(r'^(%s)(?:[.]|$)' % '|'.join(
     ["CON", "COM[0-9]", "LPT[0-9]", "PRN", "AUX", "NUL"]
 ), flags=regex.IGNORECASE)
 
