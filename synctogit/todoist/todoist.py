@@ -60,10 +60,10 @@ class Todoist:
             if parent_id is None:
                 # This is a root project
                 result_ids.append(project_id)
-                result_id_to_project[project_id] = project
             else:
                 # Child project
                 result_id_to_project[parent_id].subprojects.append(project)
+            result_id_to_project[project_id] = project
 
         return [
             result_id_to_project[project_id]
@@ -106,9 +106,9 @@ class Todoist:
             parent_id = i['parent_id']
             if parent_id is None:
                 project_id_to_items[project_id].append(item)
-                id_to_item[i['id']] = item
             else:
                 id_to_item[parent_id].subitems.append(item)
+            id_to_item[i['id']] = item
 
         return dict(project_id_to_items)
 
@@ -175,7 +175,7 @@ class Todoist:
             49: "rgb(204, 172, 147)",
         }
         if color_index not in palette:
-            color_index = 47  # grey
+            color_index = 48  # light gray
         return palette[color_index]
 
     @cached_property

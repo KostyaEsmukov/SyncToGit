@@ -76,7 +76,7 @@ def test_get_projects(todoist):
                 "is_archived": 0,
                 "is_deleted": 0,
                 "is_favorite": 1,
-                "item_order": 3,
+                "item_order": 4,
                 "name": "Green Favorite Проект",
                 "parent_id": None,
                 "shared": False,
@@ -117,6 +117,23 @@ def test_get_projects(todoist):
             },
             None,
         ),
+        Project(
+            {
+                "collapsed": 0,
+                "color": 48,
+                "has_more_notes": False,
+                "id": 66666,
+                "indent": 3,
+                "is_archived": 0,
+                "is_deleted": 0,
+                "is_favorite": 0,
+                "item_order": 3,
+                "name": "Grey subchild project",
+                "parent_id": 555555,
+                "shared": False,
+            },
+            None,
+        ),
     ]
 
     expected_projects = [
@@ -141,7 +158,16 @@ def test_get_projects(todoist):
                     is_favorite=False,
                     is_inbox=False,
                     name="Grey child project",
-                    subprojects=[],
+                    subprojects=[
+                        models.TodoistProject(
+                            id=66666,
+                            color="rgb(184, 184, 184)",
+                            is_favorite=False,
+                            is_inbox=False,
+                            name="Grey subchild project",
+                            subprojects=[],
+                        )
+                    ],
                 )
             ],
         ),
@@ -182,6 +208,36 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 "item_order": 822,
                 "labels": [],
                 "parent_id": 2345,
+                "priority": 1,
+                "project_id": 999,
+                "responsible_uid": None,
+                "sync_id": None,
+                "user_id": 999,
+            },
+            None,
+        ),
+        Item(
+            {
+                "all_day": True,
+                "assigned_by_uid": 999,
+                "checked": 0,
+                "collapsed": 0,
+                "content": "Subchild",
+                "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+                "date_completed": None,
+                "date_lang": "en",
+                "date_string": "28 Sep",
+                "day_order": 10,
+                "due_date_utc": None,
+                "has_more_notes": False,
+                "id": 4567,
+                "in_history": 0,
+                "indent": 1,
+                "is_archived": 0,
+                "is_deleted": 0,
+                "item_order": 1822,
+                "labels": [],
+                "parent_id": 3456,
                 "priority": 1,
                 "project_id": 999,
                 "responsible_uid": None,
@@ -296,7 +352,20 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                         due_date=None,
                         due_datetime=None,
                         priority=models.TodoistItemPriority.p1,
-                        subitems=[],
+                        subitems=[
+                            models.TodoistTodoItem(
+                                id=4567,
+                                all_day=True,
+                                content="Subchild",
+                                added_datetime=todoist_user_timezone.localize(
+                                    datetime(2018, 9, 26, 1, 42, 56)
+                                ),
+                                due_date=None,
+                                due_datetime=None,
+                                priority=models.TodoistItemPriority.p1,
+                                subitems=[],
+                            )
+                        ],
                     )
                 ],
             ),
