@@ -51,6 +51,16 @@ class BaseSync(abc.ABC, Generic[T]):
         pass
 
 
+ServiceImplementation = NamedTuple(
+    'ServiceImplementation',
+    [
+        ('auth_session', Type[BaseAuthSession]),
+        ('auth', Type[BaseAuth]),
+        ('sync', Type[BaseSync]),
+    ]
+)
+
+
 class ServiceAuthError(Exception):
     """Error during authentication."""
     pass

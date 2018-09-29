@@ -2,13 +2,18 @@ import logging
 
 import click
 
+from . import evernote, todoist
 from .config import Config, FilesystemConfigReadWriter
-from .evernote import EvernoteAuth, EvernoteAuthSession, EvernoteSync
 from .git_factory import git_factory
 from .print_on_exception_only import PrintOnExceptionOnly
 from .service import InvalidAuthSession, ServiceTokenExpiredError, UserCancelledError
 
 logger = logging.getLogger(__name__)
+
+services = {
+    'evernote': evernote,
+    'todoist': todoist,
+}
 
 
 @click.command()
@@ -34,7 +39,11 @@ logger = logging.getLogger(__name__)
     'config',
     type=click.Path(exists=True),
 )
-def main(batch, force_update, quiet, config):
+@click.argument(
+    'service',
+    type=click.Choice(services.keys()),
+)
+def main(batch, force_update, quiet, config, service):
     """SyncToGit. Sync your Evernote notes to a local git repository.
 
     CONFIG should point to an existing config file. Note that this file
@@ -42,11 +51,15 @@ def main(batch, force_update, quiet, config):
     """
 
     with PrintOnExceptionOnly(quiet, logging.INFO):
-        run(batch, force_update, config)
+        run(service, batch, force_update, config)
 
 
-def run(batch, force_update, config):
+def run(service, batch, force_update, config):
     config = Config(FilesystemConfigReadWriter(config))
+
+    service_module = services[service]
+
+    service_implementation = service_module.get_service_implementation()
 
     gc = {
         'branch': config.get_str('git', 'branch', 'master'),
@@ -62,20 +75,24 @@ def run(batch, force_update, config):
         remote=gc['remote'],
     )
 
-    while _sync(git, gc, config, batch, force_update):
+    while _sync(service_implementation, git, gc, config, batch, force_update):
         pass
 
 
-def _sync(git, git_conf, config, batch, force_update):
+def _sync(service_implementation, git, git_conf, config, batch, force_update):
+    AuthSession = service_implementation.auth_session
+    Auth = service_implementation.auth
+    Sync = service_implementation.sync
+
     try:
-        session = EvernoteAuthSession.load_from_config(config)
+        session = AuthSession.load_from_config(config)
     except InvalidAuthSession as e:
         logger.info("Invalid auth session: %s", str(e))
         if batch:
             raise Exception("Unable to proceed due to running batch mode.", e)
 
         try:
-            session = EvernoteAuth.interactive_auth(config)
+            session = Auth.interactive_auth(config)
         except UserCancelledError as e:
             logger.info(str(e))
             return False
@@ -83,7 +100,7 @@ def _sync(git, git_conf, config, batch, force_update):
 
     try:
         logger.info("Authenticating...")
-        sync = EvernoteSync(
+        sync = Sync(
             config=config,
             auth_session=session,
             git=git,
