@@ -165,8 +165,8 @@ def test_map_to_note_info(evernote, evernote_user_timezone, tag_guids):
         notebook_guid=notebook_guid,
         update_sequence_num=1234,
         tag_guids=tag_guids or [],
-        updated=datetime(2013, 9, 20, 17, 28, 49, tzinfo=tzinfo),
-        created=datetime(2013, 9, 2, 19, 36, 7, tzinfo=tzinfo),
+        updated=tzinfo.localize(datetime(2013, 9, 20, 17, 28, 49)),
+        created=tzinfo.localize(datetime(2013, 9, 2, 19, 36, 7)),
         deleted=None,
     )
 
@@ -192,8 +192,8 @@ def test_map_to_note_metadata(
         notebook_guid=notebook_guid,
         update_sequence_num=1234,
         tag_guids=tag_guids or [],
-        updated=datetime(2013, 9, 20, 17, 28, 49, tzinfo=tzinfo),
-        created=datetime(2013, 9, 2, 19, 36, 7, tzinfo=tzinfo),
+        updated=tzinfo.localize(datetime(2013, 9, 20, 17, 28, 49)),
+        created=tzinfo.localize(datetime(2013, 9, 2, 19, 36, 7)),
         deleted=None,
     )
 
@@ -266,8 +266,8 @@ def test_map_to_note(evernote, evernote_user_timezone):
         title="заметка ✨",
         update_sequence_num=1234,
         guid=note_guid,
-        created=datetime(2018, 9, 28, 22, 21, 32, tzinfo=tzinfo),
-        updated=datetime(2018, 9, 28, 22, 21, 36, tzinfo=tzinfo),
+        created=tzinfo.localize(datetime(2018, 9, 28, 22, 21, 32)),
+        updated=tzinfo.localize(datetime(2018, 9, 28, 22, 21, 36)),
         html=(
             "<html>\n"
             "<head>\n"
@@ -378,8 +378,8 @@ def test_map_to_note_with_resources(evernote, evernote_user_timezone):
         title="заметка ✨",
         update_sequence_num=1234,
         guid=note_guid,
-        created=datetime(2018, 9, 28, 22, 21, 32, tzinfo=tzinfo),
-        updated=datetime(2018, 9, 28, 22, 33, 39, tzinfo=tzinfo),
+        created=tzinfo.localize(datetime(2018, 9, 28, 22, 21, 32)),
+        updated=tzinfo.localize(datetime(2018, 9, 28, 22, 33, 39)),
         html=(
             "<html>\n"
             "<head>\n"

@@ -240,4 +240,4 @@ class Evernote:
     def _normalize_timestamp(self, ts: Optional[int]) -> Optional[datetime.datetime]:
         if not ts:
             return None
-        return datetime.datetime.fromtimestamp(ts / 1000).replace(tzinfo=self._timezone)
+        return self._timezone.localize(datetime.datetime.fromtimestamp(ts / 1000))
