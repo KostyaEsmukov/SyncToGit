@@ -58,6 +58,8 @@ class TodoistSync(BaseSync[TodoistAuthSession]):
 
         todoist = Todoist(str(cache_path), self.auth_session.token)
 
+        # XXX respect force_update (delete cache)
+
         git_conf = {
             'push': self.config.get_bool('git', 'push', False),
             'remote_name': self.config.get_str('git', 'remote_name', 'origin'),

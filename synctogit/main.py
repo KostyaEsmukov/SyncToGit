@@ -3,16 +3,10 @@ import logging
 import click
 
 from .config import Config, FilesystemConfigReadWriter
-from .evernote import (
-    EvernoteAuth,
-    EvernoteAuthSession,
-    EvernoteSync,
-    UserCancelledError,
-)
-from .evernote.exc import EvernoteTokenExpiredError
+from .evernote import EvernoteAuth, EvernoteAuthSession, EvernoteSync
 from .git_factory import git_factory
 from .print_on_exception_only import PrintOnExceptionOnly
-from .service import InvalidAuthSession
+from .service import InvalidAuthSession, ServiceTokenExpiredError, UserCancelledError
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +91,7 @@ def _sync(git, git_conf, config, batch, force_update):
         )
         sync.run_sync()
         return False
-    except EvernoteTokenExpiredError:
+    except ServiceTokenExpiredError:
         logger.warning("Auth token expired.")
         session.remove_session_from_config(config)
         return True

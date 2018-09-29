@@ -10,7 +10,7 @@ from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
 
 from . import index_generator
-from .auth import InteractiveAuth, UserCancelledError
+from .auth import InteractiveAuth
 from .evernote import Evernote
 from .models import NoteGuid, NoteMetadata
 from .working_copy import Changeset, EvernoteWorkingCopy
@@ -21,7 +21,6 @@ __all__ = (
     "EvernoteAuth",
     "EvernoteAuthSession",
     "EvernoteSync",
-    "UserCancelledError",
 )
 
 # python -c "import base64; print base64.b64encode('123')"

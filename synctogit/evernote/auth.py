@@ -4,12 +4,10 @@ from typing import Any
 from evernote.api.client import EvernoteClient
 from prompt_toolkit.shortcuts import button_dialog, input_dialog, yes_no_dialog
 
+from synctogit.service import ServiceAuthError, UserCancelledError
+
 from . import exc
 from .evernote import translate_exceptions
-
-
-class UserCancelledError(exc.EvernoteAuthError):
-    pass
 
 
 def _abort_if_falsy(result: Any) -> None:
@@ -52,7 +50,7 @@ class InteractiveAuth:
 
         try:
             token = self._run_oauth()
-        except exc.EvernoteAuthError:
+        except ServiceAuthError:
             raise
         except Exception as e:
             raise exc.EvernoteAuthError(e)

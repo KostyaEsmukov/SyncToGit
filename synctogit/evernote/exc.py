@@ -1,13 +1,15 @@
+from synctogit.service import ServiceAuthError, ServiceTokenExpiredError
+
 
 class EvernoteError(Exception):
     pass
 
 
-class EvernoteTokenExpiredError(EvernoteError):
+class EvernoteAuthError(ServiceAuthError, EvernoteError):
     pass
 
 
-class EvernoteAuthError(EvernoteError):
+class EvernoteTokenExpiredError(ServiceTokenExpiredError, EvernoteError):
     pass
 
 

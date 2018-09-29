@@ -1,5 +1,5 @@
 import abc
-from typing import Generic, Type, TypeVar
+from typing import Generic, NamedTuple, Type, TypeVar
 
 import git
 
@@ -49,3 +49,16 @@ class BaseSync(abc.ABC, Generic[T]):
     @abc.abstractmethod
     def run_sync(self) -> None:
         pass
+
+
+class ServiceAuthError(Exception):
+    """Error during authentication."""
+    pass
+
+
+class UserCancelledError(ServiceAuthError):
+    pass
+
+
+class ServiceTokenExpiredError(Exception):
+    pass
