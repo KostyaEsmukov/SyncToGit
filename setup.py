@@ -45,7 +45,7 @@ setup(
     install_requires=[
         "GitPython==2.1.11",
         "cached-property==1.5.1",
-        "click==6.7",
+        "click==7.0",
         "defusedxml==0.5.0",
         "jinja2==2.10",
         "prompt_toolkit==2.0.4",
