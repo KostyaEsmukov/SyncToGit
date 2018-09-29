@@ -1,0 +1,90 @@
+{% extends "_base.j2" %}
+
+{% block title %}{{ project.name }}{% endblock %}
+
+
+{% block head %}
+<style>
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+.wrapper {
+    padding-left: 40px;
+}
+ul.todo-items {
+    list-style: none;
+    padding: 0;
+    padding-left: 30px;
+}
+div > ul.todo-items {
+    padding-left: 0;
+}
+.todo-items .ist-checkbox {
+    border: 3px solid gray;
+    border-radius: 16px;
+
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+
+    display: inline-block;
+    transform: translateY(4px);
+    margin-right: 10px;
+}
+.todo-items li {
+    font-size: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 30px;
+}
+div > ul.todo-items > li:last-child {
+    border-bottom: none;
+}
+
+.item-p-2 .ist-checkbox {
+    border-color: #ffe6a7;
+}
+.item-p-3 .ist-checkbox {
+    border-color: #ffbf89;
+}
+.item-p-4 .ist-checkbox {
+    border-color: #e67775;
+}
+</style>
+{% endblock %}
+
+
+{% block body %}
+<div class="wrapper">
+{{ render_project(project) }}
+</div>
+{% endblock %}
+
+
+
+{% macro render_project(project, h_level=1) -%}
+<h{{ h_level }}>{{ project.name }}</h{{ h_level }}>
+
+{{ render_todo_items_list(todo_items[project.id]) }}
+
+{% for subproject in project.subprojects %}
+{{ render_project(subproject, h_level=2) }}
+{% endfor %}
+{%- endmacro %}
+
+
+
+{% macro render_todo_items_list(todo_items) -%}
+<ul class="todo-items">
+{% for todo_item in todo_items %}
+<li class="item-p-{{ todo_item.priority.value }}">
+    <div class="ist-checkbox"></div>
+    {{ todo_item.content | urlize(nofollow=True, target="_blank") }}
+</li>
+{% if todo_item.subitems %}
+{{ render_todo_items_list(todo_item.subitems) }}
+{% endif %}
+{% endfor %}
+</ul>
+{%- endmacro %}

@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 __all__ = (
     "EvernoteAuth",
     "EvernoteAuthSession",
+    "EvernoteSync",
     "UserCancelledError",
 )
 
@@ -125,18 +126,20 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 self._update_index(evernote_metadata)
 
                 logger.info("Sync iteration is done!")
-                logger.info(
-                    "Target was: delete: %d, create: %d, update: %d",
-                    len(changeset.delete),
-                    len(changeset.new),
-                    len(changeset.update),
-                )
-                logger.info(
-                    "Result: saved: %d, failed: %d",
-                    len(update_context.updated_notes),
-                    len(update_context.failed_notes),
-                )
-                any_fail = len(update_context.failed_notes) != 0
+                logger.info("Closing the git transaction...")
+
+            logger.info(
+                "Target was: delete: %d, create: %d, update: %d",
+                len(changeset.delete),
+                len(changeset.new),
+                len(changeset.update),
+            )
+            logger.info(
+                "Result: saved: %d, failed: %d",
+                len(update_context.updated_notes),
+                len(update_context.failed_notes),
+            )
+            any_fail = len(update_context.failed_notes) != 0
 
         logger.info("Done")
 

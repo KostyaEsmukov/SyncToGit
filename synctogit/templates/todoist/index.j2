@@ -1,0 +1,109 @@
+{% extends "_base.j2" %}
+
+{% block title %}SyncToGit index{% endblock %}
+
+
+{% block head %}
+<style>
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+.left, .right {
+    height: 100%;
+    float: left;
+    box-sizing: border-box;
+}
+.left ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: none;
+}
+.left > ul {
+    padding-left: 0;
+}
+.left ul .ist-project {
+    background-color: gray;
+    border-radius: 16px;
+
+    width: 10px;
+    height: 10px;
+    line-height: 10px;
+
+    display: inline-block;
+}
+.left h2 {
+    font-size: 20px;
+}
+.left li {
+    font-size: 18px;
+}
+.left {
+    width: 20%;
+    overflow-y: scroll;
+    padding: 10px;
+}
+.right {
+    width: 80%;
+}
+.left a {
+    margin: 5px 5px;
+}
+#frm {
+    width: 100%;
+    height: 100%;
+}
+</style>
+{% endblock %}
+
+
+{% block body %}
+<div class="left">
+
+<h2>Favorites</h2>
+{{ render_projects(
+    flat_projects|selectattr("is_inbox"),
+    with_nested=False,
+) }}
+{{ render_projects(
+    flat_projects|rejectattr("is_inbox")|selectattr("is_favorite"),
+    with_nested=False,
+) }}
+
+<h2>All Projects</h2>
+{{ render_projects(projects|rejectattr("is_inbox")) }}
+
+</div>
+
+<div class="right">
+<iframe id="frm"></iframe>
+</div>
+
+<script>
+var frmLocation = (function() {
+    var frm = document.getElementById("frm");
+    return function(l) {
+        frm.src = l;
+        return false;
+    }
+})();
+</script>
+{% endblock %}
+
+{% macro render_projects(projects, with_nested=True) -%}
+<ul>
+{% for project in projects %}
+<li>
+<div class="ist-project" style="background-color: {{ project.color }}"></div>
+<a href="{{ project_links[project.id].url }}" onclick="return frmLocation('{{ project_links[project.id].url }}');">{{ project.name }}</a>
+({{ project_links[project.id].todo_items_count }})
+</li>
+{% if with_nested and project.subprojects %}
+{{ render_projects(project.subprojects) }}
+{% endif %}
+{% endfor %}
+</ul>
+{%- endmacro %}
