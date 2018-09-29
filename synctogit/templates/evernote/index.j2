@@ -1,10 +1,9 @@
+{% extends "_base.j2" %}
 
-<!doctype html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>SyncToGit index</title>
+{% block title %}SyncToGit index{% endblock %}
 
+
+{% block head %}
 <style>
 html, body {
     width: 100%;
@@ -38,9 +37,10 @@ html, body {
     height: 100%;
 }
 </style>
-</head>
-<body>
+{% endblock %}
 
+
+{% block body %}
 <div class="left">
 <ul>
 {% for note in notes %}
@@ -62,6 +62,5 @@ var frmLocation = (function() {
     }
 })();
 </script>
-</body>
-</html>
+{% endblock %}
 
