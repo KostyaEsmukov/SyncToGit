@@ -47,10 +47,9 @@ setup(
         "cached-property==1.5.1",
         "click==6.7",
         "defusedxml==0.5.0",
-        "evernote3==1.25.12",
         "jinja2==2.10",
-        "oauth2==1.9.0.post1",
         "prompt_toolkit==2.0.4",
+        "python-dateutil==2.7.3",
         "pytz",
         "regex==2018.08.29",
     ],
@@ -62,6 +61,13 @@ setup(
             'pytest==3.8.1',
             'vcrpy==2.0.0',
         ],
+        'todoist': [
+            'todoist-python==7.0.18',
+        ],
+        'evernote': [
+            "evernote3==1.25.12",
+            "oauth2==1.9.0.post1",
+        ]
     },
     license="MIT",
     python_requires=">=3.5",
