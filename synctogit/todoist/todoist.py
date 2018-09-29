@@ -135,13 +135,26 @@ class Todoist:
                 timezone = due.get('timezone')
                 timezone = pytz.timezone(timezone) if timezone else self._timezone
 
-                # date -- is a datetime. In ISO format.
-                # Just live with it.
-                due_datetime = self._parse_iso_datetime(due['date'], timezone)
-                if due_datetime.date() != due_date:
+                # date -- is a datetime. In ISO format. Or just a date.
+                # Live with it.
+                try:
+                    fmt = "%Y-%m-%d"
+                    due_datetime = datetime.datetime.strptime(due['date'], fmt)
+                    # If it didn't raise yet -- then it's indeed just a date.
+                    # Store it for validation and drop the datetime -- we
+                    # don't need it if it doesn't contain time.
+                    due_datetime_date = due_datetime.date()
+                    due_datetime = None
+                except ValueError:
+                    # It's not a date -- thus it's a datetime.
+                    due_datetime = dateutil.parser.parse(due['date'])
+                    due_datetime = due_datetime.astimezone(timezone)
+                    due_datetime_date = due_datetime.date()
+
+                if due_datetime_date != due_date:
                     raise ValueError(
                         "Unexpected due date part: `%s` is different from due_date "
-                        "`%s`." % (due_datetime.date(), due_date)
+                        "`%s`." % (due_datetime_date, due_date)
                     )
 
         return due_date, due_datetime
@@ -189,7 +202,3 @@ class Todoist:
         fmt = "%a %d %b %Y %H:%M:%S %z"  # Fri 23 Jun 2017 06:39:51 +0000
         utc_datetime = datetime.datetime.strptime(date, fmt)
         return utc_datetime.astimezone(self._timezone)
-
-    def _parse_iso_datetime(self, date: str, timezone) -> datetime.datetime:
-        raw_datetime = dateutil.parser.parse(date)
-        return raw_datetime.astimezone(timezone)
