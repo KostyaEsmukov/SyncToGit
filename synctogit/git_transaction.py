@@ -4,6 +4,8 @@ from pathlib import Path
 
 import git
 
+from .git_factory import gitignore_synctogit_files_prefix
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +38,8 @@ class GitTransaction:
         self.remote_name = remote_name
 
         self.repo_dir = Path(repo.working_tree_dir)
-        self.lockfile_path = self.repo_dir / ".synctogit.lockfile"
+        lockfile_name = "%s.lockfile" % gitignore_synctogit_files_prefix
+        self.lockfile_path = self.repo_dir / lockfile_name
 
         self.transaction_commit_message = None
 

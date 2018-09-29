@@ -1,4 +1,5 @@
 import os
+from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
@@ -33,7 +34,9 @@ def test_git_new_existing_empty_dir(call_git, temp_dir, remote_name, remote):
     assert git_root == d
 
     git_commits = call_git(r'git log --all --pretty=format:"%D %s" -n 2', cwd=d)
-    assert git_commits == "HEAD -> spooky Initial commit"
+    assert git_commits == (
+        "HEAD -> spooky Update .gitignore (automated commit by synctogit)"
+    )
 
     git_branch = call_git("git symbolic-ref --short HEAD", cwd=d)
     assert git_branch == branch
@@ -92,14 +95,18 @@ def test_git_load_existing_not_empty(call_git, temp_dir,
     if shadow_remote:
         call_git("git remote add %s %s" % (remote_name, shadow_remote), cwd=d)
 
-    if shadow_remote and remote != shadow_remote:
-        with pytest.raises(GitError):
-            git = git_factory(d, remote_name=remote_name, remote=remote)
-        return
-    else:
+    with ExitStack() as stack:
+        if shadow_remote and remote != shadow_remote:
+            stack.enter_context(pytest.raises(GitError))
         git = git_factory(d, remote_name=remote_name, remote=remote)
 
-    assert git.head.commit.summary == "The Cake is a lie"
+    if shadow_remote and remote != shadow_remote:
+        return
+
+    assert git.head.commit.summary == (
+        "Update .gitignore (automated commit by synctogit)"
+    )
+    assert git.head.commit.parents[0].summary == "The Cake is a lie"
 
     git_remotes = call_git("git remote -v", cwd=d)
     if remote:
@@ -125,3 +132,94 @@ def test_git_nested(call_git, temp_dir):
     assert git_root == str(root)
     git_root = call_git("git rev-parse --show-toplevel", cwd=str(inner))
     assert git_root == str(inner)
+
+
+@pytest.mark.parametrize('is_up_to_date', [False, True])
+def test_gitignore_existing(call_git, temp_dir, is_up_to_date):
+    p = Path(temp_dir) / 'myrepo'
+    d = str(p)
+    os.mkdir(d)
+    gitignore_file = p / '.gitignore'
+    if is_up_to_date:
+        gitignore_file.write_text('.synctogit*')
+    else:
+        gitignore_file.write_text('*.something')
+
+    call_git('git init', cwd=d)
+    call_git('git add .', cwd=d)
+    call_git('git commit -m "The Cake is a lie"', cwd=d)
+
+    git = git_factory(d)
+    if is_up_to_date:
+        assert git.head.commit.summary == 'The Cake is a lie'
+    else:
+        assert git.head.commit.summary == (
+            "Update .gitignore (automated commit by synctogit)"
+        )
+        assert git.head.commit.parents[0].summary == "The Cake is a lie"
+        assert gitignore_file.read_text() == (
+            "*.something\n"
+            ".synctogit*\n"
+        )
+
+
+@pytest.mark.parametrize('dirty', ['repo', 'gitignore'])
+@pytest.mark.parametrize('is_dirty_staged', [False, True])
+@pytest.mark.parametrize('is_new_file', [False, True])
+def test_gitignore_update_with_dirty_repo(
+    call_git, temp_dir, dirty, is_dirty_staged, is_new_file
+):
+    p = Path(temp_dir) / 'myrepo'
+    d = str(p)
+    os.mkdir(d)
+    gitignore_file = p / '.gitignore'
+
+    if dirty == 'gitignore':
+        dirty_file = gitignore_file
+    elif dirty == 'repo':
+        dirty_file = p / '.lalalala'
+
+    call_git('git init', cwd=d)
+
+    if not is_new_file:
+        dirty_file.write_text('*.pdf')
+        call_git("git add .", cwd=d)
+
+    call_git('git commit --allow-empty -m "The Cake is a lie"', cwd=d)
+
+    dirty_file.write_text('*.something')
+
+    if is_dirty_staged:
+        call_git('git add .', cwd=d)
+
+    with ExitStack() as stack:
+        if dirty == 'gitignore':
+            stack.enter_context(pytest.raises(GitError))
+        git = git_factory(d)
+
+    dirty_file.read_text() == '*.something'
+    if dirty == 'gitignore':
+        # No commits should be created
+        git_commits = call_git(r'git log --all --pretty=format:"%D %s" -n 2', cwd=d)
+        assert git_commits == (
+            "HEAD -> master The Cake is a lie"
+        )
+    elif dirty == 'repo':
+        # Dirty changes should be there and still not be committed.
+        gitignore_file.read_text() == '.synctogit*\n'
+        assert git.head.commit.summary == (
+            "Update .gitignore (automated commit by synctogit)"
+        )
+        assert git.head.commit.parents[0].summary == "The Cake is a lie"
+
+        # Only .gitignore should be committed
+        git_show = call_git('git show --pretty="" --name-only', cwd=d)
+        assert git_show == ".gitignore"
+
+    # Ensure that the dirty files are in the same staged/unstaged state
+    git_status = call_git('git status --porcelain', cwd=d, space_trim=False)
+    if is_new_file:
+        prefix = "A  " if is_dirty_staged else "?? "
+    else:
+        prefix = "M  " if is_dirty_staged else " M "
+    assert git_status.startswith(prefix)

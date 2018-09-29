@@ -14,6 +14,8 @@ from synctogit.git_transaction import (
     GitTransaction,
 )
 
+initial_commit = "Update .gitignore (automated commit by synctogit)"
+
 
 @pytest.fixture
 def git_repo(temp_dir):
@@ -101,7 +103,7 @@ def test_dirty_changes_are_stashed(git_repo, call_git):
 
     # Ensure no new commits have been created
     git_commits = call_git(r'git log --pretty=format:"%s" -n 2', cwd=wd)
-    assert git_commits == "Initial commit"
+    assert git_commits == initial_commit
 
     # And a single stash is created
     git_stashes = call_git('git stash list', cwd=wd)
@@ -131,7 +133,7 @@ def test_changes_on_exception_are_stashed(git_repo, call_git):
 
     # Ensure no new commits have been created
     git_commits = call_git(r'git log --pretty=format:"%s" -n 2', cwd=wd)
-    assert git_commits == "Initial commit"
+    assert git_commits == initial_commit
 
     # And a single stash is created
     git_stashes = call_git('git stash list', cwd=wd)
@@ -200,7 +202,9 @@ def test_changes_are_committed(push, commit_message,
 
     # Ensure that a new commit has been created
     git_commits = call_git(r'git log --pretty=format:"%s" -n 3', cwd=wd)
-    assert git_commits == "%s\nInitial commit" % new_commit_message
+    assert git_commits == (
+        "%s\n%s" % (new_commit_message, initial_commit)
+    )
 
     # Ensure that the working copy is clean
     git_status = call_git('git status --porcelain', cwd=wd)
@@ -210,9 +214,9 @@ def test_changes_are_committed(push, commit_message,
     git_remote_commits = call_git(r'git log --pretty=format:"%s" -n 3',
                                   cwd=remote_git_repo.working_tree_dir)
     if push:
-        assert git_remote_commits == "%s\nInitial commit" % new_commit_message
+        assert git_remote_commits == "%s\n%s" % (new_commit_message, initial_commit)
     else:
-        assert git_remote_commits == "Initial commit"
+        assert git_remote_commits == initial_commit
 
 
 def test_git_push_with_conflicts(git_repo_with_remote, call_git):
@@ -237,7 +241,7 @@ def test_git_push_with_conflicts(git_repo_with_remote, call_git):
 
     # Ensure that a new commit has been created
     git_commits = call_git(r'git log --pretty=format:"%s" -n 3', cwd=wd)
-    assert git_commits == "%s\nInitial commit" % new_commit_message
+    assert git_commits == "%s\n%s" % (new_commit_message, initial_commit)
 
     # Ensure that the working copy is clean
     git_status = call_git('git status --porcelain', cwd=wd)
@@ -246,4 +250,4 @@ def test_git_push_with_conflicts(git_repo_with_remote, call_git):
     # Ensure that there're no new commits in the remote repo
     git_remote_commits = call_git(r'git log --pretty=format:"%s" -n 3',
                                   cwd=remote_git_repo.working_tree_dir)
-    assert git_remote_commits == "empty\nInitial commit"
+    assert git_remote_commits == "empty\n%s" % initial_commit

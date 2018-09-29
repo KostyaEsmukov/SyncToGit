@@ -13,7 +13,7 @@ def temp_dir():
 
 @pytest.fixture
 def call_git():
-    def f(shell_command, *, cwd):
+    def f(shell_command, *, cwd, space_trim=True):
         # NOTE! That shell_command must be compatible with Windows.
         # Have fun.
 
@@ -23,7 +23,12 @@ def call_git():
                                stderr=subprocess.STDOUT,
                                cwd=cwd,
                                shell=True, check=True, timeout=5)
-            return p.stdout.decode().strip()
+            res = p.stdout.decode()
+            if space_trim:
+                res = res.strip()
+            else:
+                res = res.strip('\n')
+            return res
         except subprocess.CalledProcessError as e:
             print(e.stdout.decode())
             raise

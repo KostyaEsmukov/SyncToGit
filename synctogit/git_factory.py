@@ -1,3 +1,4 @@
+import contextlib
 import os
 from typing import Optional
 
@@ -10,6 +11,12 @@ class GitError(Exception):
 
 # XXX is this still relevant?
 os.environ['USERNAME'] = 'None'  # default username for git
+
+gitignore_synctogit_files_prefix = '.synctogit'
+
+# The directory below is automatically added to the .gitignore file,
+# so feel free to store any local cache of a service here.
+local_git_ignored_cache_dir = '%s.sync_cache' % gitignore_synctogit_files_prefix
 
 
 def git_factory(
@@ -72,13 +79,14 @@ class _GitFactory:
                 "commit manually or simply delete the .git directory."
             )
         self._ensure_remote(repo)
+        self._ensure_gitignore(repo)
         return repo
 
     def _init_new_git_repo(self) -> git.Repo:
         repo = git.Repo.init(self.repo_dir)
         # Create orphan branch
         repo.head.reference = git.Head(repo, "refs/heads/%s" % self.branch)
-        repo.index.commit("Initial commit")
+        self._ensure_gitignore(repo)
         self._ensure_remote(repo)
         return repo
 
@@ -96,3 +104,41 @@ class _GitFactory:
                     % (self.remote_name, origin.url, self.remote)
                 )
         assert origin.exists()
+
+    def _ensure_gitignore(self, repo: git.Repo) -> None:
+        gitignore_path = os.path.join(self.repo_dir, '.gitignore')
+
+        gitignore_line = "%s*" % gitignore_synctogit_files_prefix
+
+        if os.path.isfile(gitignore_path):
+            with open(gitignore_path, 'rt') as f:
+                gitignore = f.read()
+            for line in gitignore.splitlines():
+                if line.rstrip() == gitignore_line:
+                    # gitignore is good!
+                    return
+
+        with self.clean_index(repo, ['.gitignore']):
+            with open(gitignore_path, 'at') as f:
+                f.write('\n%s\n' % gitignore_line)
+            repo.index.add([".gitignore"])
+            repo.index.commit('Update .gitignore (automated commit by synctogit)')
+
+    @contextlib.contextmanager
+    def clean_index(self, repo: git.Repo, fail_for_changed_files=[]):
+        changes = repo.git.status(
+            *fail_for_changed_files, porcelain=True, untracked_files=True
+        )
+        if changes:
+            raise GitError(
+                "Unable to make modifications because they already "
+                "contain uncommitted changes. Please commit them or reset "
+                "manually. The list of conflicts:\n%s" % changes
+            )
+
+        stash = repo.is_dirty()
+        if stash:
+            repo.git.stash()
+        yield
+        if stash:
+            repo.git.stash('pop', '--index')

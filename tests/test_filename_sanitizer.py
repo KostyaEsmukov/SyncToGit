@@ -1,6 +1,7 @@
 import pytest
 
 from synctogit.filename_sanitizer import denormalize_filename, normalize_filename
+from synctogit.git_factory import gitignore_synctogit_files_prefix
 
 raw_to_normalized = [
     (" ", "_0020"),
@@ -18,6 +19,7 @@ raw_to_normalized = [
     ("раз_два", "раз__два"),
     (r"раз/два\три", "раз_002fдва_005cтри"),
     ("❤️and💩and👍🏾", "_2764_fe0fand_d83d_dca9and_d83d_dc4d_d83c_dffe"),
+    (gitignore_synctogit_files_prefix, "_%s" % gitignore_synctogit_files_prefix),
 ]
 
 
