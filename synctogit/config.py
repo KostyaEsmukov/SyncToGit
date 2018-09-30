@@ -1,7 +1,8 @@
 import abc
-import configparser
 import contextlib
 from typing import ContextManager, TextIO, Union
+
+from configupdater import ConfigUpdater
 
 DEFAULT_SENTINEL = object()
 
@@ -34,42 +35,58 @@ class FilesystemConfigReadWriter(ConfigReadWriter):  # pragma: no cover
 class Config:
     def __init__(self, config_read_writer: ConfigReadWriter) -> None:
         self.config_read_writer = config_read_writer
-        self.conf = configparser.ConfigParser()
+        self.conf = ConfigUpdater()
         with self.config_read_writer.reader() as f:
             self.conf.read_file(f)
 
-    def _get(self, section, key, getter, default=DEFAULT_SENTINEL):
+    def _get(self, section, key, converter, default=DEFAULT_SENTINEL):
 
         if section not in self.conf:
             if default == DEFAULT_SENTINEL:
                 raise ValueError('Section %s is missing' % section)
             else:
-                return default
-
-        if key not in self.conf[section]:
+                value = default
+        elif key not in self.conf[section]:
             if default == DEFAULT_SENTINEL:
                 raise ValueError(
                     'Key %s from section %s is missing' % (key, section)
                 )
             else:
-                return default
+                value = default
+        else:
+            value = self.conf[section][key].value
 
-        return getter(section, key)
+        if value is None:
+            return value
+        return converter(value)
 
     def get_int(self, section: str, key: str,
                 default: int = DEFAULT_SENTINEL) -> int:
-        v = self._get(section, key, self.conf.getint, default)
+        v = self._get(section, key, int, default)
+
         return v
 
     def get_str(self, section: str, key: str,
                 default: str = DEFAULT_SENTINEL) -> str:
-        v = self._get(section, key, self.conf.get, default)
+        v = self._get(section, key, str, default)
         return v
 
     def get_bool(self, section: str, key: str,
                  default: bool = DEFAULT_SENTINEL) -> bool:
-        v = self._get(section, key, self.conf.getboolean, default)
+        v = self._get(section, key, self._convert_to_boolean, default)
         return v
+
+    @staticmethod
+    def _convert_to_boolean(value):
+        BOOLEAN_STATES = {
+            '1': True, 'yes': True, 'true': True, 'on': True,
+            '0': False, 'no': False, 'false': False, 'off': False,
+        }
+        if value is True or value is False:
+            return value
+        if value.lower() not in BOOLEAN_STATES:
+            raise ValueError('Not a boolean: %s' % value)
+        return BOOLEAN_STATES[value.lower()]
 
     def _write(self):
         with self.config_read_writer.writer() as f:

@@ -46,6 +46,7 @@ setup(
         "GitPython==2.1.11",
         "cached-property==1.5.1",
         "click==7.0",
+        "configupdater==0.3.2",
         "defusedxml==0.5.0",
         "jinja2==2.10",
         "prompt_toolkit==2.0.4",

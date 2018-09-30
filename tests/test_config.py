@@ -120,41 +120,49 @@ sandbox = true
     assert config.get_str('evernote', 'token') == 'new-token'
 
     # Unfortunately, configparser strips the comments :(
-    assert read_writer.text() == """[git]
+    assert read_writer.text() == """
+[git]
 repo_dir = git
+
 push = false
 
 [evernote]
+; comment before sandbox
 sandbox = true
+; comment in the end
 token = new-token
-
 """
 
     config.unset('evernote', 'token')
     with pytest.raises(ValueError):
         config.get_str('evernote', 'token')
-    assert read_writer.text() == """[git]
+    assert read_writer.text() == """
+[git]
 repo_dir = git
+
 push = false
 
 [evernote]
+; comment before sandbox
 sandbox = true
-
+; comment in the end
 """
 
     config.set('newsect', 'num', 42)
     config.set('newsect', 'bool', True)
-    assert read_writer.text() == """[git]
+    assert read_writer.text() == """
+[git]
 repo_dir = git
+
 push = false
 
 [evernote]
+; comment before sandbox
 sandbox = true
-
+; comment in the end
 [newsect]
 num = 42
 bool = True
-
 """
 
 
