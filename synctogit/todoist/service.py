@@ -2,7 +2,8 @@ import logging
 import os
 from pathlib import Path
 
-from synctogit.config import Config
+from synctogit.config import Config, StrConfigItem
+from synctogit.git_config import git_push, git_remote_name
 from synctogit.git_factory import gitignore_synctogit_files_prefix
 from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
@@ -20,6 +21,9 @@ __all__ = (
 )
 
 
+todoist_token = StrConfigItem('todoist', 'token')
+
+
 class TodoistAuthSession(BaseAuthSession):
     def __init__(self, token: str) -> None:
         self.token = token
@@ -27,17 +31,17 @@ class TodoistAuthSession(BaseAuthSession):
     @classmethod
     def load_from_config(cls, config: Config) -> 'TodoistAuthSession':
         try:
-            token = config.get_str('todoist', 'token')
+            token = todoist_token.get(config)
         except ValueError:
             raise InvalidAuthSession('Todoist token is missing in config')
 
         return cls(token)
 
     def save_to_config(self, config: Config) -> None:
-        config.set('todoist', 'token', self.token)
+        todoist_token.set(config, self.token)
 
     def remove_session_from_config(self, config: Config) -> None:
-        config.unset('todoist', 'token')
+        todoist_token.unset(config)
 
 
 class TodoistAuth(BaseAuth[TodoistAuthSession]):
@@ -60,14 +64,11 @@ class TodoistSync(BaseSync[TodoistAuthSession]):
 
         # XXX respect force_update (delete cache)
 
-        git_conf = {
-            'push': self.config.get_bool('git', 'push', False),
-            'remote_name': self.config.get_str('git', 'remote_name', 'origin'),
-        }
-
-        with GitTransaction(self.git,
-                            remote_name=git_conf["remote_name"],
-                            push=git_conf["push"]) as t:
+        with GitTransaction(
+                self.git,
+                remote_name=git_remote_name.get(self.config),
+                push=git_push.get(self.config),
+        ) as t:
             todoist.sync()
 
             pr = ProjectsRenderer(

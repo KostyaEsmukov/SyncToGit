@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from . import evernote, todoist
+from . import evernote, git_config, todoist
 from .config import Config, FilesystemConfigReadWriter
 from .git_factory import git_factory
 from .print_on_exception_only import PrintOnExceptionOnly
@@ -61,25 +61,18 @@ def run(service, batch, force_update, config):
 
     service_implementation = service_module.get_service_implementation()
 
-    gc = {
-        'branch': config.get_str('git', 'branch', 'master'),
-        'push': config.get_bool('git', 'push', False),
-        'remote': config.get_str('git', 'remote', None) or None,
-        'remote_name': config.get_str('git', 'remote_name', 'origin'),
-        'repo_dir': config.get_str('git', 'repo_dir'),
-    }
     git = git_factory(
-        repo_dir=gc['repo_dir'],
-        branch=gc['branch'],
-        remote_name=gc['remote_name'],
-        remote=gc['remote'],
+        repo_dir=git_config.git_repo_dir.get(config),
+        branch=git_config.git_branch.get(config),
+        remote_name=git_config.git_remote_name.get(config),
+        remote=git_config.git_remote.get(config),
     )
 
-    while _sync(service_implementation, git, gc, config, batch, force_update):
+    while _sync(service_implementation, git, config, batch, force_update):
         pass
 
 
-def _sync(service_implementation, git, git_conf, config, batch, force_update):
+def _sync(service_implementation, git, config, batch, force_update):
     AuthSession = service_implementation.auth_session
     Auth = service_implementation.auth
     Sync = service_implementation.sync

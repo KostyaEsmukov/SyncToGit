@@ -4,10 +4,10 @@ from typing import ContextManager, TextIO
 
 import pytest
 
-from synctogit.config import Config, ConfigReadWriter
+from synctogit import config
 
 
-class MemoryConfigReadWriter(ConfigReadWriter):
+class MemoryConfigReadWriter(config.ConfigReadWriter):
     def __init__(self, text: str) -> None:
         self.file = io.StringIO(text)
 
@@ -39,13 +39,14 @@ sandbox = true
 token =
 """
     read_writer = MemoryConfigReadWriter(conf)
-    config = Config(read_writer)
-    assert config.get_str('git', 'repo_dir') == 'git'
-    assert config.get_bool('git', 'push') is False
-    assert config.get_int('git', 'num') == 3
+    conf = config.Config(read_writer)
 
-    assert config.get_bool('evernote', 'sandbox') is True
-    assert config.get_str('evernote', 'token') == ''
+    assert config.StrConfigItem('git', 'repo_dir').get(conf) == 'git'
+    assert config.BoolConfigItem('git', 'push').get(conf) is False
+    assert config.IntConfigItem('git', 'num').get(conf) == 3
+
+    assert config.BoolConfigItem('evernote', 'sandbox').get(conf) is True
+    assert config.StrConfigItem('evernote', 'token').get(conf) == ''
 
 
 def test_comments():
@@ -61,13 +62,17 @@ sandbox = true
 
 """
     read_writer = MemoryConfigReadWriter(conf)
-    config = Config(read_writer)
+    conf = config.Config(read_writer)
 
-    assert config.get_bool('evernote', 'sandbox') is True
+    evernote_sandbox = config.BoolConfigItem('evernote', 'sandbox')
+    git_comment = config.IntConfigItem('git', 'comment')
+    evernote_token = config.StrConfigItem('evernote', 'token')
+
+    assert evernote_sandbox.get(conf) is True
     with pytest.raises(ValueError):
-        config.get_int('git', 'comment')
+        git_comment.get(conf)
     with pytest.raises(ValueError):
-        config.get_str('evernote', 'token')
+        evernote_token.get(conf)
 
 
 def test_bool():
@@ -86,19 +91,19 @@ h = no
 i = None
 """
     read_writer = MemoryConfigReadWriter(conf)
-    config = Config(read_writer)
-    assert config.get_bool('git', 'a') is True
-    assert config.get_bool('git', 'b') is True
-    assert config.get_bool('git', 'c') is True
-    assert config.get_bool('git', 'd') is True
+    conf = config.Config(read_writer)
+    assert config.BoolConfigItem('git', 'a').get(conf) is True
+    assert config.BoolConfigItem('git', 'b').get(conf) is True
+    assert config.BoolConfigItem('git', 'c').get(conf) is True
+    assert config.BoolConfigItem('git', 'd').get(conf) is True
 
-    assert config.get_bool('git', 'e') is False
-    assert config.get_bool('git', 'f') is False
-    assert config.get_bool('git', 'g') is False
-    assert config.get_bool('git', 'h') is False
+    assert config.BoolConfigItem('git', 'e').get(conf) is False
+    assert config.BoolConfigItem('git', 'f').get(conf) is False
+    assert config.BoolConfigItem('git', 'g').get(conf) is False
+    assert config.BoolConfigItem('git', 'h').get(conf) is False
 
     with pytest.raises(ValueError):
-        assert config.get_bool('git', 'i') is False
+        assert config.BoolConfigItem('git', 'i').get(conf) is False
 
 
 def test_write():
@@ -114,10 +119,11 @@ sandbox = true
 ; comment in the end
 """
     read_writer = MemoryConfigReadWriter(conf)
-    config = Config(read_writer)
+    conf = config.Config(read_writer)
 
-    config.set('evernote', 'token', 'new-token')
-    assert config.get_str('evernote', 'token') == 'new-token'
+    evernote_token = config.StrConfigItem('evernote', 'token')
+    evernote_token.set(conf, 'new-token')
+    assert evernote_token.get(conf) == 'new-token'
 
     # Unfortunately, configparser strips the comments :(
     assert read_writer.text() == """
@@ -133,9 +139,9 @@ sandbox = true
 token = new-token
 """
 
-    config.unset('evernote', 'token')
+    evernote_token.unset(conf)
     with pytest.raises(ValueError):
-        config.get_str('evernote', 'token')
+        evernote_token.get(conf)
     assert read_writer.text() == """
 [git]
 repo_dir = git
@@ -148,8 +154,8 @@ sandbox = true
 ; comment in the end
 """
 
-    config.set('newsect', 'num', 42)
-    config.set('newsect', 'bool', True)
+    config.IntConfigItem('newsect', 'num').set(conf, 42)
+    config.BoolConfigItem('newsect', 'bool').set(conf, True)
     assert read_writer.text() == """
 [git]
 repo_dir = git
@@ -172,19 +178,19 @@ def test_defaults():
 a = s
 """
     read_writer = MemoryConfigReadWriter(conf)
-    config = Config(read_writer)
+    conf = config.Config(read_writer)
 
     with pytest.raises(ValueError):
-        config.get_str('no', 'b')
+        config.StrConfigItem('no', 'b').get(conf)
     with pytest.raises(ValueError):
-        config.get_str('git', 'b')
+        config.StrConfigItem('git', 'b').get(conf)
     with pytest.raises(ValueError):
-        config.get_int('git', 'b')
+        config.IntConfigItem('git', 'b').get(conf)
     with pytest.raises(ValueError):
-        config.get_bool('git', 'b')
+        config.BoolConfigItem('git', 'b').get(conf)
 
-    assert config.get_str('no', 'b', 'yeah') == 'yeah'
-    assert config.get_str('git', 'b', 'a-ha') == 'a-ha'
-    assert config.get_int('git', 'b', 42) == 42
-    assert config.get_bool('git', 'b', True) is True
-    assert config.get_str('git', 'b', None) is None
+    assert config.StrConfigItem('no', 'b', 'yeah').get(conf) == 'yeah'
+    assert config.StrConfigItem('git', 'b', 'a-ha').get(conf) == 'a-ha'
+    assert config.IntConfigItem('git', 'b', 42).get(conf) == 42
+    assert config.BoolConfigItem('git', 'b', True).get(conf) is True
+    assert config.StrConfigItem('git', 'b', None).get(conf) is None

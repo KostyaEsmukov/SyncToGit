@@ -1,6 +1,6 @@
 import abc
 import contextlib
-from typing import ContextManager, TextIO, Union
+from typing import ContextManager, Generic, TextIO, TypeVar
 
 from configupdater import ConfigUpdater
 
@@ -32,6 +32,57 @@ class FilesystemConfigReadWriter(ConfigReadWriter):  # pragma: no cover
             yield f
 
 
+T = TypeVar('T')
+
+
+class ConfigItem(abc.ABC, Generic[T]):
+    def __init__(self, section: str, key: str, default: T = DEFAULT_SENTINEL) -> None:
+        self.section = section
+        self.key = key
+        self.default = default
+
+    def get(self, config: 'Config') -> T:
+        return config._get(self.section, self.key, self._conv, self.default)
+
+    def set(self, config: 'Config', value: T) -> None:
+        value = str(value)
+        if self.section not in config.conf:
+            config.conf.add_section(self.section)
+        config.conf[self.section][self.key] = value
+        config._write()
+
+    def unset(self, config: 'Config') -> None:
+        del config.conf[self.section][self.key]
+        config._write()
+
+    @abc.abstractmethod
+    def _conv(self, value: str) -> T:
+        pass
+
+
+class StrConfigItem(ConfigItem[str]):
+    def _conv(self, value: str) -> str:
+        return str(value)
+
+
+class IntConfigItem(ConfigItem[int]):
+    def _conv(self, value: str) -> int:
+        return int(value)
+
+
+class BoolConfigItem(ConfigItem[bool]):
+    def _conv(self, value: str) -> bool:
+        BOOLEAN_STATES = {
+            '1': True, 'yes': True, 'true': True, 'on': True,
+            '0': False, 'no': False, 'false': False, 'off': False,
+        }
+        if value is True or value is False:
+            return value
+        if value.lower() not in BOOLEAN_STATES:
+            raise ValueError('Not a boolean: %s' % value)
+        return BOOLEAN_STATES[value.lower()]
+
+
 class Config:
     def __init__(self, config_read_writer: ConfigReadWriter) -> None:
         self.config_read_writer = config_read_writer
@@ -60,45 +111,6 @@ class Config:
             return value
         return converter(value)
 
-    def get_int(self, section: str, key: str,
-                default: int = DEFAULT_SENTINEL) -> int:
-        v = self._get(section, key, int, default)
-
-        return v
-
-    def get_str(self, section: str, key: str,
-                default: str = DEFAULT_SENTINEL) -> str:
-        v = self._get(section, key, str, default)
-        return v
-
-    def get_bool(self, section: str, key: str,
-                 default: bool = DEFAULT_SENTINEL) -> bool:
-        v = self._get(section, key, self._convert_to_boolean, default)
-        return v
-
-    @staticmethod
-    def _convert_to_boolean(value):
-        BOOLEAN_STATES = {
-            '1': True, 'yes': True, 'true': True, 'on': True,
-            '0': False, 'no': False, 'false': False, 'off': False,
-        }
-        if value is True or value is False:
-            return value
-        if value.lower() not in BOOLEAN_STATES:
-            raise ValueError('Not a boolean: %s' % value)
-        return BOOLEAN_STATES[value.lower()]
-
     def _write(self):
         with self.config_read_writer.writer() as f:
             self.conf.write(f)
-
-    def set(self, section: str, key: str, value: Union[str, bool, int]) -> None:
-        value = str(value)
-        if section not in self.conf:
-            self.conf.add_section(section)
-        self.conf[section][key] = value
-        self._write()
-
-    def unset(self, section: str, key: str) -> None:
-        del self.conf[section][key]
-        self._write()

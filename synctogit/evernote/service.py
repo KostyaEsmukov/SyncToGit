@@ -1,11 +1,11 @@
 import base64
 import logging
-import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from synctogit import templates
-from synctogit.config import Config
+from synctogit.config import BoolConfigItem, Config, IntConfigItem, StrConfigItem
+from synctogit.git_config import git_push, git_remote_name
 from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
 
@@ -23,10 +23,22 @@ __all__ = (
     "EvernoteSync",
 )
 
-# python -c "import base64; print base64.b64encode('123')"
-_CONSUMER_KEY = 'kostya0shift-0653'
-_CONSUMER_SECRET = base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
-_CALLBACK_URL = 'https://localhost:63543/non-existing-url'  # non existing link
+evernote_consumer_key = StrConfigItem(
+    "evernote", "consumer_key", 'kostya0shift-0653'
+)
+evernote_consumer_secret = StrConfigItem(
+    # python -c "import base64; print(base64.b64encode('123'.encode()).decode())"
+    "evernote", "consumer_secret",
+    base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
+)
+evernote_callback_url = StrConfigItem(
+    # A non-existing link.
+    "evernote", "callback_url", 'https://localhost:63543/non-existing-url'
+)
+evernote_sandbox = BoolConfigItem('evernote', 'sandbox', False)
+evernote_token = StrConfigItem('evernote', 'token')
+
+notes_download_threads = IntConfigItem("internals", "notes_download_threads", 30)
 
 
 class EvernoteAuthSession(BaseAuthSession):
@@ -36,7 +48,7 @@ class EvernoteAuthSession(BaseAuthSession):
     @classmethod
     def load_from_config(cls, config: Config) -> 'EvernoteAuthSession':
         try:
-            encoded_token = config.get_str('evernote', 'token')
+            encoded_token = evernote_token.get(config)
         except ValueError:
             raise InvalidAuthSession('Evernote token is missing in config')
 
@@ -49,28 +61,20 @@ class EvernoteAuthSession(BaseAuthSession):
 
     def save_to_config(self, config: Config) -> None:
         encoded_token = base64.b64encode(self.token.encode()).decode()
-        config.set('evernote', 'token', encoded_token)
+        evernote_token.set(config, encoded_token)
 
     def remove_session_from_config(self, config: Config) -> None:
-        config.unset('evernote', 'token')
+        evernote_token.unset(config)
 
 
 class EvernoteAuth(BaseAuth[EvernoteAuthSession]):
     @classmethod
     def interactive_auth(cls, config: Config) -> EvernoteAuthSession:
         token = InteractiveAuth(
-            consumer_key=config.get_str(
-                "evernote", "consumer_key", _CONSUMER_KEY
-            ),
-            consumer_secret=config.get_str(
-                "evernote", "consumer_secret", _CONSUMER_SECRET
-            ),
-            callback_url=config.get_str(
-                "evernote", "callback_url", _CALLBACK_URL
-            ),
-            sandbox=config.get_bool(
-                'evernote', 'sandbox', False
-            ),
+            consumer_key=evernote_consumer_key.get(config),
+            consumer_secret=evernote_consumer_secret.get(config),
+            callback_url=evernote_callback_url.get(config),
+            sandbox=evernote_sandbox.get(config),
         ).run()
         return EvernoteAuthSession(token)
 
@@ -79,17 +83,12 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
 
     def run_sync(self) -> None:
         evernote = Evernote(
-            sandbox=self.config.get_bool('evernote', 'sandbox', False),
+            sandbox=evernote_sandbox.get(self.config),
         )
         evernote.auth(self.auth_session.token)
         self._sync_loop(evernote)
 
     def _sync_loop(self, evernote):
-        git_conf = {
-            'push': self.config.get_bool('git', 'push', False),
-            'remote_name': self.config.get_str('git', 'remote_name', 'origin'),
-        }
-
         any_fail = False
         is_converged = False
         while not is_converged:
@@ -98,9 +97,11 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
 
             logger.info("Starting sync iteration...")
 
-            with GitTransaction(self.git,
-                                remote_name=git_conf["remote_name"],
-                                push=git_conf["push"]) as t:
+            with GitTransaction(
+                    self.git,
+                    remote_name=git_remote_name.get(self.config),
+                    push=git_push.get(self.config),
+            ) as t:
                 wc = EvernoteWorkingCopy(t)
 
                 logger.info("Retrieving actual metadata...")
@@ -122,7 +123,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 is_converged = is_converged and update_context.is_converged
 
                 logger.info("Updating index...")
-                self._update_index(evernote_metadata)
+                self._update_index(evernote_metadata, t)
 
                 logger.info("Sync iteration is done!")
                 logger.info("Closing the git transaction...")
@@ -168,11 +169,9 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
         ]
         update_context = _UpdateContext(total=len(notes_to_update))
 
-        max_workers = self.config.get_int(
-            "internals", "notes_download_threads", 30
-        )
-
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        with ThreadPoolExecutor(
+            max_workers=notes_download_threads.get(self.config),
+        ) as pool:
             for guid, note_metadata in notes_to_update:
                 pool.submit(self._update_note, guid, note_metadata,
                             update_context, wc, evernote)
@@ -224,7 +223,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
             )
             update_context.set_not_converged()
 
-    def _update_index(self, evernote_metadata) -> None:
+    def _update_index(self, evernote_metadata, git_transaction) -> None:
         note_links = [
             index_generator.IndexLink(
                 filesystem_path_parts=note.dir + (note.file,),
@@ -235,7 +234,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
         index_generator.generate(
             note_links,
             templates.file_writer(
-                os.path.join(self.config.get_str('git', 'repo_dir'), "index.html")
+                str(git_transaction.repo_dir / "index.html")
             ),
         )
 
