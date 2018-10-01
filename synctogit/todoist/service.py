@@ -32,7 +32,7 @@ class TodoistAuthSession(BaseAuthSession):
     def load_from_config(cls, config: Config) -> 'TodoistAuthSession':
         try:
             token = todoist_token.get(config)
-        except ValueError:
+        except (KeyError, ValueError):
             raise InvalidAuthSession('Todoist token is missing in config')
 
         return cls(token)

@@ -69,9 +69,9 @@ sandbox = true
     evernote_token = config.StrConfigItem('evernote', 'token')
 
     assert evernote_sandbox.get(conf) is True
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         git_comment.get(conf)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         evernote_token.get(conf)
 
 
@@ -140,7 +140,7 @@ token = new-token
 """
 
     evernote_token.unset(conf)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         evernote_token.get(conf)
     assert read_writer.text() == """
 [git]
@@ -180,13 +180,13 @@ a = s
     read_writer = MemoryConfigReadWriter(conf)
     conf = config.Config(read_writer)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         config.StrConfigItem('no', 'b').get(conf)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         config.StrConfigItem('git', 'b').get(conf)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         config.IntConfigItem('git', 'b').get(conf)
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         config.BoolConfigItem('git', 'b').get(conf)
 
     assert config.StrConfigItem('no', 'b', 'yeah').get(conf) == 'yeah'
@@ -194,3 +194,26 @@ a = s
     assert config.IntConfigItem('git', 'b', 42).get(conf) == 42
     assert config.BoolConfigItem('git', 'b', True).get(conf) is True
     assert config.StrConfigItem('git', 'b', None).get(conf) is None
+
+
+def test_isset():
+    conf = """
+[aa]
+num = 5
+s = hi
+"""
+    read_writer = MemoryConfigReadWriter(conf)
+    conf = config.Config(read_writer)
+
+    non_existing = config.IntConfigItem('bb', 'cc')
+    assert not non_existing.isset(conf)
+
+    non_existing.set(conf, 6)
+    assert non_existing.isset(conf)
+
+    num = config.IntConfigItem('aa', 'num')
+    assert num.isset(conf)
+
+    bad_num = config.IntConfigItem('aa', 's', 5)
+    with pytest.raises(ValueError):
+        bad_num.isset(conf)

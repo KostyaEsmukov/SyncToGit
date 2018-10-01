@@ -49,7 +49,7 @@ class EvernoteAuthSession(BaseAuthSession):
     def load_from_config(cls, config: Config) -> 'EvernoteAuthSession':
         try:
             encoded_token = evernote_token.get(config)
-        except ValueError:
+        except (KeyError, ValueError):
             raise InvalidAuthSession('Evernote token is missing in config')
 
         try:

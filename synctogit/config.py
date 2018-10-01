@@ -44,6 +44,14 @@ class ConfigItem(abc.ABC, Generic[T]):
     def get(self, config: 'Config') -> T:
         return config._get(self.section, self.key, self._conv, self.default)
 
+    def isset(self, config: 'Config') -> bool:
+        try:
+            config._get(self.section, self.key, self._conv)
+        except KeyError:
+            return False
+        else:
+            return True
+
     def set(self, config: 'Config', value: T) -> None:
         value = str(value)
         if self.section not in config.conf:
@@ -76,8 +84,6 @@ class BoolConfigItem(ConfigItem[bool]):
             '1': True, 'yes': True, 'true': True, 'on': True,
             '0': False, 'no': False, 'false': False, 'off': False,
         }
-        if value is True or value is False:
-            return value
         if value.lower() not in BOOLEAN_STATES:
             raise ValueError('Not a boolean: %s' % value)
         return BOOLEAN_STATES[value.lower()]
@@ -94,12 +100,12 @@ class Config:
 
         if section not in self.conf:
             if default == DEFAULT_SENTINEL:
-                raise ValueError('Section %s is missing' % section)
+                raise KeyError('Section %s is missing' % section)
             else:
                 value = default
         elif key not in self.conf[section]:
             if default == DEFAULT_SENTINEL:
-                raise ValueError(
+                raise KeyError(
                     'Key %s from section %s is missing' % (key, section)
                 )
             else:
@@ -107,7 +113,7 @@ class Config:
         else:
             value = self.conf[section][key].value
 
-        if value is None:
+        if value is default:
             return value
         return converter(value)
 
