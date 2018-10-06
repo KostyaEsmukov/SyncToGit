@@ -1,26 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-
-from setuptools import setup
+from setuptools import find_packages, setup
 
 import synctogit
 
 version = synctogit.__version__
-
-if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload --sign')
-    print("You probably want to also tag the version now:")
-    print("  git tag -s -a v%s" % version)
-    print("  git push --tags")
-    sys.exit()
-
-
-def strip_comments(l):
-    return l.split('#', 1)[0].strip()
-
 
 readme = open('README.rst').read()
 changelog = open('CHANGELOG.rst').read()
@@ -33,9 +18,7 @@ setup(
     author='Kostya Esmukov',
     author_email='kostya@esmukov.ru',
     url='https://github.com/KostyaEsmukov/SyncToGit',
-    packages=[
-        'synctogit',
-    ],
+    packages=find_packages(exclude=["*test*"]),
     include_package_data=True,
     entry_points={
         'console_scripts': [

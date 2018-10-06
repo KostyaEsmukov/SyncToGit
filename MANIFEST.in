@@ -3,5 +3,4 @@ include LICENSE.txt
 include README.rst
 include requirements
 include synctogit/NoShell.vbs
-recursive-include synctogit/js *.min.js
-recursive-include synctogit/templates *.j2
+graft synctogit/templates
