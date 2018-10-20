@@ -7,6 +7,7 @@ from synctogit.git_config import git_push, git_remote_name
 from synctogit.git_factory import gitignore_synctogit_files_prefix
 from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
+from synctogit.timezone import get_timezone
 
 from .projects_renderer import ProjectsRenderer
 from .todoist import Todoist
@@ -73,7 +74,8 @@ class TodoistSync(BaseSync[TodoistAuthSession]):
 
             pr = ProjectsRenderer(
                 projects=todoist.get_projects(),
-                todo_items=todoist.get_todo_items()
+                todo_items=todoist.get_todo_items(),
+                timezone=get_timezone(self.config),
             )
             wc = TodoistWorkingCopy(t, projects_renderer=pr)
 

@@ -1,6 +1,8 @@
 from functools import lru_cache
 from typing import Dict, NamedTuple, Sequence
 
+import pytz
+
 from synctogit.filename_sanitizer import normalize_filename
 from synctogit.templates import template_env
 
@@ -23,7 +25,8 @@ class ProjectsRenderer:
         self,
         *,
         projects: Sequence[models.TodoistProject],
-        todo_items: Dict[models.TodoistProjectId, Sequence[models.TodoistTodoItem]]
+        todo_items: Dict[models.TodoistProjectId, Sequence[models.TodoistTodoItem]],
+        timezone: pytz.BaseTzInfo
     ) -> None:
         self.projects = tuple(projects)
         self.flat_projects = tuple(_flatten_projects(projects))
@@ -32,6 +35,7 @@ class ProjectsRenderer:
             for project in self.flat_projects
         }
         self.todo_items = dict(todo_items)
+        self.timezone = timezone
 
     @lru_cache(maxsize=100)
     def render_project(self, project_id) -> bytes:
@@ -40,6 +44,7 @@ class ProjectsRenderer:
         html_text = _project_template.render(dict(
             project=project,
             todo_items=self.todo_items,
+            timezone=self.timezone,
         ))
         return html_text.encode("utf8")
 
@@ -61,6 +66,7 @@ class ProjectsRenderer:
             flat_projects=self.flat_projects,
             project_links=project_links,
             todo_items=self.todo_items,
+            timezone=self.timezone,
         ))
         return html_text.encode("utf8")
 

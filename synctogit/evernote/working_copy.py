@@ -6,6 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Mapping, NamedTuple, Sequence
 
+import pytz
+
 from synctogit.evernote.models import Note, NoteGuid, NoteMetadata
 from synctogit.git_transaction import GitTransaction, rmfile_silent
 
@@ -27,11 +29,16 @@ class EvernoteWorkingCopy:
     notes_dir_name = "Notes"
     resources_dir_name = "Resources"
 
-    def __init__(self, git_transaction: GitTransaction) -> None:
+    def __init__(
+        self,
+        git_transaction: GitTransaction,
+        timezone: pytz.BaseTzInfo
+    ) -> None:
         self.git_transaction = git_transaction
         self.repo_dir = git_transaction.repo_dir
         self.notes_dir = self.repo_dir / self.notes_dir_name
         self.resources_dir = self.repo_dir / self.resources_dir_name
+        self.timezone = timezone
 
     @classmethod
     def get_relative_resources_url(cls,
@@ -83,7 +90,7 @@ class EvernoteWorkingCopy:
         resources_dir = self.resources_dir / note.guid
         os.makedirs(str(note_dir), exist_ok=True)
 
-        html_body = WorkingCopyNoteParser.note_to_html(note)
+        html_body = WorkingCopyNoteParser.note_to_html(note, self.timezone)
         note_path = note_dir / metadata.file
         note_path.write_bytes(html_body)
 

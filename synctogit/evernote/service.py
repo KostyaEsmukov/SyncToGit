@@ -8,6 +8,7 @@ from synctogit.config import BoolConfigItem, Config, IntConfigItem, StrConfigIte
 from synctogit.git_config import git_push, git_remote_name
 from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
+from synctogit.timezone import get_timezone
 
 from . import index_generator
 from .auth import InteractiveAuth
@@ -102,7 +103,10 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                     remote_name=git_remote_name.get(self.config),
                     push=git_push.get(self.config),
             ) as t:
-                wc = EvernoteWorkingCopy(t)
+                wc = EvernoteWorkingCopy(
+                    git_transaction=t,
+                    timezone=get_timezone(self.config),
+                )
 
                 logger.info("Retrieving actual metadata...")
                 working_copy_metadata, evernote_metadata = (

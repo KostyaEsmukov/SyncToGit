@@ -4,6 +4,7 @@ from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
+import pytz
 
 from synctogit.evernote.models import Note, NoteMetadata
 from synctogit.evernote.working_copy_note_parser import (
@@ -43,12 +44,18 @@ def note_header_vars():
 
 
 def test_note_to_html_valid():
+    timezone_input = pytz.timezone('Europe/Moscow')
+    timezone_output = pytz.timezone('Asia/Novosibirsk')
     note = Note(
         title='раз два',
         update_sequence_num=12345,
         guid="eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7",
-        updated=datetime.datetime(2018, 9, 27, 1, 14, 3),
-        created=datetime.datetime(2018, 9, 27, 1, 14, 3),
+        updated=timezone_input.localize(
+            datetime.datetime(2018, 9, 27, 1, 14, 3)
+        ),
+        created=timezone_input.localize(
+            datetime.datetime(2018, 9, 27, 1, 14, 3)
+        ),
         html="<html><head></head><body>три четыре</body></html>".encode(),
         resources={},
     )
@@ -60,13 +67,13 @@ def test_note_to_html_valid():
         "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
         "<!-- updateSequenceNum: 12345 -->\n"
         "<!-- title: раз два -->\n"
-        "<!-- created: 2018-09-27 01:14:03 -->\n"
-        "<!-- updated: 2018-09-27 01:14:03 -->\n"
+        "<!-- created: 2018-09-27 05:14:03+07:00 -->\n"
+        "<!-- updated: 2018-09-27 05:14:03+07:00 -->\n"
         "<!----------------->\n"
         "<html><head></head><body>три четыре</body></html>"
     ).encode()
 
-    html = WorkingCopyNoteParser.note_to_html(note)
+    html = WorkingCopyNoteParser.note_to_html(note, timezone_output)
     assert html == expected_html
 
 

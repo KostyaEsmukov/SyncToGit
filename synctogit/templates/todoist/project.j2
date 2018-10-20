@@ -36,7 +36,12 @@ div > ul.todo-items {
 .todo-items li {
     font-size: 16px;
     border-bottom: 1px solid #f0f0f0;
-    line-height: 30px;
+    line-height: 20px;
+}
+.todo-item-sub {
+    color: #aaa;
+    font-size: 12px;
+    margin-right: 20px;
 }
 div > ul.todo-items > li:last-child {
     border-bottom: none;
@@ -79,8 +84,24 @@ div > ul.todo-items > li:last-child {
 <ul class="todo-items">
 {% for todo_item in todo_items %}
 <li class="item-p-{{ todo_item.priority.value }}">
-    <div class="ist-checkbox"></div>
-    {{ todo_item.content | urlize(nofollow=True, target="_blank") }}
+    <table><tr>
+        <td style="vertical-align: top;"><div class="ist-checkbox"></div></td>
+
+        <td>
+            <span>{{ todo_item.content | urlize(nofollow=True, target="_blank") }}</span>
+            <br>
+            <span class="todo-item-sub">
+                created: {{ todo_item.added_datetime.astimezone(timezone) }}
+            </span>
+            <span class="todo-item-sub">
+                {% set due_time = (
+                    todo_item.due_datetime.astimezone(timezone) if todo_item.due_datetime
+                    else (todo_item.due_date or '')
+                ) %}
+                {{ 'due: ' if due_time }}{{ due_time }}
+            </span>
+        </td>
+    </tr></table>
 </li>
 {% if todo_item.subitems %}
 {{ render_todo_items_list(todo_item.subitems) }}

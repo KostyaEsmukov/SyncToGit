@@ -36,6 +36,7 @@ setup(
         "python-dateutil==2.7.3",
         "pytz",
         "regex==2018.08.29",
+        "tzlocal==1.5.1",
     ],
     extras_require={
         'dev': [
