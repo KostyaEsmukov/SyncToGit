@@ -7,11 +7,9 @@ import pytest
 import pytz
 
 from synctogit.evernote.models import Note, NoteMetadata
-from synctogit.evernote.working_copy_note_parser import (
-    CorruptedNoteError,
-    WorkingCopyNoteParser,
-)
+from synctogit.evernote.stored_note import EvernoteStoredNote
 from synctogit.filename_sanitizer import normalize_filename
+from synctogit.service.notes.stored_note import CorruptedNoteError
 
 
 @pytest.fixture
@@ -73,7 +71,7 @@ def test_note_to_html_valid():
         "<html><head></head><body>три четыре</body></html>"
     ).encode()
 
-    html = WorkingCopyNoteParser.note_to_html(note, timezone_output)
+    html = EvernoteStoredNote.note_to_html(note, timezone_output)
     assert html == expected_html
 
 
@@ -84,7 +82,7 @@ def test_get_stored_note_metadata_valid(temp_dir, note_html, note_header_vars):
     os.makedirs(str(note.parents[0]))
     note.write_bytes(note_html)
 
-    guid, metadata = WorkingCopyNoteParser.get_stored_note_metadata(notes_dir, note)
+    guid, metadata = EvernoteStoredNote.get_stored_note_metadata(notes_dir, note)
     assert guid == note_header_vars['guid']
     assert metadata == NoteMetadata(
         dir=("Eleven _2728", "Haircut"),
@@ -114,7 +112,7 @@ def test_get_stored_note_metadata_dir_parts(
     with ExitStack() as stack:
         if not is_valid:
             stack.enter_context(pytest.raises(CorruptedNoteError))
-        WorkingCopyNoteParser.get_stored_note_metadata(notes_dir, note)
+        EvernoteStoredNote.get_stored_note_metadata(notes_dir, note)
 
 
 @pytest.mark.parametrize(
@@ -172,14 +170,14 @@ def test_get_stored_note_metadata_invalid_vars(
     note.write_bytes(note_html)
 
     with pytest.raises(CorruptedNoteError):
-        WorkingCopyNoteParser.get_stored_note_metadata(notes_dir, note)
+        EvernoteStoredNote.get_stored_note_metadata(notes_dir, note)
 
 
 def test_parse_note_header_valid(temp_dir, note_html, note_header_vars):
     note = Path(temp_dir) / "test.html"
     note.write_bytes(note_html)
 
-    metadata = WorkingCopyNoteParser._parse_note_header(note)
+    metadata = EvernoteStoredNote._parse_note_header(note)
     assert metadata == note_header_vars
 
 
@@ -230,4 +228,4 @@ def test_parse_note_header_invalid(temp_dir, note_html):
     note.write_bytes(note_html)
 
     with pytest.raises(CorruptedNoteError):
-        WorkingCopyNoteParser._parse_note_header(note)
+        EvernoteStoredNote._parse_note_header(note)

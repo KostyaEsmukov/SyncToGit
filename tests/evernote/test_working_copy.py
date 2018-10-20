@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 
 from synctogit.evernote.models import NoteMetadata
-from synctogit.evernote.working_copy import Changeset, EvernoteWorkingCopy
+from synctogit.evernote.working_copy import EvernoteChangeset, EvernoteWorkingCopy
 
 
 @pytest.mark.parametrize(
@@ -53,14 +53,14 @@ def test_calculate_changes_removals(force_update, present_in):
         evernote=new,
     )[present_in][guid] = note
 
-    expected_changeset = Changeset(
+    expected_changeset = EvernoteChangeset(
         new=new,
         update={},
         delete=delete,
     )
 
     got_changeset = EvernoteWorkingCopy.calculate_changes(
-        evernote_metadata=evernote_metadata,
+        service_metadata=evernote_metadata,
         working_copy_metadata=working_copy_metadata,
         force_update=force_update,
     )
@@ -119,14 +119,14 @@ def test_calculate_changes_detects_moves(force_update, change):
         new = {guid: evernote_metadata[guid]}
         delete = {guid_git: working_copy_metadata[guid_git]}
 
-    expected_changeset = Changeset(
+    expected_changeset = EvernoteChangeset(
         new=new,
         update=update,
         delete=delete,
     )
 
     got_changeset = EvernoteWorkingCopy.calculate_changes(
-        evernote_metadata=evernote_metadata,
+        service_metadata=evernote_metadata,
         working_copy_metadata=working_copy_metadata,
         force_update=force_update,
     )

@@ -14,7 +14,7 @@ from . import index_generator
 from .auth import InteractiveAuth
 from .evernote import Evernote
 from .models import NoteGuid, NoteMetadata
-from .working_copy import Changeset, EvernoteWorkingCopy
+from .working_copy import EvernoteChangeset, EvernoteWorkingCopy
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 logger.info("Calculating changes...")
                 changeset = wc.calculate_changes(
                     working_copy_metadata=working_copy_metadata,
-                    evernote_metadata=evernote_metadata,
+                    service_metadata=evernote_metadata,
                     force_update=self.force_full_resync,
                 )
 
@@ -162,7 +162,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
 
     def _update_notes(
         self,
-        changeset: Changeset,
+        changeset: EvernoteChangeset,
         wc: EvernoteWorkingCopy,
         evernote: Evernote,
     ) -> '_UpdateContext':

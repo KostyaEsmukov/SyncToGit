@@ -3,7 +3,7 @@ from typing import Generic, NamedTuple, Type, TypeVar
 
 import git
 
-from .config import Config
+from synctogit.config import Config
 
 
 class InvalidAuthSession(ValueError):
