@@ -184,6 +184,39 @@ def test_get_projects(todoist):
     assert todoist.get_projects() == expected_projects
 
 
+@pytest.mark.parametrize(
+    'project_extra', [
+        dict(is_archived=1),
+        dict(is_deleted=1),
+    ]
+)
+def test_hidden_projects(todoist, project_extra):
+    todoist.api.state["projects"] = [
+        Project(
+            {
+                "collapsed": 0,
+                "color": 35,
+                "has_more_notes": False,
+                "id": 9182196813,
+                "indent": 1,
+                "is_archived": 0,
+                "is_deleted": 0,
+                "is_favorite": 1,
+                "item_order": 4,
+                "name": "DELETED PROJECT",
+                "parent_id": None,
+                "shared": False,
+                **project_extra,
+            },
+            None,
+        ),
+    ]
+    expected_projects = [
+    ]
+
+    assert todoist.get_projects() == expected_projects
+
+
 def test_get_todo_items(todoist, todoist_user_timezone):
     todoist.api.state["items"] = [
         Item(
@@ -370,6 +403,54 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 ],
             ),
         ]
+    }
+
+    assert todoist.get_todo_items() == expected_items
+
+
+@pytest.mark.parametrize(
+    'item_extra', [
+        dict(is_archived=1),
+        dict(is_deleted=1),
+        dict(checked=1),
+    ]
+)
+def test_hidden_todo_items(todoist, item_extra):
+    todoist.api.state["items"] = [
+        Item(
+            {
+                "all_day": True,
+                "assigned_by_uid": 999,
+                "checked": 0,
+                "collapsed": 0,
+                "content": "All day Привет",
+                "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+                "date_completed": None,
+                "date_lang": "en",
+                "date_string": "28 Sep",
+                "day_order": 6,
+                "due_date_utc": None,
+                "has_more_notes": False,
+                "id": 1234,
+                "in_history": 0,
+                "indent": 1,
+                "is_archived": 0,
+                "is_deleted": 0,
+                "item_order": 820,
+                "labels": [],
+                "parent_id": None,
+                "priority": 1,
+                "project_id": 999,
+                "responsible_uid": None,
+                "sync_id": None,
+                "user_id": 999,
+                **item_extra,
+            },
+            None,
+        ),
+    ]
+
+    expected_items = {
     }
 
     assert todoist.get_todo_items() == expected_items

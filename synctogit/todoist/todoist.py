@@ -47,6 +47,10 @@ class Todoist:
         for raw_project in ordered_raw_projects:
             project_id = raw_project.data['id']
             p = raw_project.data
+            if p.get('is_deleted') or p.get('is_archived'):
+                logger.debug('Skipping project as deleted/archived: %s', p)
+                continue
+
             project = models.TodoistProject(
                 id=int(p['id']),
                 name=str(p['name']),
@@ -85,6 +89,15 @@ class Todoist:
 
         for raw_item in ordered_items:
             i = raw_item.data
+
+            # NOTE: The original Todoist doesn't hide the checked items
+            # when they're nested under a non-checked todo item, but
+            # the code below hides them. This is my personal preference
+            # and perhaps it should be made configurable.
+            if i.get('is_deleted') or i.get('is_archived') or i.get('checked'):
+                logger.debug('Skipping todo item as deleted/archived/checked: %s', i)
+                continue
+
             project_id = i['project_id']
 
             date_added = self._parse_datetime(i['date_added'])
