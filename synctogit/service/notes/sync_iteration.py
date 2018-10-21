@@ -178,6 +178,8 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
                     note_key,
                     exc_info=True,
                 )
+                update_context.add_failed(note_key, note_metadata)
+                return
         else:
             logger.info(
                 "Skipping note (%d/%d) because it has changed "
