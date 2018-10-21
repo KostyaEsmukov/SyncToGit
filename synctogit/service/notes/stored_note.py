@@ -61,7 +61,7 @@ class StoredNote(abc.ABC):
             # Read the actual vars
             line = f.readline()
             while line != end_mark and line != b'':
-                g = re.search(b'^<!-- ([a-zA-Z]+): (.+) -->$', line)
+                g = re.search(b'^<!-- ([a-zA-Z_]+): (.+) -->$', line)
                 if g is None:
                     raise CorruptedNoteError(
                         'Expected a metadata variable in the header, but '
