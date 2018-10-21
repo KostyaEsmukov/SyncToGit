@@ -4,7 +4,6 @@ import logging
 from collections import OrderedDict
 from functools import wraps
 from socket import error as socketerror
-from time import sleep
 from typing import Mapping, Optional
 
 import evernote.edam as Edam
@@ -15,15 +14,20 @@ from cached_property import cached_property
 from evernote.api.client import EvernoteClient
 
 from synctogit.filename_sanitizer import normalize_filename
+from synctogit.service import (
+    ServiceAPIError,
+    ServiceRateLimitError,
+    ServiceTokenExpiredError,
+    retry_ratelimited,
+)
 
-from . import exc, models, note_parser
+from . import models, note_parser
 
 # import evernote.edam.userstore.constants as UserStoreConstants
 # import evernote.edam.type.ttypes as Types
 
 logger = logging.getLogger(__name__)
 
-_RETRIES = 10
 _MAXLEN_TITLE_FILENAME = 30
 
 
@@ -38,40 +42,22 @@ def translate_exceptions(f):
         try:
             return f(*args, **kwargs)
         except (socketerror, EOFError) as e:
-            raise exc.EvernoteIOError(e)
+            raise ServiceAPIError(e)
         except Errors.EDAMSystemException as e:
             if e.errorCode == Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
                 s = float(e.rateLimitDuration + 1)
                 # XXX sleep?
-                raise exc.EvernoteApiRateLimitError(e, rate_limit_duration_seconds=s)
+                raise ServiceRateLimitError(e, rate_limit_duration_seconds=s)
             else:
-                raise exc.EvernoteApiError(e)
+                raise ServiceAPIError(e)
         except Errors.EDAMUserException as e:
             if (
                 e.errorCode == Errors.EDAMErrorCode.AUTH_EXPIRED
                 or e.errorCode == Errors.EDAMErrorCode.BAD_DATA_FORMAT
             ):
-                raise exc.EvernoteTokenExpiredError(e)
+                raise ServiceTokenExpiredError(e)
             else:
-                raise exc.EvernoteApiError(e)
-
-    return c
-
-
-def retry_ratelimited(f):
-    # XXX make it configurable
-    @wraps(f)
-    def c(*args, **kwargs):
-        for i in range(_RETRIES, 0, -1):
-            try:
-                return f(*args, **kwargs)
-            except exc.EvernoteApiRateLimitError as e:
-                if i <= 1:
-                    raise
-                s = e.rate_limit_duration_seconds
-                logger.warning("Rate limit reached. Waiting %d seconds..." % s)
-                sleep(s)
-        raise RuntimeError("Should not have been reached")
+                raise ServiceAPIError(e)
 
     return c
 

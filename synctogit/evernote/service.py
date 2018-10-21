@@ -99,9 +99,9 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
             logger.info("Starting sync iteration...")
 
             with GitTransaction(
-                    self.git,
-                    remote_name=git_remote_name.get(self.config),
-                    push=git_push.get(self.config),
+                self.git,
+                remote_name=git_remote_name.get(self.config),
+                push=git_push.get(self.config),
             ) as t:
                 wc = EvernoteWorkingCopy(
                     git_transaction=t,

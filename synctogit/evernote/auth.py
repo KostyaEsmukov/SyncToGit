@@ -6,7 +6,6 @@ from prompt_toolkit.shortcuts import button_dialog, input_dialog, yes_no_dialog
 
 from synctogit.service import ServiceAuthError, UserCancelledError
 
-from . import exc
 from .evernote import translate_exceptions
 
 
@@ -53,7 +52,7 @@ class InteractiveAuth:
         except ServiceAuthError:
             raise
         except Exception as e:
-            raise exc.EvernoteAuthError(e)
+            raise ServiceAuthError(e)
         else:
             # XXX validate
             return token

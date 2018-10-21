@@ -59,16 +59,3 @@ ServiceImplementation = NamedTuple(
         ('sync', Type[BaseSync]),
     ]
 )
-
-
-class ServiceAuthError(Exception):
-    """Error during authentication."""
-    pass
-
-
-class UserCancelledError(ServiceAuthError):
-    pass
-
-
-class ServiceTokenExpiredError(Exception):
-    pass
