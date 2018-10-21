@@ -15,8 +15,8 @@ def note_html():
         "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
         "<!-- updateSequenceNum: 12345 -->\n"
         "<!-- title: раз два три название -->\n"
-        "<!-- created: 2018-07-11 18:10:40 -->\n"
-        "<!-- updated: 2018-09-23 22:33:10 -->\n"
+        "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+        "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
         "<!----------------->\n"
         "<html>\n"
         "<head>\n"
@@ -26,11 +26,11 @@ def note_html():
 @pytest.fixture
 def note_header_vars():
     return {
-        "created": "2018-07-11 18:10:40",
         "guid": "eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7",
-        "title": "раз два три название",
         "updateSequenceNum": "12345",
-        "updated": "2018-09-23 22:33:10",
+        "title": "раз два три название",
+        "created": "2018-07-11 18:10:40+03:00",
+        "updated": "2018-09-23 22:33:10+03:00",
     }
 
 
@@ -53,8 +53,8 @@ def test_parse_note_header_valid(temp_dir, note_html, note_header_vars):
             "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
             "<!-- updateSequenceNum: 12345 -->\n"
             "<!-- title: раз два три название -->\n"
-            "<!-- created: 2018-07-11 18:10:40 -->\n"
-            "<!-- updated: 2018-09-23 22:33:10 -->\n"
+            "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+            "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
             "<!----------------->\n"
             "<html>\n"
             "<head>\n"
@@ -68,8 +68,8 @@ def test_parse_note_header_valid(temp_dir, note_html, note_header_vars):
             "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
             "<!-- updateSequenceNum: 12345 -->\n"
             "<!-- title: раз два три название -->\n"
-            "<!-- created: 2018-07-11 18:10:40 -->\n"
-            "<!-- updated: 2018-09-23 22:33:10 -->\n"
+            "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+            "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
         ).encode(),
         (
             # Non-var between the marks
@@ -125,7 +125,7 @@ def test_parse_note_header_invalid(temp_dir, note_html):
         ),
     ]
 )
-def test_peculiar_valid_cases(temp_dir, note_html, expected):
+def test_parse_note_header_peculiar_valid_cases(temp_dir, note_html, expected):
     note = Path(temp_dir) / "test.html"
     note.write_bytes(note_html)
 

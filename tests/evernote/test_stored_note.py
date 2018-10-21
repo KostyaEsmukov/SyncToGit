@@ -22,8 +22,8 @@ def note_html():
         "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
         "<!-- updateSequenceNum: 12345 -->\n"
         "<!-- title: раз два три название -->\n"
-        "<!-- created: 2018-07-11 18:10:40 -->\n"
-        "<!-- updated: 2018-09-23 22:33:10 -->\n"
+        "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+        "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
         "<!----------------->\n"
         "<html>\n"
         "<head>\n"
@@ -33,11 +33,11 @@ def note_html():
 @pytest.fixture
 def note_header_vars():
     return {
-        "created": "2018-07-11 18:10:40",
         "guid": "eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7",
-        "title": "раз два три название",
         "updateSequenceNum": "12345",
-        "updated": "2018-09-23 22:33:10",
+        "title": "раз два три название",
+        "created": "2018-07-11 18:10:40+03:00",
+        "updated": "2018-09-23 22:33:10+03:00",
     }
 
 
@@ -126,8 +126,8 @@ def test_get_stored_note_metadata_dir_parts(
             "<!--+++++++++++++-->\n"
             "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
             "<!-- updateSequenceNum: 12345 -->\n"
-            "<!-- created: 2018-07-11 18:10:40 -->\n"
-            "<!-- updated: 2018-09-23 22:33:10 -->\n"
+            "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+            "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
             "<!----------------->\n"
             "<html>\n"
         ).encode(),
@@ -139,8 +139,8 @@ def test_get_stored_note_metadata_dir_parts(
             "<!--+++++++++++++-->\n"
             "<!-- title: раз два три название -->\n"
             "<!-- updateSequenceNum: 12345 -->\n"
-            "<!-- created: 2018-07-11 18:10:40 -->\n"
-            "<!-- updated: 2018-09-23 22:33:10 -->\n"
+            "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+            "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
             "<!----------------->\n"
             "<html>\n"
         ).encode(),
@@ -153,8 +153,8 @@ def test_get_stored_note_metadata_dir_parts(
             "<!-- guid: eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7 -->\n"
             "<!-- title: раз два три название -->\n"
             "<!-- updateSequenceNum: 123haha -->\n"
-            "<!-- created: 2018-07-11 18:10:40 -->\n"
-            "<!-- updated: 2018-09-23 22:33:10 -->\n"
+            "<!-- created: 2018-07-11 18:10:40+03:00 -->\n"
+            "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
             "<!----------------->\n"
             "<html>\n"
             "<head>\n"
