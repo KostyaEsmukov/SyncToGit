@@ -12,6 +12,7 @@ import pytz
 from synctogit.git_transaction import GitTransaction, rmfile_silent
 
 from .stored_note import CorruptedNoteError
+from .types import TNoteKey, TNoteMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +32,6 @@ NoteResource = NamedTuple(
         ('body', bytes),
     ]
 )
-
-
-TNoteKey = TypeVar('TNoteKey', bound=str)
-TNoteMetadata = TypeVar('TNoteMetadata')
 
 
 # TODO: replace with a dataclass
