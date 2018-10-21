@@ -42,14 +42,39 @@ html, body {
     width: 100%;
     height: 100%;
 }
+.tree, .tree ul, .tree li {
+     position: relative;
+}
+.tree ul {
+    list-style: none;
+    padding-left: 20px;
+}
+.tree li::before, .tree li::after {
+    content: "";
+    position: absolute;
+    left: -12px;
+}
+.tree li::before {
+    border-top: 1px solid #000;
+    top: 9px;
+    width: 8px;
+    height: 0;
+}
+.tree li::after {
+    border-left: 1px solid #000;
+    height: 100%;
+    width: 0px;
+    top: 2px;
+}
+.tree ul > li:last-child::after {
+    height: 8px;
+}
 </style>
 </head>
 <body>
 
-<div class="left">
-<ul>
+<div class="left tree">
 
-</ul>
 </div>
 
 <div class="right">
@@ -76,7 +101,7 @@ SAMPLE_NOTES = [
             "P - _0A (Й)",
             "жизнь.04d42576-e960-4184-aade-9798b1fe403f.html",
         ),
-        name_parts=("Projects", "P - !Z (Щ)", "жизнь"),
+        name_parts=("Projects", "P - !Z (Щ) <>", "жизнь"),
     ),
     IndexLink(
         filesystem_path_parts=(
@@ -85,6 +110,14 @@ SAMPLE_NOTES = [
             "мои.b04b7672-f020-4203-ad1e-6c361c35c9ac.html",
         ),
         name_parts=("Learning", "Книги", "мои"),
+    ),
+    IndexLink(
+        filesystem_path_parts=(
+            "Learning",
+            "Книги",
+            "не мои.a5ccfd4c-1338-4b92-8339-16ff43390f10.html",
+        ),
+        name_parts=("Learning", "Книги", "не мои"),
     ),
 ]
 
@@ -127,18 +160,71 @@ html, body {
     width: 100%;
     height: 100%;
 }
+.tree, .tree ul, .tree li {
+     position: relative;
+}
+.tree ul {
+    list-style: none;
+    padding-left: 20px;
+}
+.tree li::before, .tree li::after {
+    content: "";
+    position: absolute;
+    left: -12px;
+}
+.tree li::before {
+    border-top: 1px solid #000;
+    top: 9px;
+    width: 8px;
+    height: 0;
+}
+.tree li::after {
+    border-left: 1px solid #000;
+    height: 100%;
+    width: 0px;
+    top: 2px;
+}
+.tree ul > li:last-child::after {
+    height: 8px;
+}
 </style>
 </head>
 <body>
 
-<div class="left">
+<div class="left tree">
+
 <ul>
+    <li><span title="Projects">Projects</span>
 
-<li><a href="./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BC%D0%BE%D0%B8.b04b7672-f020-4203-ad1e-6c361c35c9ac.html" onclick="return frmLocation('./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BC%D0%BE%D0%B8.b04b7672-f020-4203-ad1e-6c361c35c9ac.html');">Learning &rarr; Книги &rarr; мои</a></li>
+        <ul>
+            <li><span title="Projects &rarr; P - !Z (Щ) &lt;&gt;">P - !Z (Щ) <></span>
 
-<li><a href="./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.04d42576-e960-4184-aade-9798b1fe403f.html" onclick="return frmLocation('./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.04d42576-e960-4184-aade-9798b1fe403f.html');">Projects &rarr; P - !Z (Щ) &rarr; жизнь</a></li>
+                    <ul>
+                        <li><a title="Projects &rarr; P - !Z (Щ) &lt;&gt; &rarr; жизнь" href="./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.04d42576-e960-4184-aade-9798b1fe403f.html" onclick="return frmLocation('./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.04d42576-e960-4184-aade-9798b1fe403f.html');">жизнь</a></li>
+                    </ul>
 
+            </li>
+        </ul>
+
+    </li>
+
+    <li><span title="Learning">Learning</span>
+
+        <ul>
+            <li><span title="Learning &rarr; Книги">Книги</span>
+
+                    <ul>
+                        <li><a title="Learning &rarr; Книги &rarr; мои" href="./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BC%D0%BE%D0%B8.b04b7672-f020-4203-ad1e-6c361c35c9ac.html" onclick="return frmLocation('./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BC%D0%BE%D0%B8.b04b7672-f020-4203-ad1e-6c361c35c9ac.html');">мои</a></li>
+
+                        <li><a title="Learning &rarr; Книги &rarr; не мои" href="./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BD%D0%B5%20%D0%BC%D0%BE%D0%B8.a5ccfd4c-1338-4b92-8339-16ff43390f10.html" onclick="return frmLocation('./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BD%D0%B5%20%D0%BC%D0%BE%D0%B8.a5ccfd4c-1338-4b92-8339-16ff43390f10.html');">не мои</a></li>
+                    </ul>
+
+            </li>
+        </ul>
+
+    </li>
 </ul>
+
 </div>
 
 <div class="right">

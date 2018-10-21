@@ -1,6 +1,7 @@
 import binascii
 import datetime
 import logging
+from collections import OrderedDict
 from functools import wraps
 from socket import error as socketerror
 from time import sleep
@@ -90,14 +91,14 @@ class Evernote:
         notes_metadata = self._get_all_notes_metadata()
         notebooks = self._get_notebooks()
 
-        res = {
-            note_guid: self._map_to_note_metadata(
+        res = OrderedDict((
+            (note_guid, self._map_to_note_metadata(
                 notebooks[note_info.notebook_guid],
                 note_guid,
                 note_info,
-            )
+            ))
             for note_guid, note_info in notes_metadata.items()
-        }
+        ))
         return res
 
     @retry_ratelimited
@@ -105,10 +106,10 @@ class Evernote:
     def _get_notebooks(self) -> Mapping[models.NotebookGuid, models.NotebookInfo]:
         note_store = self.client.get_note_store()
         notebooks = note_store.listNotebooks()
-        return {
-            n.guid: self._map_to_notebook_info(n)
+        return OrderedDict((
+            (n.guid, self._map_to_notebook_info(n))
             for n in notebooks
-        }
+        ))
 
     @retry_ratelimited
     @translate_exceptions
@@ -127,17 +128,17 @@ class Evernote:
         spec.includeUpdated = True
         spec.includeDeleted = True
 
-        res = {}
+        res = OrderedDict()
         offset = 0
         while True:
             metadata = note_store.findNotesMetadata(
                 noteFilter, offset, Constants.EDAM_USER_NOTES_MAX, spec
             )
 
-            res.update({
-                n.guid: self._map_to_note_info(n)
+            res.update(OrderedDict((
+                (n.guid, self._map_to_note_info(n))
                 for n in metadata.notes
-            })
+            )))
 
             offset = metadata.startIndex + len(metadata.notes)
             if offset >= metadata.totalNotes:

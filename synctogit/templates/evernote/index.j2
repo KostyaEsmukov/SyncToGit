@@ -36,17 +36,40 @@ html, body {
     width: 100%;
     height: 100%;
 }
+.tree, .tree ul, .tree li {
+     position: relative;
+}
+.tree ul {
+    list-style: none;
+    padding-left: 20px;
+}
+.tree li::before, .tree li::after {
+    content: "";
+    position: absolute;
+    left: -12px;
+}
+.tree li::before {
+    border-top: 1px solid #000;
+    top: 9px;
+    width: 8px;
+    height: 0;
+}
+.tree li::after {
+    border-left: 1px solid #000;
+    height: 100%;
+    width: 0px;
+    top: 2px;
+}
+.tree ul > li:last-child::after {
+    height: 8px;
+}
 </style>
 {% endblock %}
 
 
 {% block body %}
-<div class="left">
-<ul>
-{% for note in notes %}
-<li><a href="{{ note.url }}" onclick="return frmLocation('{{ note.url }}');">{{ note.text }}</a></li>
-{% endfor %}
-</ul>
+<div class="left tree">
+{{ render_items(items) }}
 </div>
 
 <div class="right">
@@ -64,3 +87,33 @@ var frmLocation = (function() {
 </script>
 {% endblock %}
 
+{% macro render_items(items, depth=1, parent_name_parts=[]) -%}
+{% if items %}
+<ul>
+{%- for item in items -%}
+{% set cur_name_parts = parent_name_parts + [item.name] -%}
+{% if item.url %}
+    <li>{{ render_note_item(
+                item,
+                name_parts=cur_name_parts,
+             )|indent(depth * 4) }}</li>
+{% else %}
+    <li><span title="{{ render_name_parts(cur_name_parts) }}">{{ item.name }}</span>
+{{ render_items(
+        item.items, depth=depth + 1,
+        parent_name_parts=cur_name_parts,
+       )|indent((depth + 1) * 4) }}
+    </li>
+{% endif %}
+{%- endfor -%}
+</ul>
+{% endif %}
+{%- endmacro %}
+
+{% macro render_note_item(note_item, name_parts) -%}
+<a title="{{ render_name_parts(name_parts) }}" href="{{ note_item.url }}" onclick="return frmLocation('{{ note_item.url }}');">{{ note_item.name }}</a>
+{%- endmacro %}
+
+{% macro render_name_parts(name_parts) -%}
+{{ name_parts|map('e')|join(' &rarr; ') }}
+{%- endmacro %}
