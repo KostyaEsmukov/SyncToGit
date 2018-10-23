@@ -197,7 +197,7 @@ html, body {
     <li><span title="Projects">Projects</span>
 
         <ul>
-            <li><span title="Projects &rarr; P - !Z (Щ) &lt;&gt;">P - !Z (Щ) <></span>
+            <li><span title="Projects &rarr; P - !Z (Щ) &lt;&gt;">P - !Z (Щ) &lt;&gt;</span>
 
                     <ul>
                         <li><a title="Projects &rarr; P - !Z (Щ) &lt;&gt; &rarr; жизнь" href="./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.04d42576-e960-4184-aade-9798b1fe403f.html" onclick="return frmLocation('./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.04d42576-e960-4184-aade-9798b1fe403f.html');">жизнь</a></li>

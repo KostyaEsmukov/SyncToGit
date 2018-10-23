@@ -98,7 +98,7 @@ var frmLocation = (function() {
                 name_parts=cur_name_parts,
              )|indent(depth * 4) }}</li>
 {% else %}
-    <li><span title="{{ render_name_parts(cur_name_parts) }}">{{ item.name }}</span>
+    <li><span title="{{ render_name_parts(cur_name_parts) }}">{{ item.name|e }}</span>
 {{ render_items(
         item.items, depth=depth + 1,
         parent_name_parts=cur_name_parts,
@@ -111,7 +111,7 @@ var frmLocation = (function() {
 {%- endmacro %}
 
 {% macro render_note_item(note_item, name_parts) -%}
-<a title="{{ render_name_parts(name_parts) }}" href="{{ note_item.url }}" onclick="return frmLocation('{{ note_item.url }}');">{{ note_item.name }}</a>
+<a title="{{ render_name_parts(name_parts) }}" href="{{ note_item.url }}" onclick="return frmLocation('{{ note_item.url }}');">{{ note_item.name|e }}</a>
 {%- endmacro %}
 
 {% macro render_name_parts(name_parts) -%}

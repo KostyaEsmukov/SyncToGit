@@ -98,7 +98,7 @@ var frmLocation = (function() {
 {% for project in projects %}
 <li>
 <div class="ist-project" style="background-color: {{ project.color }}"></div>
-<a href="{{ project_links[project.id].url }}" onclick="return frmLocation('{{ project_links[project.id].url }}');">{{ project.name }}</a>
+<a href="{{ project_links[project.id].url }}" onclick="return frmLocation('{{ project_links[project.id].url }}');">{{ project.name|e }}</a>
 ({{ project_links[project.id].todo_items_count }})
 </li>
 {% if with_nested and project.subprojects %}
