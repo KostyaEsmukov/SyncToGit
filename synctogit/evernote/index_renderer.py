@@ -6,7 +6,7 @@ from synctogit.templates import template_env
 _index_template = template_env.get_template("evernote/index.j2")
 
 
-def generate(
+def render(
     note_links: Sequence['IndexLink'],
     writer: Callable[[bytes], None],
     notes_dirs: Sequence[str]=("Notes",),
@@ -33,7 +33,7 @@ def _all_prefix_parts(seq):
 def _note_links_to_tree(
     note_links: Sequence['IndexLink'],
     notes_dirs: Sequence[str],
-) -> Sequence['DirItem']:
+) -> Sequence['_DirItem']:
     dir_items = []
     name_parts_to_dir_item = {}
 
@@ -47,7 +47,7 @@ def _note_links_to_tree(
             else:
                 # A new dir item -- create it and link with the parent
                 parent_dir_item = dir_item
-                dir_item = DirItem(
+                dir_item = _DirItem(
                     name=parts[-1],
                     items=[],
                 )
@@ -67,7 +67,7 @@ def _note_links_to_tree(
         url = './' + '/'.join(parts)
 
         dir_item.items.append(
-            NoteItem(
+            _NoteItem(
                 name=index_link.name_parts[-1],
                 url=url,
             )
@@ -75,16 +75,16 @@ def _note_links_to_tree(
     return dir_items
 
 
-DirItem = NamedTuple(
-    'DirItem',
+_DirItem = NamedTuple(
+    '_DirItem',
     [
         ('name', str),
-        ('items', Sequence[Union['DirItem', 'NoteItem']]),
+        ('items', Sequence[Union['_DirItem', '_NoteItem']]),
     ]
 )
 
-NoteItem = NamedTuple(
-    'NoteItem',
+_NoteItem = NamedTuple(
+    '_NoteItem',
     [
         ('name', str),
         ('url', str),

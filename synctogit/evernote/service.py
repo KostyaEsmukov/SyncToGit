@@ -10,7 +10,7 @@ from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSe
 from synctogit.service.notes import SyncIteration, WorkingCopy
 from synctogit.timezone import get_timezone
 
-from . import index_generator
+from . import index_renderer
 from .auth import InteractiveAuth
 from .evernote import Evernote
 from .models import Note, NoteGuid, NoteMetadata
@@ -170,13 +170,13 @@ class _EvernoteSyncIteration(SyncIteration[NoteGuid, NoteMetadata, Note]):
         git_transaction: GitTransaction
     ) -> None:
         note_links = [
-            index_generator.IndexLink(
+            index_renderer.IndexLink(
                 filesystem_path_parts=note.dir + (note.file,),
                 name_parts=note.name,
             )
             for note in service_metadata.values()
         ]
-        index_generator.generate(
+        index_renderer.render(
             note_links,
             templates.file_writer(
                 str(git_transaction.repo_dir / "index.html")

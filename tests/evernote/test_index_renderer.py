@@ -1,7 +1,7 @@
 import io
 from typing import BinaryIO, Callable
 
-from synctogit.evernote.index_generator import IndexLink, generate
+from synctogit.evernote.index_renderer import IndexLink, render
 
 EXPECTED_INDEX_EMPTY_NOTES = """
 <!doctype html>
@@ -253,11 +253,11 @@ def memory_writer(buf: BinaryIO) -> Callable[[bytes], None]:
 
 def test_index_empty_notes():
     buf = io.BytesIO()
-    generate([], memory_writer(buf))
+    render([], memory_writer(buf))
     assert buf.getvalue() == EXPECTED_INDEX_EMPTY_NOTES
 
 
 def test_index_sample_notes():
     buf = io.BytesIO()
-    generate(SAMPLE_NOTES, memory_writer(buf))
+    render(SAMPLE_NOTES, memory_writer(buf))
     assert buf.getvalue() == EXPECTED_INDEX_SAMPLE_NOTES
