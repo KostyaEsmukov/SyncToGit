@@ -1,0 +1,25 @@
+{% if inkml %}
+<script id="inkml" type="application/inkml+xml">
+{{- inkml -}}
+</script>
+<script>
+// jquery
+{{ include_file("onenote/js/jquery.min.js") }}
+// https://github.com/Microsoft/InkMLjs
+{{ include_file("onenote/js/inkml.min.js") }}
+</script>
+<script>
+
+var inkml = document.getElementById('inkml').innerHTML;
+var ink = new Ink(inkml);
+
+var canvas = document.createElement('canvas');
+// TODO determine size dynamically
+canvas.width = 2000;
+canvas.height = 2000;
+
+document.body.appendChild(canvas);
+
+ink.draw(canvas);
+</script>
+{% endif %}

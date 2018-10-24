@@ -11,6 +11,8 @@
   "dependencies": {
     "gulp": "^4.0.0",
     "gulp-rename": "^1.4.0",
-    "gulp-uglify": "^3.0.1"
+    "gulp-uglify": "^3.0.1",
+    "inkmljs": "github:KostyaEsmukov/InkMLjs",
+    "jquery": "^3.3.1"
   }
 }

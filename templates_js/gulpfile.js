@@ -6,7 +6,7 @@ gulp.task('build', build());
 gulp.task('default', build());
 
 function build() {
-    function scriptEvernote() {
+    function evernoteDecrypt() {
         return script(
             './evernote/decrypt.js',
             '../synctogit/templates/evernote/js/',
@@ -14,8 +14,26 @@ function build() {
         );
     }
 
+    function onenoteJquery() {
+        return script(
+            './node_modules/jquery/dist/jquery.min.js',
+            '../synctogit/templates/onenote/js/',
+            'jquery.min.js',
+        );
+    }
+
+    function onenoteInkml() {
+        return script(
+            './node_modules/inkmljs/InkMLjs/inkml.js',
+            '../synctogit/templates/onenote/js/',
+            'inkml.min.js',
+        );
+    }
+
     return gulp.parallel(
-        scriptEvernote,
+        evernoteDecrypt,
+        onenoteJquery,
+        onenoteInkml,
     );
 }
 
