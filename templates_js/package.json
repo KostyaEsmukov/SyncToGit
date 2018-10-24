@@ -1,0 +1,16 @@
+{
+  "name": "templates_js",
+  "version": "0.0.0",
+  "description": "JS builder for templates of SyncToGit",
+  "scripts": {
+    "build": "gulp build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kostya Esmukov",
+  "license": "MIT",
+  "dependencies": {
+    "gulp": "^4.0.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify": "^3.0.1"
+  }
+}
