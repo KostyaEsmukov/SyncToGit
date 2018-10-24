@@ -1,5 +1,6 @@
 import datetime
 import io
+from pathlib import Path
 from typing import BinaryIO, Callable
 
 import pytz
@@ -15,99 +16,7 @@ from synctogit.onenote.models import (
 timezone = pytz.timezone("Europe/Moscow")
 dt_tzaware = timezone.localize(datetime.datetime.now())
 
-
-EXPECTED_INDEX_EMPTY_PAGES = """
-<!doctype html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>SyncToGit index</title>
-
-<style>
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-.left, .right {
-    height: 100%;
-    float: left;
-    box-sizing: border-box;
-}
-.left ul {
-    margin: 0;
-    padding-left: 10px;
-}
-.left {
-    width: 20%;
-    overflow-y: scroll;
-    padding: 10px;
-}
-.right {
-    width: 80%;
-}
-.left a {
-    margin: 5px 5px;
-}
-#frm {
-    width: 100%;
-    height: 100%;
-}
-.tree, .tree ul, .tree li {
-     position: relative;
-}
-.tree ul {
-    list-style: none;
-    padding-left: 20px;
-}
-.tree li::before, .tree li::after {
-    content: "";
-    position: absolute;
-    left: -12px;
-}
-.tree li::before {
-    border-top: 1px solid #000;
-    top: 9px;
-    width: 8px;
-    height: 0;
-}
-.tree li::after {
-    border-left: 1px solid #000;
-    height: 100%;
-    width: 0px;
-    top: 2px;
-}
-.tree ul > li:last-child::after {
-    height: 8px;
-}
-</style>
-</head>
-<body>
-
-<div class="left tree">
-<ul>
-
-</ul>
-</div>
-
-<div class="right">
-<iframe id="frm"></iframe>
-</div>
-
-<script>
-var frmLocation = (function() {
-    var frm = document.getElementById("frm");
-    return function(l) {
-        frm.src = l;
-        return false;
-    }
-})();
-</script>
-</body>
-</html>
-""".encode("utf8")
+data_path = Path(__file__).parents[0] / 'data'
 
 
 SAMPLE_PAGES = dict(
@@ -191,129 +100,6 @@ SAMPLE_PAGES = dict(
     },
 )
 
-EXPECTED_INDEX_SAMPLE_PAGES = """
-<!doctype html>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>SyncToGit index</title>
-
-<style>
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-.left, .right {
-    height: 100%;
-    float: left;
-    box-sizing: border-box;
-}
-.left ul {
-    margin: 0;
-    padding-left: 10px;
-}
-.left {
-    width: 20%;
-    overflow-y: scroll;
-    padding: 10px;
-}
-.right {
-    width: 80%;
-}
-.left a {
-    margin: 5px 5px;
-}
-#frm {
-    width: 100%;
-    height: 100%;
-}
-.tree, .tree ul, .tree li {
-     position: relative;
-}
-.tree ul {
-    list-style: none;
-    padding-left: 20px;
-}
-.tree li::before, .tree li::after {
-    content: "";
-    position: absolute;
-    left: -12px;
-}
-.tree li::before {
-    border-top: 1px solid #000;
-    top: 9px;
-    width: 8px;
-    height: 0;
-}
-.tree li::after {
-    border-left: 1px solid #000;
-    height: 100%;
-    width: 0px;
-    top: 2px;
-}
-.tree ul > li:last-child::after {
-    height: 8px;
-}
-</style>
-</head>
-<body>
-
-<div class="left tree">
-<ul>
-
-    <li><span title="Learning">Learning</span>
-        <ul>
-
-            <li><span title="Learning &rarr; Книги">Книги</span>
-                <ul>
-
-                    <li><a title="Learning &rarr; Книги &rarr; мои" href="./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BC%D0%BE%D0%B8.0-111aa99a9999999aaaaa99aaa999aaaa_00211-AAAAAAAAAAAAAAA_0021999.html" onclick="return frmLocation('./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BC%D0%BE%D0%B8.0-111aa99a9999999aaaaa99aaa999aaaa_00211-AAAAAAAAAAAAAAA_0021999.html');">мои</a></li>
-
-                    <li><a title="Learning &rarr; Книги &rarr; не мои" href="./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BD%D0%B5%20%D0%BC%D0%BE%D0%B8.0-222aa99a9999999aaaaa99aaa999aaaa_00211-AAAAAAAAAAAAAAA_0021999.html" onclick="return frmLocation('./Notes/Learning/%D0%9A%D0%BD%D0%B8%D0%B3%D0%B8/%D0%BD%D0%B5%20%D0%BC%D0%BE%D0%B8.0-222aa99a9999999aaaaa99aaa999aaaa_00211-AAAAAAAAAAAAAAA_0021999.html');">не мои</a></li>
-
-                </ul>
-            </li>
-
-        </ul>
-    </li>
-
-    <li><span title="Projects">Projects</span>
-        <ul>
-
-            <li><span title="Projects &rarr; P - !Z (Щ) &lt;&gt;">P - !Z (Щ) &lt;&gt;</span>
-                <ul>
-
-                    <li><a title="Projects &rarr; P - !Z (Щ) &lt;&gt; &rarr; жизнь" href="./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.0-333aa99a9999999aaaaa99aaa999aaaa_00211-AAAAAAAAAAAAAAA_0021999.html" onclick="return frmLocation('./Notes/Projects/P%20-%20_0A%20%28%D0%99%29/%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C.0-333aa99a9999999aaaaa99aaa999aaaa_00211-AAAAAAAAAAAAAAA_0021999.html');">жизнь</a></li>
-
-                </ul>
-            </li>
-
-        </ul>
-    </li>
-
-</ul>
-</div>
-
-<div class="right">
-<iframe id="frm"></iframe>
-</div>
-
-<script>
-var frmLocation = (function() {
-    var frm = document.getElementById("frm");
-    return function(l) {
-        frm.src = l;
-        return false;
-    }
-})();
-</script>
-</body>
-</html>
-""".encode("utf8")  # noqa: E501
-
 
 def memory_writer(buf: BinaryIO) -> Callable[[bytes], None]:
     def write(data: bytes) -> None:
@@ -322,6 +108,7 @@ def memory_writer(buf: BinaryIO) -> Callable[[bytes], None]:
 
 
 def test_index_empty_pages():
+    expected = (data_path / 'index_renderer_empty.html').read_bytes()
     buf = io.BytesIO()
     render(
         notebooks=[],
@@ -329,10 +116,11 @@ def test_index_empty_pages():
         service_metadata={},
         write=memory_writer(buf)
     )
-    assert buf.getvalue() == EXPECTED_INDEX_EMPTY_PAGES
+    assert buf.getvalue() == expected
 
 
 def test_index_sample_pages():
+    expected = (data_path / 'index_renderer_sample.html').read_bytes()
     buf = io.BytesIO()
     render(**SAMPLE_PAGES, write=memory_writer(buf))
-    assert buf.getvalue() == EXPECTED_INDEX_SAMPLE_PAGES
+    assert buf.getvalue() == expected
