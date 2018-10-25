@@ -9,17 +9,18 @@
 {{ include_file("onenote/js/inkml.min.js") }}
 </script>
 <script>
-
 var inkml = document.getElementById('inkml').innerHTML;
-var ink = new Ink(inkml);
+var ink = new Ink(inkml, { keepOffsets: true, dpi: 96 });
 
 var canvas = document.createElement('canvas');
-// TODO determine size dynamically
-canvas.width = 2000;
-canvas.height = 2000;
+canvas.width = ink.getPixelWidth();
+canvas.height = ink.getPixelHeight();
 
 document.body.appendChild(canvas);
 
 ink.draw(canvas);
 </script>
+<style>
+body { margin: 0 }
+</style>
 {% endif %}
