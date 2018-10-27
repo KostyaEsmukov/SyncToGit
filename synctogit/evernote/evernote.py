@@ -229,4 +229,6 @@ class Evernote:
     def _normalize_timestamp(self, ts: Optional[int]) -> Optional[datetime.datetime]:
         if not ts:
             return None
-        return self._timezone.localize(datetime.datetime.fromtimestamp(ts / 1000))
+        naive_utc = datetime.datetime.utcfromtimestamp(ts / 1000)
+        aware_utc = naive_utc.replace(tzinfo=datetime.timezone.utc)
+        return aware_utc.astimezone(self._timezone)
