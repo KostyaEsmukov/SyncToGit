@@ -2,7 +2,7 @@ import contextlib
 import threading
 import urllib.request
 from functools import lru_cache
-from io import BytesIO
+from io import BytesIO, StringIO
 from xml.sax import ContentHandler, ErrorHandler, InputSource
 from xml.sax.handler import EntityResolver, feature_external_ges
 
@@ -77,5 +77,5 @@ def parseString(string: str, handler: ContentHandler,
     parser.setFeature(feature_external_ges, True)
 
     inpsrc = InputSource()
-    inpsrc.setByteStream(BytesIO(string))
+    inpsrc.setCharacterStream(StringIO(string))
     parser.parse(inpsrc)

@@ -22,8 +22,6 @@ _an_pattern = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 # Add newline before:
 _bn_pattern = re.compile("<(/head|/body|title)[^>]*>")
 
-_entity_pattern = re.compile(r"&#?\w+;")
-
 _note_tail_template = template_env.get_template('evernote/body_tail.j2')
 
 
@@ -210,7 +208,11 @@ class _EvernoteNoteParser(ContentHandler):
                 "Note is not parsed yet: hierarchy size is %d" % len(self.hierarchy)
             )
 
-        r = ElementTree.tostring(self.hierarchy[0].e, encoding="unicode")
+        r = ElementTree.tostring(
+            self.hierarchy[0].e,
+            encoding="unicode",
+            # method="html",  # XXX uncomment this?
+        )
 
         r = _an_pattern.sub(lambda m: m.group(0) + "\n", r)
         r = _bn_pattern.sub(lambda m: "\n" + m.group(0), r)
@@ -232,7 +234,7 @@ def parse(resources_base_path: str, enbody: str, title: str) -> bytes:
 
     try:
         parseString(
-            enbody.encode("utf8"),
+            enbody,
             p,
             forbid_dtd=False,
             forbid_entities=False,
