@@ -9,8 +9,10 @@ class GitError(Exception):
     pass
 
 
-# XXX is this still relevant?
-os.environ['USERNAME'] = 'None'  # default username for git
+# Default username and email for git.
+os.environ['USERNAME'] = 'synctogit'
+os.environ['EMAIL'] = 'none@none'
+
 
 gitignore_synctogit_files_prefix = '.synctogit'
 
