@@ -25,7 +25,7 @@ def _is_empty_inkml(inkml: Optional[str]):
     root = ET.fromstring(inkml)
     # https://stackoverflow.com/q/14853243
     tg = root.find('./{http://www.w3.org/2003/InkML}traceGroup')
-    return not bool(tg.getchildren())
+    return not bool(list(tg))
 
 
 class ResourceRetrieval(abc.ABC):

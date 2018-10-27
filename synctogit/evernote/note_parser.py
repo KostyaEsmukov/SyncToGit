@@ -22,7 +22,7 @@ _an_pattern = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 # Add newline before:
 _bn_pattern = re.compile("<(/head|/body|title)[^>]*>")
 
-_entity_pattern = re.compile("&#?\w+;")
+_entity_pattern = re.compile(r"&#?\w+;")
 
 _note_tail_template = template_env.get_template('evernote/body_tail.j2')
 
