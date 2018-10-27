@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inkml:ink xmlns:emma="http://www.w3.org/2003/04/emma" xmlns:msink="http://schemas.microsoft.com/ink/2010/main" xmlns:inkml="http://www.w3.org/2003/InkML">
+  <inkml:definitions>
+    <inkml:context xml:id="ctxCoordinatesWithPressure">
+      <inkml:inkSource xml:id="inkSrcCoordinatesWithPressure">
+        <inkml:traceFormat>
+          <inkml:channel name="X" type="integer" max="32767" units="himetric" />
+          <inkml:channel name="Y" type="integer" max="32767" units="himetric" />
+          <inkml:channel name="F" type="integer" max="32767" units="dev" />
+        </inkml:traceFormat>
+        <inkml:channelProperties>
+          <inkml:channelProperty channel="X" name="resolution" value="1" units="1/himetric" />
+          <inkml:channelProperty channel="Y" name="resolution" value="1" units="1/himetric" />
+          <inkml:channelProperty channel="F" name="resolution" value="1" units="1/dev" />
+        </inkml:channelProperties>
+      </inkml:inkSource>
+    </inkml:context>
+    <inkml:brush xml:id="{83066dbb-61cd-a403-089e-8233c8971ec3}{12}">
+      <inkml:brushProperty name="width" value="50" units="himetric" />
+      <inkml:brushProperty name="height" value="50" units="himetric" />
+      <inkml:brushProperty name="color" value="#000000" />
+      <inkml:brushProperty name="transparency" value="0" />
+      <inkml:brushProperty name="tip" value="ellipse" />
+      <inkml:brushProperty name="rasterOp" value="copyPen" />
+      <inkml:brushProperty name="ignorePressure" value="false" />
+      <inkml:brushProperty name="antiAliased" value="true" />
+      <inkml:brushProperty name="fitToCurve" value="false" />
+    </inkml:brush>
+  </inkml:definitions>
+  <inkml:traceGroup>
+    <inkml:trace xml:id="{83066dbb-61cd-a403-089e-8233c8971ec3}{13}" contextRef="#ctxCoordinatesWithPressure" brushRef="#{83066dbb-61cd-a403-089e-8233c8971ec3}{12}">10509 17166 9344, 10508 17161 9646, 10508 17159 9713, 10509 17159 9704, 10511 17159 9694, 10513 17159 9691, 10515 17159 9664, 10517 17159 9645, 10519 17159 9565, 10521 17160 9520, 10523 17161 9461, 10525 17163 9418, 10527 17166 9417, 10528 17169 9426, 10529 17172 9406, 10530 17175 9361, 10530 17178 9322, 10530 17182 9269, 10530 17184 9245, 10530 17187 9246, 10530 17190 9229, 10530 17193 9228, 10530 17195 9210, 10530 17196 9233, 10530 17198 9227, 10530 17199 9297, 10530 17201 9299, 10529 17202 9339, 10528 17203 9334, 10526 17204 9337, 10525 17204 9335, 10522 17204 9345, 10520 17204 9413, 10518 17204 9466, 10516 17204 9547, 10514 17204 9588, 10512 17203 9664, 10511 17201 9704, 10509 17199 9785, 10508 17196 9816, 10507 17194 9841, 10506 17190 9876, 10506 17187 9907, 10506 17184 9885, 10506 17181 9904, 10506 17179 9878, 10506 17176 9907, 10506 17175 9952, 10506 17173 9980, 10507 17172 10023, 10509 17172 9983, 10511 17171 9930, 10513 17171 9859, 10515 17171 9646, 10517 17171 9513, 10519 17171 9274, 10521 17171 9113, 10523 17172 8916, 10524 17172 8753, 10526 17173 8512, 10527 17175 8413, 10528 17177 8314, 10529 17178 8314, 10530 17180 8314, 10530 17181 8314, 10529 17183 8314, 10529 17185 8314, 10527 17188 8314</inkml:trace>
+  </inkml:traceGroup>
+</inkml:ink>

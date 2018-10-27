@@ -134,7 +134,9 @@ class Evernote:
 
     @retry_ratelimited
     @translate_exceptions
-    def get_note(self, guid: models.NoteGuid, resources_base) -> models.Note:
+    def get_note(
+        self, guid: models.NoteGuid, resources_base: str
+    ) -> models.Note:
         note_store = self.client.get_note_store()
 
         # These args must be positional :(
@@ -195,7 +197,7 @@ class Evernote:
             file=file,
         )
 
-    def _map_to_note(self, note, resources_base) -> models.Note:
+    def _map_to_note(self, note, resources_base: str) -> models.Note:
         note_parsed = note_parser.parse(
             resources_base, note.content, note.title
         )

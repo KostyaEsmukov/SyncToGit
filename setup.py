@@ -52,7 +52,10 @@ setup(
         'evernote': [
             "evernote3==1.25.12",
             "oauth2==1.9.0.post1",
-        ]
+        ],
+        'onenote': [
+            "beautifulsoup4==4.6.3",
+        ],
     },
     license="MIT",
     python_requires=">=3.5",
