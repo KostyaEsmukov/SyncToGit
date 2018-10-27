@@ -4,7 +4,7 @@ import urllib.request
 from functools import lru_cache
 from io import BytesIO
 from xml.sax import ContentHandler, ErrorHandler, InputSource
-from xml.sax.handler import EntityResolver
+from xml.sax.handler import EntityResolver, feature_external_ges
 
 from defusedxml.sax import make_parser
 
@@ -72,6 +72,9 @@ def parseString(string: str, handler: ContentHandler,
     parser.forbid_external = forbid_external
 
     parser.setEntityResolver(_caching_entity_resolver)
+
+    # Since Python 3.7.1 external DTDs are not processed by default.
+    parser.setFeature(feature_external_ges, True)
 
     inpsrc = InputSource()
     inpsrc.setByteStream(BytesIO(string))
