@@ -27,7 +27,7 @@ def note_html():
         "<!----------------->\n"
         "<html>\n"
         "<head>\n"
-    ).encode()
+    )
 
 
 @pytest.fixture
@@ -69,10 +69,10 @@ def test_note_to_html_valid():
         "<!-- updated: 2018-09-27 05:14:03+07:00 -->\n"
         "<!----------------->\n"
         "<html><head></head><body>три четыре</body></html>"
-    ).encode()
+    )
 
     html = EvernoteStoredNote.note_to_html(note, timezone_output)
-    assert html == expected_html
+    assert html.decode() == expected_html
 
 
 def test_get_stored_note_metadata_valid(temp_dir, note_html, note_header_vars):
@@ -80,7 +80,7 @@ def test_get_stored_note_metadata_valid(temp_dir, note_html, note_header_vars):
 
     note = notes_dir / normalize_filename("Eleven ✨") / "Haircut" / "s1.html"
     os.makedirs(str(note.parents[0]))
-    note.write_bytes(note_html)
+    note.write_text(note_html)
 
     guid, metadata = EvernoteStoredNote.get_stored_note_metadata(notes_dir, note)
     assert guid == note_header_vars['guid']
@@ -107,7 +107,7 @@ def test_get_stored_note_metadata_dir_parts(
     notes_dir = Path(temp_dir) / 'a'
     note = notes_dir.joinpath(*parts) / "s1.html"
     os.makedirs(str(note.parents[0]))
-    note.write_bytes(note_html)
+    note.write_text(note_html)
 
     with ExitStack() as stack:
         if not is_valid:
@@ -130,7 +130,7 @@ def test_get_stored_note_metadata_dir_parts(
             "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
             "<!----------------->\n"
             "<html>\n"
-        ).encode(),
+        ),
         (
             # Missing guid
             "<!doctype html>\n"
@@ -143,7 +143,7 @@ def test_get_stored_note_metadata_dir_parts(
             "<!-- updated: 2018-09-23 22:33:10+03:00 -->\n"
             "<!----------------->\n"
             "<html>\n"
-        ).encode(),
+        ),
         (
             # Non-numeric updateSequenceNum
             "<!doctype html>\n"
@@ -158,7 +158,7 @@ def test_get_stored_note_metadata_dir_parts(
             "<!----------------->\n"
             "<html>\n"
             "<head>\n"
-        ).encode(),
+        ),
     ]
 )
 def test_get_stored_note_metadata_invalid_vars(
@@ -167,7 +167,7 @@ def test_get_stored_note_metadata_invalid_vars(
     notes_dir = Path(temp_dir)
     note = notes_dir / "Eleven" / "Haircut" / "s1.html"
     os.makedirs(str(note.parents[0]))
-    note.write_bytes(note_html)
+    note.write_text(note_html)
 
     with pytest.raises(CorruptedNoteError):
         EvernoteStoredNote.get_stored_note_metadata(notes_dir, note)

@@ -54,7 +54,7 @@ def test_full_html():  # without inkml
         ),
     )
 
-    assert p.html == output_html.encode()
+    assert p.html.decode() == output_html
     assert p.resources == {
         "0-aaaaaaaaaaaaaaaaaaaaaaaaaaaaa0af!1-AAAAAAAAAAAAAAA!999": OneNoteResource(
             body=b"test data|0-aaaaaaaaaaaaaaaaaaaaaaaaaaaaa0af!1-AAAAAAAAAAAAAAA!999",

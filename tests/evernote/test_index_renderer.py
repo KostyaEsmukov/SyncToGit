@@ -42,14 +42,14 @@ def memory_writer(buf: BinaryIO) -> Callable[[bytes], None]:
 
 
 def test_index_empty_notes():
-    expected = (data_path / 'index_renderer_empty.html').read_bytes()
+    expected = (data_path / 'index_renderer_empty.html').read_text()
     buf = io.BytesIO()
     render([], memory_writer(buf))
-    assert buf.getvalue() == expected
+    assert buf.getvalue().decode() == expected
 
 
 def test_index_sample_notes():
-    expected = (data_path / 'index_renderer_sample.html').read_bytes()
+    expected = (data_path / 'index_renderer_sample.html').read_text()
     buf = io.BytesIO()
     render(SAMPLE_NOTES, memory_writer(buf))
-    assert buf.getvalue() == expected
+    assert buf.getvalue().decode() == expected

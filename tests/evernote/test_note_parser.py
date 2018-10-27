@@ -31,10 +31,10 @@ def test_simple_parse():
 
 </body>
 </html>
-""".encode("utf8")  # noqa: E501
+"""  # noqa: E501
 
     html = note_parser.parse('.', note, title='привет')
-    assert html == expected
+    assert html.decode() == expected
 
 
 @vcr_dtd.use_cassette('cassette_dtd')
@@ -74,18 +74,19 @@ def test_encrypted():
 
 
 
-<script>""".encode("utf8")  # noqa: E501
+<script>"""  # noqa: E501
 
     expected_tail = """
 </script>
 </body>
 </html>
-""".encode("utf8")
+"""
 
     html = note_parser.parse('.', note, title='привет')
+    html = html.decode()
     assert html.startswith(expected_head)
     assert html.endswith(expected_tail)
-    assert html.count(b'evernote_decrypt') == 2
+    assert html.count('evernote_decrypt') == 2
 
 
 @vcr_dtd.use_cassette('cassette_dtd')
@@ -133,10 +134,10 @@ def test_todo():
 
 </body>
 </html>
-""".encode("utf8")  # noqa: E501
+"""  # noqa: E501
 
     html = note_parser.parse('.', note, title='привет')
-    assert html == expected
+    assert html.decode() == expected
 
 
 @vcr_dtd.use_cassette('cassette_dtd')
@@ -162,10 +163,10 @@ def test_html_entities_unwrapping():
 
 </body>
 </html>
-""".encode("utf8")  # noqa: E501
+"""  # noqa: E501
 
     html = note_parser.parse('.', note, title='привет')
-    assert html == expected
+    assert html.decode() == expected
 
 
 @vcr_dtd.use_cassette('cassette_dtd')
@@ -193,11 +194,11 @@ def test_image():
 
 </body>
 </html>
-""".encode("utf8")  # noqa: E501
+"""  # noqa: E501
 
     src_path = "../Resource s/123/"
     html = note_parser.parse(src_path, note, title='привет')
-    assert html == expected
+    assert html.decode() == expected
 
 
 @vcr_dtd.use_cassette('cassette_dtd')
@@ -224,8 +225,8 @@ def test_pdf():
 
 </body>
 </html>
-""".encode("utf8")  # noqa: E501
+"""  # noqa: E501
 
     src_path = "../Resource s/123/"
     html = note_parser.parse(src_path, note, title='привет')
-    assert html == expected
+    assert html.decode() == expected
