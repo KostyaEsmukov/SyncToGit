@@ -5,6 +5,8 @@ node_modules
 dist
 build
 
+.tox
+
 *.pyc
 __pycache__/
 
