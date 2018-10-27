@@ -390,7 +390,7 @@ def test_map_to_note_with_resources(evernote, evernote_user_timezone):
             '<body style="word-wrap: break-word; -webkit-nbsp-mode: space; '
             '-webkit-line-break: after-white-space;">\n'
             "<div>1"
-            '<a href="../../Resources/%s/a9f6d89f06411341248f85e22ea4fd4f.plain">'
+            '<a href="../../Resources/%s/a9f6d89f06411341248f85e22ea4fd4f.txt">'
             'Document of type text/plain</a></div>'
             "\n"
             "<div><br />\n"
@@ -403,7 +403,7 @@ def test_map_to_note_with_resources(evernote, evernote_user_timezone):
             'a9f6d89f06411341248f85e22ea4fd4f': models.NoteResource(
                 body=resource_body,
                 mime='text/plain',
-                filename='a9f6d89f06411341248f85e22ea4fd4f.plain'
+                filename='a9f6d89f06411341248f85e22ea4fd4f.txt'
             ),
         },
     )

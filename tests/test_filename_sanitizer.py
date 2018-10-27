@@ -1,6 +1,10 @@
 import pytest
 
-from synctogit.filename_sanitizer import denormalize_filename, normalize_filename
+from synctogit.filename_sanitizer import (
+    denormalize_filename,
+    ext_from_mime_type,
+    normalize_filename,
+)
 from synctogit.git_factory import gitignore_synctogit_files_prefix
 
 raw_to_normalized = [
@@ -71,3 +75,19 @@ def test_empty_filename_raises():
 def test_long_filename_raises(fn):
     with pytest.raises(ValueError):
         normalize_filename(fn)
+
+
+@pytest.mark.parametrize(
+    'mime_type, expected_ext',
+    [
+        ('image/png', 'png'),
+        ('application/javascript', 'js'),
+        ('dsjkahdkas/uwqieyiquwe', 'uwqieyiquwe'),
+        ('text/plain', 'txt'),
+        ('application/msword', 'doc'),
+        ('application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+         'docx'),
+    ]
+)
+def test_ext_from_mime_type(mime_type, expected_ext):
+    assert expected_ext == ext_from_mime_type(mime_type)

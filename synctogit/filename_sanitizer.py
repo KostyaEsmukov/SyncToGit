@@ -1,3 +1,5 @@
+import mimetypes
+
 import regex
 
 _escape_char = "_"
@@ -83,3 +85,21 @@ def denormalize_filename(filename: str) -> str:
             filename = filename[1:]
 
     return filename
+
+
+def ext_from_mime_type(mime_type: str) -> str:
+    hardcoded_mime_type_conversions = {
+        # On macOS (at least) text/plain might resolve to `.c` or `.ksh`.
+        'text/plain': 'txt',
+    }
+    ext = hardcoded_mime_type_conversions.get(mime_type)
+    if ext:
+        return ext
+    ext_list = mimetypes.guess_all_extensions(mime_type, strict=True)
+    if ext_list:
+        # There might be a handful of them. Sort them so the result
+        # is more or less consistent.
+        ext = sorted(ext_list)[0]
+        return ext.lstrip('.')
+    _, ext = mime_type.split('/', 2)
+    return ext

@@ -4,6 +4,7 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from xml.sax import ContentHandler, SAXParseException
 
+from synctogit.filename_sanitizer import ext_from_mime_type
 from synctogit.templates import template_env
 from synctogit.xmlutils import parseString
 
@@ -27,7 +28,7 @@ _note_tail_template = template_env.get_template('evernote/body_tail.j2')
 
 
 def resource_filename(file_hash: str, mime_type: str) -> str:
-    _, ext = mime_type.split('/', 2)
+    ext = ext_from_mime_type(mime_type)
     return "%s.%s" % (file_hash, ext)
 
 
