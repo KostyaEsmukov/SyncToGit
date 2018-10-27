@@ -52,9 +52,11 @@ def git_repo_with_remote(git_repo, temp_dir, call_git):
 def git_unbare_repo(working_tree_dir, call_git):
     call_git('git config --bool core.bare false',
              cwd=working_tree_dir)
-    yield
-    call_git('git config --bool core.bare true',
-             cwd=working_tree_dir)
+    try:
+        yield
+    finally:
+        call_git('git config --bool core.bare true',
+                 cwd=working_tree_dir)
 
 
 def test_lockfile_created(git_repo):

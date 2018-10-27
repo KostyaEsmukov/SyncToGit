@@ -141,6 +141,8 @@ class _GitFactory:
         stash = repo.is_dirty()
         if stash:
             repo.git.stash()
-        yield
-        if stash:
-            repo.git.stash('pop', '--index')
+        try:
+            yield
+        finally:
+            if stash:
+                repo.git.stash('pop', '--index')

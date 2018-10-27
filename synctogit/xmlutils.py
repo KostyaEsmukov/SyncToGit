@@ -24,11 +24,13 @@ class _LockedMap:
                 is_leader = True
         if not is_leader:
             event.wait()
-        yield
-        with self._lock:
-            if is_leader:
-                self._map[key].set()
-                del self._map[key]
+        try:
+            yield
+        finally:
+            with self._lock:
+                if is_leader:
+                    self._map[key].set()
+                    del self._map[key]
 
 
 class _CachingEntityResolver(EntityResolver):
