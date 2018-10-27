@@ -56,6 +56,7 @@ setup(
         'onenote': [
             "beautifulsoup4==4.6.3",
             "oauth2==1.9.0.post1",
+            "requests_toolbelt==0.8.0",
         ],
     },
     license="MIT",
