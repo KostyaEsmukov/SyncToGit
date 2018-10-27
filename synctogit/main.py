@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from . import evernote, git_config, todoist
+from . import evernote, git_config, onenote, todoist
 from .config import Config, FilesystemConfigReadWriter
 from .git_factory import git_factory
 from .print_on_exception_only import PrintOnExceptionOnly
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 services = {
     'evernote': evernote,
+    'onenote': onenote,
     'todoist': todoist,
 }
 

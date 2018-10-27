@@ -176,6 +176,8 @@ class InteractiveAuth:
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.callback_url = callback_url
+        # XXX bundled != the one stored in the conf
+        # XXX store custom consumer_* to the conf as well
 
     def _evernote_client(self) -> EvernoteClient:
         client = EvernoteClient(
