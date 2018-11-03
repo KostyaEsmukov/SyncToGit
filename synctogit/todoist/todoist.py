@@ -66,6 +66,9 @@ class Todoist:
                 result_ids.append(project_id)
             else:
                 # Child project
+                if parent_id not in result_id_to_project:
+                    # It was filtered out as deleted/archived/etc.
+                    continue
                 result_id_to_project[parent_id].subprojects.append(project)
             result_id_to_project[project_id] = project
 
@@ -127,6 +130,9 @@ class Todoist:
             if parent_id is None:
                 project_id_to_items[project_id].append(item)
             else:
+                if parent_id not in id_to_item:
+                    # It was filtered out as checked/deleted/etc.
+                    continue
                 id_to_item[parent_id].subitems.append(item)
             id_to_item[i['id']] = item
 
