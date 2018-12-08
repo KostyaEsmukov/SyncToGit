@@ -9,7 +9,6 @@ class InteractiveAuth:
     def run(self) -> str:
         self._ask_continue()
         api_token = self._ask_api_token()
-        # XXX validate?
         return api_token
 
     def _ask_continue(self) -> None:

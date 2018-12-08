@@ -35,7 +35,6 @@ class InteractiveAuth:
         auth_method = self._ask_auth_method()
         if auth_method == "devtoken":
             token = self._ask_devtoken()
-            # XXX validate?
             return token
 
         assert auth_method == "oauth"
@@ -51,7 +50,6 @@ class InteractiveAuth:
         except Exception as e:
             raise ServiceAuthError(e)
         else:
-            # XXX validate
             return token
 
     def _run_oauth(self) -> str:
@@ -173,8 +171,8 @@ class InteractiveAuth:
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.callback_url = callback_url
-        # XXX bundled != the one stored in the conf
-        # XXX store custom consumer_* to the conf as well
+        # TODO bundled != the one stored in the conf
+        # TODO store custom consumer_* to the conf as well
 
     def _evernote_client(self) -> EvernoteClient:
         client = EvernoteClient(

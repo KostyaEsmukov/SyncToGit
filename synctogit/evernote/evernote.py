@@ -46,7 +46,6 @@ def translate_exceptions(f):
         except Errors.EDAMSystemException as e:
             if e.errorCode == Errors.EDAMErrorCode.RATE_LIMIT_REACHED:
                 s = float(e.rateLimitDuration + 1)
-                # XXX sleep?
                 raise ServiceRateLimitError(e, rate_limit_duration_seconds=s)
             else:
                 raise ServiceAPIError(e)
