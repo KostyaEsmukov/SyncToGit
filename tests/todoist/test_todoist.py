@@ -1,4 +1,5 @@
 from collections import defaultdict
+from contextlib import ExitStack
 from datetime import date, datetime
 from unittest.mock import Mock, patch
 
@@ -6,6 +7,7 @@ import pytest
 import pytz
 from todoist.models import Item, Project
 
+from synctogit.service import ServiceAPIError, ServiceTokenExpiredError
 from synctogit.todoist import models
 from synctogit.todoist.todoist import Todoist
 
@@ -571,3 +573,37 @@ def test_parse_due_time(
 def test_parse_due_time_raises(todoist, todo_item):
     with pytest.raises(ValueError):
         todoist._parse_due_date_time(todo_item)
+
+
+@pytest.mark.parametrize(
+    "exc, response",
+    [
+        (ServiceAPIError, "Error!"),
+        (
+            ServiceTokenExpiredError,
+            {
+                "error_extra": {"retry_after": 3, "access_type": "access_token"},
+                "http_code": 403,
+                "error_code": 401,
+                "error_tag": "AUTH_INVALID_TOKEN",
+                "error": "Invalid token",
+            },
+        ),
+        (
+            None,
+            {
+                "notes": [],
+                "projects": [],
+                "sync_token": "ZZZZ",
+                "items": [],
+                "filters": [],
+            },
+        ),
+    ],
+)
+def test_sync_error_processing(todoist, exc, response):
+    with patch.object(todoist.api, "sync", return_value=response):
+        with ExitStack() as stack:
+            if exc is not None:
+                stack.enter_context(pytest.raises(exc))
+            todoist.sync()

@@ -1,6 +1,7 @@
 import datetime
 import os
 from collections import defaultdict
+from collections.abc import Mapping
 from logging import getLogger
 from typing import Dict, Optional, Sequence, Tuple
 
@@ -8,6 +9,8 @@ import dateutil.parser
 import pytz
 import todoist
 from cached_property import cached_property
+
+from synctogit.service import ServiceAPIError, ServiceTokenExpiredError
 
 from . import models
 
@@ -32,7 +35,18 @@ class Todoist:
         return _TodoistAPI(cache=cache_dir, token=auth_token)
 
     def sync(self):
-        self.api.sync()
+        response = self.api.sync()
+        if isinstance(response, Mapping):
+            if 'sync_token' in response and 'error' not in response:
+                # Successful sync
+                return
+            if 'error' in response:
+                if 'AUTH_INVALID_TOKEN' == response.get('error_tag'):
+                    raise ServiceTokenExpiredError(response.get('error'))
+            error = response.get('error') or response
+        else:
+            error = response
+        raise ServiceAPIError(str(error))
 
     def get_projects(self) -> Sequence[models.TodoistProject]:
         def key(p):
