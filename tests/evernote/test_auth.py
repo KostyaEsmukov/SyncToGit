@@ -23,7 +23,7 @@ def mock_prompt_toolkit():
         # Not really from the prompt_toolkit, but it is just convenient
         # to mock it there as well.
         mocked["wait_for_enter"] = st.enter_context(
-            patch.object(synctogit.evernote.auth, "_wait_for_enter")
+            patch.object(synctogit.evernote.auth, "wait_for_enter")
         )
         yield mocked
 

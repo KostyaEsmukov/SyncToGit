@@ -9,6 +9,7 @@ from synctogit.git_transaction import GitTransaction
 from synctogit.service import BaseAuth, BaseAuthSession, BaseSync, InvalidAuthSession
 from synctogit.timezone import get_timezone
 
+from .auth import InteractiveAuth
 from .projects_renderer import ProjectsRenderer
 from .todoist import Todoist
 from .working_copy import TodoistWorkingCopy
@@ -33,6 +34,9 @@ class TodoistAuthSession(BaseAuthSession):
     def load_from_config(cls, config: Config) -> 'TodoistAuthSession':
         try:
             token = todoist_token.get(config)
+
+            if not token:
+                raise ValueError()
         except (KeyError, ValueError):
             raise InvalidAuthSession('Todoist token is missing in config')
 
@@ -48,8 +52,8 @@ class TodoistAuthSession(BaseAuthSession):
 class TodoistAuth(BaseAuth[TodoistAuthSession]):
     @classmethod
     def interactive_auth(cls, config: Config) -> TodoistAuthSession:
-        # XXX
-        pass
+        token = InteractiveAuth().run()
+        return TodoistAuthSession(token)
 
 
 class TodoistSync(BaseSync[TodoistAuthSession]):

@@ -1,24 +1,21 @@
 import urllib.parse
-from typing import Any
 
 from evernote.api.client import EvernoteClient
 from prompt_toolkit.shortcuts import button_dialog, input_dialog, yes_no_dialog
 
-from synctogit.service import ServiceAuthError, UserCancelledError
+from synctogit.service import ServiceAuthError
+from synctogit.service.auth import abort_if_falsy, wait_for_enter
 
 from .evernote import translate_exceptions
 
 
-def _abort_if_falsy(result: Any) -> None:
-    if not result:
-        raise UserCancelledError("Cancelled by user")
-
-
-def _wait_for_enter() -> None:
-    input()
-
-
 class InteractiveAuth:
+    auth_details_url = "https://dev.evernote.com/doc/articles/authentication.php"
+    devtokens_details_url = "https://dev.evernote.com/doc/articles/dev_tokens.php"
+
+    devtoken_prod_url = "https://www.evernote.com/api/DeveloperToken.action"
+    devtoken_sandbox_url = "https://sandbox.evernote.com/api/DeveloperToken.action"
+
     def __init__(
         self,
         consumer_key: str,
@@ -84,7 +81,7 @@ class InteractiveAuth:
             text="Evernote API token is missing. Do you want to retrieve a new one?",
             no_text="Cancel",
         )
-        _abort_if_falsy(result)
+        abort_if_falsy(result)
 
     def _ask_auth_method(self) -> str:
         result = button_dialog(
@@ -96,21 +93,21 @@ class InteractiveAuth:
                 "If unsure, choose OAuth.\n"
                 "\n"
                 "More info:\n"
-                "https://dev.evernote.com/doc/articles/authentication.php"
-            ),
+                "%s"
+            ) % self.auth_details_url,
             buttons=[
                 ("OAuth", "oauth"),
                 ("Dev Token", "devtoken"),
                 ("Cancel", "cancel"),
             ],
         )
-        _abort_if_falsy(result != "cancel")
+        abort_if_falsy(result != "cancel")
         return result
 
     def _ask_devtoken(self) -> str:
         url = {
-            False: "https://www.evernote.com/api/DeveloperToken.action",
-            True: "https://sandbox.evernote.com/api/DeveloperToken.action",
+            False: self.devtoken_prod_url,
+            True: self.devtoken_sandbox_url,
         }[self.sandbox]
         devtoken = input_dialog(
             title="Input your Developer Token",
@@ -123,11 +120,11 @@ class InteractiveAuth:
                 "Paste your Developer Token to the prompt below.\n"
                 "\n"
                 "More about Developer Tokens:\n"
-                "https://dev.evernote.com/doc/articles/dev_tokens.php"
+                "%s"
             )
-            % url,
+            % (url, self.devtokens_details_url),
         )
-        _abort_if_falsy(devtoken)
+        abort_if_falsy(devtoken)
         return devtoken
 
     def _ask_oauth_use_bundled(self) -> bool:
@@ -141,10 +138,10 @@ class InteractiveAuth:
                 "or you want to input credentials for your own?\n"
                 "\n"
                 "More info on OAuth in Evernote:\n"
-                "https://dev.evernote.com/doc/articles/authentication.php\n"
+                "%s\n"
                 "\n"
                 "If unsure, choose Bundled."
-            ),
+            ) % self.auth_details_url,
             yes_text="Bundled",
             no_text="Custom",
         )
@@ -192,7 +189,7 @@ class InteractiveAuth:
         print("Open the following URL in your browser:")
         print(url)
         print("Press Enter to continue")
-        _wait_for_enter()
+        wait_for_enter()
 
     def _ask_redirection_url(self) -> str:
         url = input_dialog(
@@ -207,7 +204,7 @@ class InteractiveAuth:
                 "Inter the URL of that page to the prompt below:"
             ),
         )
-        _abort_if_falsy(url)
+        abort_if_falsy(url)
         return url
 
     def _ask_try_again_for_invalid_redirect_url(self, e: Exception) -> None:
@@ -224,4 +221,4 @@ class InteractiveAuth:
             ) % (repr(e), self.callback_url),
             no_text="Cancel",
         )
-        _abort_if_falsy(result)
+        abort_if_falsy(result)

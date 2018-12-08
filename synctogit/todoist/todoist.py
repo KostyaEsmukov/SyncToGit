@@ -28,6 +28,7 @@ class Todoist:
         self.api = self._create_api(cache_dir, auth_token)
 
     def _create_api(self, cache_dir, auth_token):
+        assert auth_token
         return _TodoistAPI(cache=cache_dir, token=auth_token)
 
     def sync(self):
