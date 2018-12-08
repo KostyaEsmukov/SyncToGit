@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from . import evernote, git_config, onenote, todoist
+from . import __version__, evernote, git_config, onenote, todoist
 from .config import Config, FilesystemConfigReadWriter
 from .git_factory import git_factory
 from .print_on_exception_only import PrintOnExceptionOnly
@@ -18,6 +18,9 @@ services = {
 
 
 @click.command()
+@click.version_option(
+    version=__version__,
+)
 @click.option(
     "-b",
     "--batch",
@@ -44,7 +47,7 @@ services = {
     'service',
     type=click.Choice(services.keys()),
 )
-def main(batch, force_update, quiet, config, service):
+def synctogit(batch, force_update, quiet, config, service):
     """SyncToGit. Sync your Evernote notes to a local git repository.
 
     CONFIG should point to an existing config file. Note that this file
@@ -109,4 +112,4 @@ def _sync(service_implementation, git, config, batch, force_update):
 
 
 if __name__ == '__main__':
-    main()
+    synctogit(prog_name="synctogit")
