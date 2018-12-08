@@ -12,6 +12,7 @@ from synctogit.service.notes import SyncIteration, WorkingCopy
 from synctogit.timezone import get_timezone
 
 from . import index_renderer
+from .auth import InteractiveAuth
 from .models import OneNotePage, OneNotePageId, OneNotePageMetadata
 from .onenote import OneNoteClient
 from .working_copy import OneNoteWorkingCopy
@@ -27,9 +28,9 @@ microsoft_graph_client_secret = StrConfigItem(
     "microsoft_graph", "client_secret",
     base64.b64decode("eXRwWVZQSTU3OCEtZmJuaVJSSzUzXV8=").decode(),
 )
-microsoft_graph_callback_url = StrConfigItem(
+microsoft_graph_redirect_uri = StrConfigItem(
     # A non-existing link.
-    "microsoft_graph", "callback_url",
+    "microsoft_graph", "redirect_uri",
     "https://localhost:63543/non-existing-url",
 )
 microsoft_graph_oauth_scopes = StrConfigItem(
@@ -77,8 +78,13 @@ class MicrosoftGraphAuthSession(BaseAuthSession):
 class MicrosoftGraphAuth(BaseAuth[MicrosoftGraphAuthSession]):
     @classmethod
     def interactive_auth(cls, config: Config) -> MicrosoftGraphAuthSession:
-        # XXX
-        pass
+        token = InteractiveAuth(
+            client_id=microsoft_graph_client_id.get(config),
+            client_secret=microsoft_graph_client_secret.get(config),
+            redirect_uri=microsoft_graph_redirect_uri.get(config),
+            scopes=microsoft_graph_oauth_scopes.get(config),
+        ).run()
+        return MicrosoftGraphAuthSession(token)
 
 
 class OneNoteSync(BaseSync[MicrosoftGraphAuthSession]):

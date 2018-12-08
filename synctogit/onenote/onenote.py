@@ -48,7 +48,7 @@ class OneNoteClient:
         notebooks_order: OneNoteOrder = OneNoteOrder.created,
         sections_order: OneNoteOrder = OneNoteOrder.created
     ) -> None:
-        # XXX REST API limitations:
+        # NB: REST API limitations:
         # - no colors
         # - no order of notebooks and sections
         # - no encrypted notes

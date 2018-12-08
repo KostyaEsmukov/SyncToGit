@@ -75,7 +75,9 @@ def test_flow_bundled_oauth(mock_evernote_client, mock_prompt_toolkit, auth_para
     auth = InteractiveAuth(**auth_params)
     assert auth.run() == "YOU.WON.THIS.TOKEN"
 
-    mock_evernote_client.get_access_token.call_args == call("AA", "WHOAH", "BB")
+    assert mock_evernote_client.get_access_token.call_args == call(
+        "AAAAAA.OOOOOOO.UUUUUUUU", "WHOAH", "BB"
+    )
     assert 1 == m["wait_for_enter"].call_count
 
 

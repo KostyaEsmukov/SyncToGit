@@ -199,7 +199,7 @@ class InteractiveAuth:
                 "After giving access you will be redirected to\n"
                 "a non-existing page – this is intended.\n"
                 "\n"
-                "Inter the URL of that page to the prompt below:"
+                "Enter the URL of that page to the prompt below:"
             ),
         )
         abort_if_falsy(url)
