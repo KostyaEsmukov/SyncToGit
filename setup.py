@@ -44,6 +44,7 @@ setup(
             'flake8==3.5.0',
             'isort==4.3.4',
             'pytest==3.8.1',
+            'sphinx==1.8.2',
             'vcrpy==2.0.0',
         ],
         'todoist': [
