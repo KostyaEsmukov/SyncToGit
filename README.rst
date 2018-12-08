@@ -4,15 +4,19 @@ SyncToGit
 
 
 .. image:: https://img.shields.io/pypi/dm/synctogit.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/synctogit/
+    :target: https://pypi.org/project/synctogit/
     :alt: Downloads
 
 .. image:: https://img.shields.io/pypi/v/synctogit.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/synctogit/
+    :target: https://pypi.org/project/synctogit/
     :alt: Latest Version
 
+.. image:: https://img.shields.io/pypi/pyversions/synctogit.svg?style=flat-square
+    :target: https://pypi.org/project/synctogit/
+    :alt: Supported Python versions
+
 .. image:: https://img.shields.io/github/license/KostyaEsmukov/SyncToGit.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/synctogit/
+    :target: https://pypi.org/project/synctogit/
     :alt: License
 
 
