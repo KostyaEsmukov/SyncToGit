@@ -45,7 +45,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'synctogit = synctogit.__main__:synctogit'
+            'synctogit = synctogit.main:main'
         ]
     },
     install_requires=[

@@ -1,6 +1,6 @@
 import pytest
 
-from synctogit.__main__ import logger
+from synctogit.main import logger
 from synctogit.print_on_exception_only import PrintOnExceptionOnly
 
 # TODO test logging as well
