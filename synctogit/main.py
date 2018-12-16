@@ -55,7 +55,12 @@ def main(batch, force_update, quiet, config, service):
     """
 
     with PrintOnExceptionOnly(quiet, logging.INFO):
-        synctogit(service, batch, force_update, config)
+        synctogit(
+            service=service,
+            batch=batch,
+            force_update=force_update,
+            config=config,
+        )
 
 
 def synctogit(*, service, batch, force_update, config):
