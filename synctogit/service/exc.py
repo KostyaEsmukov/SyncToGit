@@ -25,3 +25,7 @@ class ServiceRateLimitError(ServiceAPIError):
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.rate_limit_duration_seconds = rate_limit_duration_seconds
+
+
+class ServiceUnavailableError(ServiceAPIError):
+    pass

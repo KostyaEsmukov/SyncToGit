@@ -11,9 +11,10 @@ from .exc import (
     ServiceError,
     ServiceRateLimitError,
     ServiceTokenExpiredError,
+    ServiceUnavailableError,
     UserCancelledError,
 )
-from .retries import retry_ratelimited
+from .retries import retry_ratelimited, retry_unavailable
 
 __all__ = (
     'BaseAuth',
@@ -26,6 +27,8 @@ __all__ = (
     'ServiceImplementation',
     'ServiceRateLimitError',
     'ServiceTokenExpiredError',
+    'ServiceUnavailableError',
     'UserCancelledError',
     'retry_ratelimited',
+    'retry_unavailable',
 )

@@ -13,7 +13,9 @@ from synctogit.service import (
     ServiceAPIError,
     ServiceRateLimitError,
     ServiceTokenExpiredError,
+    ServiceUnavailableError,
     retry_ratelimited,
+    retry_unavailable,
 )
 
 from . import oauth
@@ -213,6 +215,7 @@ class OauthClient:
             return self._token
 
     @retry_ratelimited
+    @retry_unavailable
     def get(self, *args, **kwargs) -> requests.Response:
         for _ in range(2):
             with self.lock:
@@ -260,7 +263,10 @@ class OauthClient:
                     headers,
                     text,
                 )
-                raise ServiceAPIError(e)
+                if 500 <= status < 600:
+                    raise ServiceUnavailableError(e)
+                else:
+                    raise ServiceAPIError(e)
         except (socketerror, EOFError) as e:
             raise ServiceAPIError(e)
 
