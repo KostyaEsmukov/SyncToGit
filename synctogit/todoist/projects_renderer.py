@@ -30,7 +30,7 @@ class ProjectsRenderer:
     ) -> None:
         self.projects = tuple(projects)
         self.flat_projects = tuple(_flatten_projects(projects))
-        self.id_to_peoject = {
+        self.id_to_project = {
             project.id: project
             for project in self.flat_projects
         }
@@ -39,7 +39,7 @@ class ProjectsRenderer:
 
     @lru_cache(maxsize=100)
     def render_project(self, project_id) -> bytes:
-        project = self.id_to_peoject[project_id]
+        project = self.id_to_project[project_id]
 
         html_text = _project_template.render(dict(
             project=project,
@@ -56,7 +56,7 @@ class ProjectsRenderer:
                 url="./Projects/%s.%s.html" % (
                     normalize_filename(project.name), project.id
                 ),
-                todo_items_count=len(self.todo_items[project.id]),
+                todo_items_count=len(self.todo_items.get(project.id, [])),
             )
             for project in self.flat_projects
         }
