@@ -11,6 +11,7 @@ from synctogit.filename_sanitizer import normalize_filename
 
 from . import oauth
 from .client import OauthClient, OneNoteAPI
+from .exc import EncryptedSectionError
 from .models import (
     OneNoteNotebook,
     OneNotePage,
@@ -212,9 +213,12 @@ class OneNoteClient:
 
         for notebook in notebooks:
             for section in notebook.sections:
-                section_to_pages[section.id].extend(
-                    self._api.get_pages_of_section(section.id)
-                )
+                try:
+                    section_to_pages[section.id].extend(
+                        self._api.get_pages_of_section(section.id)
+                    )
+                except EncryptedSectionError:
+                    logger.info("Skipping encrypted section '%s'", section.name)
 
         return {
             section_id: [

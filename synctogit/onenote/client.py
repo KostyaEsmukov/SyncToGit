@@ -20,6 +20,7 @@ from synctogit.service import (
 
 from . import oauth
 from .compat import hide_spurious_urllib3_multipart_warning
+from .exc import EncryptedSectionError
 
 logger = logging.getLogger(__name__)
 
@@ -230,7 +231,7 @@ class OauthClient:
                     self._refresh_token(initial_token)
         raise ServiceTokenExpiredError("Failed to update auth token")
 
-    @contextlib.contextmanager
+    @contextlib.contextmanager  # noqa
     def translate_exceptions(self):
         try:
             yield
@@ -239,6 +240,11 @@ class OauthClient:
                 raise ServiceAPIError(e)
             status = e.response.status_code
             text = e.response.text
+            try:
+                json_body = e.response.json()
+            except Exception:
+                json_body = None
+
             headers = '\n'.join(map(str, e.response.headers.items()))
             if status == 429:  # Throttle
                 # Code 20166
@@ -253,6 +259,16 @@ class OauthClient:
                     s = 5 * 60
                 s = min(s, 3600) + 10
                 raise ServiceRateLimitError(e, rate_limit_duration_seconds=s)
+            elif (
+                status == 403
+                and json_body
+                and str(json_body["error"]["code"]) == "20185"
+            ):
+                # "error": {
+                #   "code": "20185",
+                #   "message": "Encrypted sections are not accessible.",
+                # }
+                raise EncryptedSectionError(json_body["error"]["message"])
             else:
                 logger.warning(
                     "Non-200 response from Microsoft Graph:\n"
