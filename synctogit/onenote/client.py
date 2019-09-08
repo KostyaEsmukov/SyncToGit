@@ -8,6 +8,7 @@ import requests
 from oauthlib.oauth2 import TokenExpiredError
 from requests_oauthlib import OAuth2Session
 from requests_toolbelt.multipart import decoder
+from urllib3.util import Retry
 
 from synctogit.service import (
     ServiceAPIError,
@@ -303,7 +304,20 @@ class OauthClient:
 
     def _get_client(self):
         session = OAuth2Session(self.client_id, token=self._token)
-        a = requests.adapters.HTTPAdapter(max_retries=1, pool_maxsize=100)
+        retries = Retry(1, respect_retry_after_header=False)
+        a = _HTTPAdapter(max_retries=retries, pool_maxsize=100, timeout=60)
         session.mount('http://', a)
         session.mount('https://', a)
         return session
+
+
+class _HTTPAdapter(requests.adapters.HTTPAdapter):
+    # https://github.com/psf/requests/issues/2011#issuecomment-64440818
+
+    def __init__(self, timeout=None, *args, **kwargs):
+        self.__timeout = timeout
+        super().__init__(*args, **kwargs)
+
+    def send(self, *args, **kwargs):
+        kwargs.setdefault('timeout', self.__timeout)
+        return super().send(*args, **kwargs)

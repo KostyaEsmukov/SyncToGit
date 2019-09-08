@@ -115,8 +115,8 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
             a = pool.submit(self.working_copy.get_working_copy_metadata)
             b = pool.submit(self.get_service_metadata)
 
-            working_copy_metadata = a.result()
-            service_metadata = b.result()
+            working_copy_metadata = a.result(timeout=3600)
+            service_metadata = b.result(timeout=3600)
             return working_copy_metadata, service_metadata
 
     def _update_notes(
