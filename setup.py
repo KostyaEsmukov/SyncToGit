@@ -74,13 +74,14 @@ setup(
             'todoist-python==8.0.0',
         ],
         'evernote': [
-            "evernote3==1.25.12",
+            "evernote3==1.25.13",
             "oauth2==1.9.0.post1",
+            "oauthlib>=1.0.3",
         ],
         'onenote': [
             "beautifulsoup4>=4.6,<5",
-            "oauth2==1.9.0.post1",
-            "requests_toolbelt>=0.8.0,<1",
+            "requests-oauthlib>=1.2.0,<2",
+            "requests_toolbelt>=0.9.1,<1",
         ],
     },
     license="MIT",
