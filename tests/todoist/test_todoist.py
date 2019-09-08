@@ -39,8 +39,8 @@ def todoist(todoist_user_timezone_name):
 @pytest.mark.parametrize(
     "date_raw, date_expected",
     [
-        ("Fri 23 Jun 2017 06:39:51 +0000", (2017, 6, 23, 9, 39, 51)),
-        ("Sat 07 Oct 2017 20:59:59 +0000", (2017, 10, 7, 23, 59, 59)),
+        ("2017-09-02T14:12:53+01:00", (2017, 9, 2, 16, 12, 53)),
+        ("2017-10-22T14:12:53Z", (2017, 10, 22, 17, 12, 53)),
     ],
 )
 def test_parse_datetime(todoist, date_raw, date_expected, todoist_user_timezone):
@@ -242,7 +242,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 "checked": 0,
                 "collapsed": 0,
                 "content": "Child",
-                "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+                "date_added": "2018-09-25T22:42:56Z",
                 "date_completed": None,
                 "date_lang": "en",
                 "date_string": "28 Sep",
@@ -272,7 +272,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 "checked": 0,
                 "collapsed": 0,
                 "content": "Subchild",
-                "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+                "date_added": "2018-09-25T22:42:56Z",
                 "date_completed": None,
                 "date_lang": "en",
                 "date_string": "28 Sep",
@@ -302,7 +302,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 "checked": 0,
                 "collapsed": 0,
                 "content": "Root",
-                "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+                "date_added": "2018-09-25T22:42:56Z",
                 "date_completed": None,
                 "date_lang": "en",
                 "date_string": "28 Sep",
@@ -312,9 +312,9 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                     "is_recurring": False,
                     "lang": "en",
                     "string": "29 Sep 16:00",
-                    "timezone": "Europe/Moscow",
+                    "timezone": None,
                 },
-                "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
+                "due_date_utc": None,
                 "has_more_notes": False,
                 "id": 2345,
                 "in_history": 0,
@@ -339,7 +339,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 "checked": 0,
                 "collapsed": 0,
                 "content": "All day Привет",
-                "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+                "date_added": "2018-09-25T22:42:56Z",
                 "date_completed": None,
                 "date_lang": "en",
                 "date_string": "28 Sep",
@@ -437,7 +437,7 @@ def test_hidden_todo_items(todoist, item_extra):
         "assigned_by_uid": 999,
         "checked": 0,
         "collapsed": 0,
-        "date_added": "Tue 25 Sep 2018 22:42:56 +0000",
+        "date_added": "2018-09-25T22:42:56Z",
         "date_completed": None,
         "date_lang": "en",
         "date_string": "28 Sep",
@@ -490,21 +490,15 @@ def test_hidden_todo_items(todoist, item_extra):
     "todo_item, due_date, due_datetime",
     [
         ({}, None, None),
-        ({"due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000"}, date(2018, 9, 29), None),
-        (
-            {"due_date_utc": "Sat 29 Sep 2018 23:59:59 +0300", "due": {}},  # unexpected
-            date(2018, 9, 29),
-            None,
-        ),
         (
             {
-                "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
+                "due_date_utc": None,
                 "due": {
-                    "date": "2018-09-29T13:00:00Z",
+                    "date": "2018-09-29T13:00:00Z",  # fake
                     "is_recurring": False,
                     "lang": "en",
                     "string": "29 Sep 16:00",
-                    "timezone": "Europe/Moscow",
+                    "timezone": None,
                 },
             },
             date(2018, 9, 29),
@@ -512,13 +506,13 @@ def test_hidden_todo_items(todoist, item_extra):
         ),
         (
             {
-                "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
+                "due_date_utc": None,
                 "due": {
-                    "date": "2018-09-29T16:00:00+03:00",  # unexpected
+                    "date": "2018-09-29T16:00:00",  # actual
                     "is_recurring": False,
                     "lang": "en",
                     "string": "29 Sep 16:00",
-                    "timezone": "Europe/Moscow",
+                    "timezone": None,
                 },
             },
             date(2018, 9, 29),
@@ -526,7 +520,21 @@ def test_hidden_todo_items(todoist, item_extra):
         ),
         (
             {
-                "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
+                "due_date_utc": None,
+                "due": {
+                    "date": "2018-09-29T16:00:00+03:00",  # fake
+                    "is_recurring": False,
+                    "lang": "en",
+                    "string": "29 Sep 16:00",
+                    "timezone": None,
+                },
+            },
+            date(2018, 9, 29),
+            datetime(2018, 9, 29, 16, 0, 0),
+        ),
+        (
+            {
+                "due_date_utc": None,
                 "due": {
                     "date": "2018-09-29",
                     "string": "29 Sep",
@@ -540,8 +548,7 @@ def test_hidden_todo_items(todoist, item_extra):
         ),
         (
             {
-                # This is a real example. The shown date is `30 Sept`.
-                "date_string": "29 Sep",
+                "date_string": None,
                 "due": {
                     "lang": "en",
                     "string": "30 Sep",
@@ -549,7 +556,7 @@ def test_hidden_todo_items(todoist, item_extra):
                     "is_recurring": False,
                     "date": "2018-09-30",
                 },
-                "due_date_utc": "Sat 29 Sep 2018 20:59:59 +0000",
+                "due_date_utc": None,
             },
             date(2018, 9, 30),
             None,
@@ -567,11 +574,11 @@ def test_parse_due_time(
 @pytest.mark.parametrize(
     "todo_item",
     [
-        {"due_date_utc": "Sat 29 Sep 2018 10:00:00 +0000"},  # must be 23:59:59
+        {"due_date_utc": "2018-09-29T16:00:00"},  # must be None
     ],
 )
 def test_parse_due_time_raises(todoist, todo_item):
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         todoist._parse_due_date_time(todo_item)
 
 

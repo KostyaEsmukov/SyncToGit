@@ -71,7 +71,7 @@ setup(
             'vcrpy==2.0.0',
         ],
         'todoist': [
-            'todoist-python==7.0.18',
+            'todoist-python==8.0.0',
         ],
         'evernote': [
             "evernote3==1.25.12",

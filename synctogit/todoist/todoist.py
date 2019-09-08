@@ -17,14 +17,6 @@ from . import models
 logger = getLogger(__name__)
 
 
-class _TodoistAPI(todoist.TodoistAPI):
-    def get_api_url(self):
-        # TodoistAPI currently uses `v7` version, which returns
-        # old color indexes. So we inject a newer version of API
-        # which exposes new color indexes.
-        return '%s/API/v7.4/' % self.api_endpoint
-
-
 class Todoist:
     def __init__(self, cache_dir: str, auth_token: str) -> None:
         cache_dir = cache_dir.rstrip(os.sep) + os.sep
@@ -32,7 +24,7 @@ class Todoist:
 
     def _create_api(self, cache_dir, auth_token):
         assert auth_token
-        return _TodoistAPI(cache=cache_dir, token=auth_token)
+        return todoist.TodoistAPI(cache=cache_dir, token=auth_token)
 
     def sync(self):
         response = self.api.sync()
@@ -98,7 +90,11 @@ class Todoist:
         def key(i):
             # All root items should go first, so they would exist when
             # a child item is processed.
-            return (i.data.get('parent_id') or -1, i.data['item_order'])
+            return (
+                i.data.get('parent_id') or -1,
+                i.data.get('item_order') or -1,
+                i.data['id'],
+            )
 
         ordered_items = sorted(self.api.state['items'], key=key)
 
@@ -164,9 +160,8 @@ class Todoist:
         if item_data.get('due'):
             due = item_data['due']
 
-            # Just ... don't ask.
-            timezone = due.get('timezone')
-            timezone = pytz.timezone(timezone) if timezone else self._timezone
+            assert due.get('timezone') is None  # This is a legacy key, I believe
+            timezone = self._timezone
 
             # date -- is a datetime. In ISO format. Or just a date.
             # Live with it.
@@ -181,19 +176,13 @@ class Todoist:
             except ValueError:
                 # It's not a date -- thus it's a full datetime.
                 due_datetime = dateutil.parser.parse(due['date'])
+                if due_datetime.tzinfo is None:
+                    due_datetime = timezone.localize(due_datetime)
                 due_datetime = due_datetime.astimezone(timezone)
                 due_date = due_datetime.date()
 
-        if due_date is None:
-            due_date_datetime = self._parse_datetime(item_data.get('due_date_utc'))
-            if due_date_datetime:
-                # Now we are talking fun
-                if due_date_datetime.time() != datetime.time(23, 59, 59):
-                    raise ValueError(
-                        "Unexpected due_date time `%s`: it must be "
-                        "23:59:59." % due_date_datetime.time()
-                    )
-                due_date = due_date_datetime.date()
+        assert item_data.get('due_date_utc') is None  # This is a legacy key, I believe
+
         return due_date, due_datetime
 
     @staticmethod
@@ -236,6 +225,7 @@ class Todoist:
     def _parse_datetime(self, date: Optional[str]) -> Optional[datetime.datetime]:
         if not date:
             return None
-        fmt = "%a %d %b %Y %H:%M:%S %z"  # Fri 23 Jun 2017 06:39:51 +0000
-        utc_datetime = datetime.datetime.strptime(date, fmt)
-        return utc_datetime.astimezone(self._timezone)
+        parsed_dt = dateutil.parser.parse(date)
+        if not parsed_dt.tzinfo:
+            raise ValueError("Expected tz-aware datetime, received '%s'" % date)
+        return parsed_dt.astimezone(self._timezone)
