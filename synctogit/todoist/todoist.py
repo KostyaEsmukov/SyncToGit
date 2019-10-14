@@ -44,7 +44,11 @@ class Todoist:
         def key(p):
             # All root items should go first, so they would exist when
             # a child item is processed.
-            return (p.data.get('parent_id') or -1, p.data['item_order'])
+            return (
+                p.data.get('parent_id') or -1,
+                p.data.get('item_order', 999999),
+                p.data.get('child_order', 999999),
+            )
 
         ordered_raw_projects = sorted(self.api.state['projects'], key=key)
 

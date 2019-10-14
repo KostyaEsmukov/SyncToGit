@@ -136,6 +136,21 @@ def test_get_projects(todoist):
             },
             None,
         ),
+        Project(
+            {
+                "shared": False,
+                "is_deleted": 0,
+                "parent_id": None,
+                "name": "New API",
+                "id": 99999922222,
+                "is_archived": 0,
+                "is_favorite": 0,
+                "collapsed": 0,
+                "child_order": 10,
+                "color": 32,
+            },
+            None,
+        ),
     ]
 
     expected_projects = [
@@ -179,6 +194,14 @@ def test_get_projects(todoist):
             is_favorite=True,
             is_inbox=False,
             name="Green Favorite Проект",
+            subprojects=[],
+        ),
+        models.TodoistProject(
+            id=99999922222,
+            color="rgb(255, 153, 51)",
+            is_favorite=False,
+            is_inbox=False,
+            name="New API",
             subprojects=[],
         ),
     ]
