@@ -63,12 +63,12 @@ setup(
     ],
     extras_require={
         'dev': [
-            'coverage==4.5.1',
-            'flake8==3.5.0',
-            'isort==4.3.4',
-            'pytest==3.8.1',
-            'sphinx==1.8.2',
-            'vcrpy==2.0.0',
+            'coverage==4.5.4',
+            'flake8==3.7.8',
+            'isort==4.3.21',
+            'pytest==5.2.1',
+            'sphinx==2.2.0',
+            'vcrpy==2.1.0',
         ],
         'todoist': [
             'todoist-python==8.0.0',
