@@ -56,7 +56,7 @@ class _GitFactory:
             return self._load_existing_git_repo()
         except GitError:
             raise
-        except git.exc.InvalidGitRepositoryError as e:
+        except git.exc.InvalidGitRepositoryError:
             if os.listdir(self.repo_dir):
                 raise GitError("Git directory is not a git repo and is not empty")
             # else -- the repo dir is empty -- let's create the new repo.

@@ -70,7 +70,7 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
     notes_dir_name = "Notes"
     resources_dir_name = "Resources"
 
-    changeset_cls = Changeset  # type: TChangeSet
+    changeset_cls = Changeset
 
     def __init__(
         self,

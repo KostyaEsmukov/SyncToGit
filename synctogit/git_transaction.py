@@ -79,7 +79,7 @@ class GitTransaction:
 
             try:
                 path.rmdir()  # raises if directory is not empty
-            except OSError as e:
+            except OSError:
                 # The current directory is either not empty or doesn't exist.
                 # In the latter case we might want to check the upper level
                 # ones, in case they do exist and are empty.

@@ -40,7 +40,7 @@ def test_normalize_filename(raw, expected):
 
 def test_normalize_filename_with_disallowed_chars():
     # https://stackoverflow.com/a/62888
-    chars = '<>:"/\|?*\';,?'
+    chars = r'<>:"/\|?*\';,?'
     assert not (set(normalize_filename(chars)) & set(chars))
 
 

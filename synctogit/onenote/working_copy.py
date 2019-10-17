@@ -18,7 +18,7 @@ class OneNoteWorkingCopy(
 ):
     # This class must be thread-safe
 
-    changeset_cls = OneNoteChangeset  # type: TChangeSet
+    changeset_cls = OneNoteChangeset
 
     @classmethod
     def _metadata_dir(cls, metadata: OneNotePageMetadata) -> Sequence[str]:

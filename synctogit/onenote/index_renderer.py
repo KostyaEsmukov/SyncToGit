@@ -20,7 +20,7 @@ def render(
     pages: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]],
     service_metadata: Mapping[OneNotePageId, OneNotePageMetadata],
     write: Callable[[bytes], None],
-    notes_dirs: Sequence[str]=("Notes",)
+    notes_dirs: Sequence[str] = ("Notes",)
 ) -> None:
     page_id_to_url = {
         page_id: _page_url(

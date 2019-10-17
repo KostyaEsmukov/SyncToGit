@@ -14,7 +14,7 @@ class EvernoteChangeset(Changeset[NoteGuid, NoteMetadata]):
 class EvernoteWorkingCopy(WorkingCopy[NoteGuid, NoteMetadata, EvernoteChangeset]):
     # This class must be thread-safe
 
-    changeset_cls = EvernoteChangeset  # type: TChangeSet
+    changeset_cls = EvernoteChangeset
 
     @classmethod
     def _metadata_dir(cls, metadata: NoteMetadata) -> Sequence[str]:

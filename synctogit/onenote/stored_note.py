@@ -1,7 +1,7 @@
 import datetime
 from collections import OrderedDict
 from pathlib import Path
-from typing import Tuple
+from typing import Mapping, Tuple
 
 import dateutil.parser
 import pytz

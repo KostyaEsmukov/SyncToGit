@@ -228,7 +228,7 @@ class OauthClient:
                     response = client.get(*args, **kwargs)
                     response.raise_for_status()
                     return response
-                except TokenExpiredError as e:
+                except TokenExpiredError:
                     self._refresh_token(initial_token)
         raise ServiceTokenExpiredError("Failed to update auth token")
 

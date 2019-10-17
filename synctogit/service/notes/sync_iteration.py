@@ -2,7 +2,7 @@ import abc
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from typing import Generic, Mapping
+from typing import Generic, List, Mapping, Tuple
 
 from synctogit.git_transaction import GitTransaction
 

@@ -9,7 +9,7 @@ _index_template = template_env.get_template("evernote/index.j2")
 def render(
     note_links: Sequence['IndexLink'],
     writer: Callable[[bytes], None],
-    notes_dirs: Sequence[str]=("Notes",),
+    notes_dirs: Sequence[str] = ("Notes",),
 ) -> None:
     dir_items = _note_links_to_tree(note_links, notes_dirs)
     b = _index_template.render(dict(items=dir_items))

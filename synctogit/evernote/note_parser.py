@@ -1,5 +1,5 @@
 import re
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, List, Mapping
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from xml.sax import ContentHandler, SAXParseException
