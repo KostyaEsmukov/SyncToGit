@@ -57,8 +57,8 @@ class _EvernoteNoteParser(ContentHandler):
         self._startElement(
             "meta",
             attrib={
-                'http-equiv': 'Content-Type',
                 'content': 'text/html; charset=UTF-8',
+                'http-equiv': 'Content-Type',
             },
         )
         self._endElement()
@@ -141,10 +141,13 @@ class _EvernoteNoteParser(ContentHandler):
             self._startElement(tag, attrib=attrs)
 
     def _processTagEnTodo(self, attrs):
-        a = {'type': "checkbox", 'disabled': "disabled"}
+        a = {}
 
         if attrs['checked'].lower() in ("true", "checked"):
             a['checked'] = 'checked'
+
+        a.update({'disabled': "disabled", 'type': "checkbox"})
+
         self._startElement("input", attrib=a)
 
     def _processTagEnMedia(self, attrs):
@@ -189,13 +192,15 @@ class _EvernoteNoteParser(ContentHandler):
         self.include_encrypted_js = True
 
         a = {
-            'href': '#',
-            'onclick': 'return evernote_decrypt(this);',
             'data-body': '',
         }
-        for k in ['cipher', 'length', 'hint']:
+        for k in ['cipher', 'hint', 'length']:
             if k in attrs:
                 a['data-' + k] = attrs[k]
+        a.update({
+            'href': '#',
+            'onclick': 'return evernote_decrypt(this);',
+        })
 
         self._startElement(
             "a", text="Encrypted content. Click here to decrypt.", attrib=a
