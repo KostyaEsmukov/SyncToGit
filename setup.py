@@ -5,8 +5,6 @@ import sys
 
 from setuptools import setup
 
-import synctogit
-
 if sys.version_info < (3, 5):
     # Courtesy of https://python3statement.org/practicalities/
     raise ImportError("""You are running synctogit on an unsupported
@@ -29,6 +27,4 @@ Your choices:
 """)
 
 
-setup(
-    version=synctogit.__version__,
-)
+setup()

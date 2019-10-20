@@ -1,6 +1,5 @@
 include CHANGELOG.rst
 include LICENSE.txt
 include README.rst
-include requirements
-include synctogit/NoShell.vbs
-graft synctogit/templates
+include src/synctogit/NoShell.vbs
+graft src/synctogit/templates
