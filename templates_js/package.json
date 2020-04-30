@@ -13,6 +13,6 @@
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.1",
     "inkmljs": "github:KostyaEsmukov/InkMLjs",
-    "jquery": "^3.3.1"
+    "jquery": "^3.5.0"
   }
 }
