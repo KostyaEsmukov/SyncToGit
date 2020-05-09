@@ -9,10 +9,10 @@
   "author": "Kostya Esmukov",
   "license": "MIT",
   "dependencies": {
-    "gulp": "^4.0.0",
+    "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
-    "gulp-uglify": "^3.0.1",
+    "gulp-uglify": "^3.0.2",
     "inkmljs": "github:KostyaEsmukov/InkMLjs",
-    "jquery": "^3.3.1"
+    "jquery": "^3.5.1"
   }
 }
