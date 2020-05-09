@@ -22,7 +22,7 @@ _an_pattern = re.compile("<(br|/?html|/?head|/?body|/title|/div)[^>]*>")
 # Add newline before:
 _bn_pattern = re.compile("<(/head|/body|title)[^>]*>")
 
-_note_tail_template = template_env.get_template('evernote/body_tail.j2')
+_note_tail_template = template_env.get_template("evernote/body_tail.j2")
 
 
 def resource_filename(file_hash: str, mime_type: str) -> str:
@@ -32,6 +32,7 @@ def resource_filename(file_hash: str, mime_type: str) -> str:
 
 class _EWrapper:
     """Element wrapper. Contains Element and a required context."""
+
     def __init__(self, element):
         self.e = element  # type: Element
         self.latest_child = None  # type: '_EWrapper'
@@ -57,8 +58,8 @@ class _EvernoteNoteParser(ContentHandler):
         self._startElement(
             "meta",
             attrib={
-                'content': 'text/html; charset=UTF-8',
-                'http-equiv': 'Content-Type',
+                "content": "text/html; charset=UTF-8",
+                "http-equiv": "Content-Type",
             },
         )
         self._endElement()
@@ -92,21 +93,21 @@ class _EvernoteNoteParser(ContentHandler):
         # todo in-app note links https://dev.evernote.com/doc/articles/note_links.php
 
         if tag == "en-note":
-            if 'style' not in attrs:
-                attrs['style'] = (
-                    'word-wrap: break-word; '
-                    '-webkit-nbsp-mode: space; '
-                    '-webkit-line-break: after-white-space;'
+            if "style" not in attrs:
+                attrs["style"] = (
+                    "word-wrap: break-word; "
+                    "-webkit-nbsp-mode: space; "
+                    "-webkit-line-break: after-white-space;"
                 )
 
-            attrs.pop('xmlns', 0)
+            attrs.pop("xmlns", 0)
 
             self._startElement("body", attrib=attrs)
             self.body_started = True
         else:
             if not self.body_started:
                 raise EvernoteMalformedNoteError(
-                    'Malformed note: tag %s appeared before en-note' % tag
+                    "Malformed note: tag %s appeared before en-note" % tag
                 )
             self._processTag(tag, attrs)
 
@@ -116,7 +117,7 @@ class _EvernoteNoteParser(ContentHandler):
     def characters(self, content):
         current_el = self.hierarchy[-1]
         if current_el.en_crypt:
-            current_el.e.attrib['data-body'] += content
+            current_el.e.attrib["data-body"] += content
             return
 
         if current_el.latest_child is None:
@@ -131,9 +132,9 @@ class _EvernoteNoteParser(ContentHandler):
 
     def _processTag(self, tag, attrs):
         m = {
-            'en-todo': self._processTagEnTodo,
-            'en-media': self._processTagEnMedia,
-            'en-crypt': self._processTagEnCrypt,
+            "en-todo": self._processTagEnTodo,
+            "en-media": self._processTagEnMedia,
+            "en-crypt": self._processTagEnCrypt,
         }
         if tag in m:
             m[tag](attrs)
@@ -143,10 +144,10 @@ class _EvernoteNoteParser(ContentHandler):
     def _processTagEnTodo(self, attrs):
         a = {}
 
-        if attrs['checked'].lower() in ("true", "checked"):
-            a['checked'] = 'checked'
+        if attrs["checked"].lower() in ("true", "checked"):
+            a["checked"] = "checked"
 
-        a.update({'disabled': "disabled", 'type': "checkbox"})
+        a.update({"disabled": "disabled", "type": "checkbox"})
 
         self._startElement("input", attrib=a)
 
@@ -171,36 +172,31 @@ class _EvernoteNoteParser(ContentHandler):
         # "application/x-iwork-pages-sffpages", "application/x-iwork-numbers-sffnumbers",  # noqa: E501
         # "application/x-iwork-keynote-sffkey"
 
-        toptype, _ = attrs['type'].split('/', 2)
+        toptype, _ = attrs["type"].split("/", 2)
 
-        src = "%s%s" % (self.resources_base,
-                        resource_filename(attrs['hash'], attrs['type']))
+        src = "%s%s" % (
+            self.resources_base,
+            resource_filename(attrs["hash"], attrs["type"]),
+        )
         if toptype == "image":
-            a = _copy_preserve(
-                attrs, ["alt", "style", "width", "height"]
-            )
-            a['src'] = src
+            a = _copy_preserve(attrs, ["alt", "style", "width", "height"])
+            a["src"] = src
             self._startElement("img", attrib=a)
         else:
             # TODO other types
 
-            self._startElement(
-                "a", text="Document of type " + attrs['type'], href=src
-            )
+            self._startElement("a", text="Document of type " + attrs["type"], href=src)
 
     def _processTagEnCrypt(self, attrs):
         self.include_encrypted_js = True
 
         a = {
-            'data-body': '',
+            "data-body": "",
         }
-        for k in ['cipher', 'hint', 'length']:
+        for k in ["cipher", "hint", "length"]:
             if k in attrs:
-                a['data-' + k] = attrs[k]
-        a.update({
-            'href': '#',
-            'onclick': 'return evernote_decrypt(this);',
-        })
+                a["data-" + k] = attrs[k]
+        a.update({"href": "#", "onclick": "return evernote_decrypt(this);"})
 
         self._startElement(
             "a", text="Encrypted content. Click here to decrypt.", attrib=a
@@ -224,13 +220,11 @@ class _EvernoteNoteParser(ContentHandler):
 
         r = r.encode("utf8")
 
-        tail = _note_tail_template.render(dict(
-            include_encrypted_js=self.include_encrypted_js,
-        ))
-
-        r = r.replace(
-            b"</body>", tail.encode("utf8") + b"</body>", 1
+        tail = _note_tail_template.render(
+            dict(include_encrypted_js=self.include_encrypted_js)
         )
+
+        r = r.replace(b"</body>", tail.encode("utf8") + b"</body>", 1)
         return r
 
 
@@ -239,11 +233,7 @@ def parse(resources_base_path: str, enbody: str, title: str) -> bytes:
 
     try:
         parseString(
-            enbody,
-            p,
-            forbid_dtd=False,
-            forbid_entities=False,
-            forbid_external=False,
+            enbody, p, forbid_dtd=False, forbid_entities=False, forbid_external=False,
         )
     except SAXParseException as e:
         raise EvernoteMalformedNoteError(e)

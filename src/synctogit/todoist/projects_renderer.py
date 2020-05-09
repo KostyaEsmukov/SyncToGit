@@ -30,10 +30,7 @@ class ProjectsRenderer:
     ) -> None:
         self.projects = tuple(projects)
         self.flat_projects = tuple(_flatten_projects(projects))
-        self.id_to_project = {
-            project.id: project
-            for project in self.flat_projects
-        }
+        self.id_to_project = {project.id: project for project in self.flat_projects}
         self.todo_items = dict(todo_items)
         self.timezone = timezone
 
@@ -41,11 +38,9 @@ class ProjectsRenderer:
     def render_project(self, project_id) -> bytes:
         project = self.id_to_project[project_id]
 
-        html_text = _project_template.render(dict(
-            project=project,
-            todo_items=self.todo_items,
-            timezone=self.timezone,
-        ))
+        html_text = _project_template.render(
+            dict(project=project, todo_items=self.todo_items, timezone=self.timezone)
+        )
         return html_text.encode("utf8")
 
     @lru_cache()
@@ -53,28 +48,31 @@ class ProjectsRenderer:
         project_links = {
             project.id: _IndexProjectLink(
                 # XXX move this out for god's sake
-                url="./Projects/%s.%s.html" % (
-                    normalize_filename(project.name), project.id
-                ),
+                url="./Projects/%s.%s.html"
+                % (normalize_filename(project.name), project.id),
                 todo_items_count=len(self.todo_items.get(project.id, [])),
             )
             for project in self.flat_projects
         }
 
-        html_text = _index_template.render(dict(
-            projects=self.projects,
-            flat_projects=self.flat_projects,
-            project_links=project_links,
-            todo_items=self.todo_items,
-            timezone=self.timezone,
-        ))
+        html_text = _index_template.render(
+            dict(
+                projects=self.projects,
+                flat_projects=self.flat_projects,
+                project_links=project_links,
+                todo_items=self.todo_items,
+                timezone=self.timezone,
+            )
+        )
         return html_text.encode("utf8")
 
 
 _IndexProjectLink = NamedTuple(
-    'IndexProjectLink',
+    "IndexProjectLink",
     [
-        ('url', str),
-        ('todo_items_count', int),
-    ]
+        # fmt: off
+        ("url", str),
+        ("todo_items_count", int),
+        # fmt: on
+    ],
 )

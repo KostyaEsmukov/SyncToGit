@@ -11,41 +11,31 @@ from .service import InvalidAuthSession, ServiceTokenExpiredError, UserCancelled
 logger = logging.getLogger(__name__)
 
 services = {
-    'evernote': evernote,
-    'onenote': onenote,
-    'todoist': todoist,
+    "evernote": evernote,
+    "onenote": onenote,
+    "todoist": todoist,
 }
 
 
 @click.command()
-@click.version_option(
-    version=__version__,
+@click.version_option(version=__version__)
+@click.option(
+    "-b", "--batch", is_flag=True, help="Non-interactive mode",
 )
 @click.option(
-    "-b",
-    "--batch",
-    is_flag=True,
-    help='Non-interactive mode',
-)
-@click.option(
-    "-f",
-    "--force-update",
-    is_flag=True,
-    help='Force download all notes',
+    "-f", "--force-update", is_flag=True, help="Force download all notes",
 )
 @click.option(
     "-q",
     "--quiet",
     is_flag=True,
-    help='Do not print anything unless exit code is non-zero',
+    help="Do not print anything unless exit code is non-zero",
 )
 @click.argument(
-    'config',
-    type=click.Path(exists=True),
+    "config", type=click.Path(exists=True),
 )
 @click.argument(
-    'service',
-    type=click.Choice(services.keys()),
+    "service", type=click.Choice(services.keys()),
 )
 def main(batch, force_update, quiet, config, service):
     """SyncToGit. Sync your Evernote notes to a local git repository.
@@ -56,10 +46,7 @@ def main(batch, force_update, quiet, config, service):
 
     with PrintOnExceptionOnly(quiet, logging.INFO):
         synctogit(
-            service=service,
-            batch=batch,
-            force_update=force_update,
-            config=config,
+            service=service, batch=batch, force_update=force_update, config=config,
         )
 
 

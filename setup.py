@@ -7,7 +7,8 @@ from setuptools import setup
 
 if sys.version_info < (3, 5):
     # Courtesy of https://python3statement.org/practicalities/
-    raise ImportError("""You are running synctogit on an unsupported
+    raise ImportError(
+        """You are running synctogit on an unsupported
 version of Python.
 
 synctogit 3.0 and above are no longer compatible with Python <3.5, and you still
@@ -24,7 +25,8 @@ Your choices:
 - Install an older version of synctogit:
 
  $ pip install 'synctogit<3.0'
-""")
+"""
+    )
 
 
 setup()

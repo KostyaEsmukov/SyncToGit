@@ -17,6 +17,7 @@ def hide_spurious_urllib3_multipart_warning():
 
 class NoHeaderErrorFilter(logging.Filter):
     """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
+
     # https://github.com/home-assistant/home-assistant/pull/17042
 
     def filter(self, record):

@@ -3,7 +3,7 @@ import tzlocal
 
 from synctogit.config import Config, StrConfigItem
 
-general_timezone = StrConfigItem('general', 'timezone', None)
+general_timezone = StrConfigItem("general", "timezone", None)
 
 
 def get_timezone(config: Config) -> pytz.BaseTzInfo:

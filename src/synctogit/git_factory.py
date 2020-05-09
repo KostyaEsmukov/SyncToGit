@@ -10,15 +10,15 @@ class GitError(Exception):
 
 
 # Default username and email for git.
-os.environ['USERNAME'] = 'synctogit'
-os.environ['EMAIL'] = 'none@none'
+os.environ["USERNAME"] = "synctogit"
+os.environ["EMAIL"] = "none@none"
 
 
-gitignore_synctogit_files_prefix = '.synctogit'
+gitignore_synctogit_files_prefix = ".synctogit"
 
 # The directory below is automatically added to the .gitignore file,
 # so feel free to store any local cache of a service here.
-local_git_ignored_cache_dir = '%s.sync_cache' % gitignore_synctogit_files_prefix
+local_git_ignored_cache_dir = "%s.sync_cache" % gitignore_synctogit_files_prefix
 
 
 def git_factory(
@@ -108,23 +108,23 @@ class _GitFactory:
         assert origin.exists()
 
     def _ensure_gitignore(self, repo: git.Repo) -> None:
-        gitignore_path = os.path.join(self.repo_dir, '.gitignore')
+        gitignore_path = os.path.join(self.repo_dir, ".gitignore")
 
         gitignore_line = "%s*" % gitignore_synctogit_files_prefix
 
         if os.path.isfile(gitignore_path):
-            with open(gitignore_path, 'rt') as f:
+            with open(gitignore_path, "rt") as f:
                 gitignore = f.read()
             for line in gitignore.splitlines():
                 if line.rstrip() == gitignore_line:
                     # gitignore is good!
                     return
 
-        with self.clean_index(repo, ['.gitignore']):
-            with open(gitignore_path, 'at') as f:
-                f.write('\n%s\n' % gitignore_line)
+        with self.clean_index(repo, [".gitignore"]):
+            with open(gitignore_path, "at") as f:
+                f.write("\n%s\n" % gitignore_line)
             repo.index.add([".gitignore"])
-            repo.index.commit('Update .gitignore (automated commit by synctogit)')
+            repo.index.commit("Update .gitignore (automated commit by synctogit)")
 
     @contextlib.contextmanager
     def clean_index(self, repo: git.Repo, fail_for_changed_files=[]):
@@ -145,4 +145,4 @@ class _GitFactory:
             yield
         finally:
             if stash:
-                repo.git.stash('pop', '--index')
+                repo.git.stash("pop", "--index")

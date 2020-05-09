@@ -8,7 +8,7 @@ from synctogit.onenote.client import OauthClient, OneNoteAPI
 from synctogit.service import ServiceAPIError
 
 
-@patch.object(OauthClient, '_get_client')
+@patch.object(OauthClient, "_get_client")
 def test_oauth_client_get_refresh_token(mock_get_client):
     client_obsolete = MagicMock()
     client_obsolete.get.side_effect = [
@@ -23,11 +23,7 @@ def test_oauth_client_get_refresh_token(mock_get_client):
         client_obsolete,
         client_refreshed,
     ]
-    oauth_client = OauthClient(
-        client_id='',
-        client_secret='',
-        token={},
-    )
+    oauth_client = OauthClient(client_id="", client_secret="", token={})
     assert response is oauth_client.get(sentinel.url)
     assert mock_get_client.call_count == 2
     assert client_obsolete.get.call_count == 1
@@ -37,35 +33,25 @@ def test_oauth_client_get_refresh_token(mock_get_client):
 
 
 def test_oauth_client_translate_exceptions():
-    client = OauthClient(
-        client_id='',
-        client_secret='',
-        token={},
-    )
+    client = OauthClient(client_id="", client_secret="", token={})
 
     with pytest.raises(ServiceAPIError):
         with client.translate_exceptions():
             raise EOFError()
 
 
-@patch('synctogit.service.retries.sleep')
-@patch.object(OauthClient, '_get_client')
+@patch("synctogit.service.retries.sleep")
+@patch.object(OauthClient, "_get_client")
 def test_oauth_client_ratelimit_retries_norecover(mock_get_client, mock_sleep):
     client = MagicMock()
 
     response = requests.Response()
     response.status_code = 429
-    client.get.side_effect = requests.HTTPError(
-        response=response,
-    )
+    client.get.side_effect = requests.HTTPError(response=response)
 
     mock_get_client.return_value = client
 
-    oauth_client = OauthClient(
-        client_id='',
-        client_secret='',
-        token={},
-    )
+    oauth_client = OauthClient(client_id="", client_secret="", token={})
 
     with pytest.raises(ServiceAPIError):
         oauth_client.get(sentinel.url)
@@ -73,42 +59,41 @@ def test_oauth_client_ratelimit_retries_norecover(mock_get_client, mock_sleep):
     assert mock_sleep.call_count == 9
 
 
-@patch('synctogit.service.retries.sleep')
-@patch.object(OauthClient, '_get_client')
+@patch("synctogit.service.retries.sleep")
+@patch.object(OauthClient, "_get_client")
 def test_oauth_client_ratelimit_retries_recover(mock_get_client, mock_sleep):
     client = MagicMock()
     success_response = MagicMock()
 
     response = requests.Response()
     response.status_code = 429
-    client.get.side_effect = [requests.HTTPError(
-        response=response,
-    )] * 5 + [success_response]
+    client.get.side_effect = (
+        # fmt: off
+        [requests.HTTPError(response=response)] * 5
+        + [success_response]
+        # fmt: on
+    )
 
     mock_get_client.return_value = client
 
-    oauth_client = OauthClient(
-        client_id='',
-        client_secret='',
-        token={},
-    )
+    oauth_client = OauthClient(client_id="", client_secret="", token={})
 
     assert success_response is oauth_client.get(sentinel.url)
     assert client.get.call_count == 6
     assert mock_sleep.call_count == 5
 
 
-@patch('requests_toolbelt.multipart.decoder.MultipartDecoder')
+@patch("requests_toolbelt.multipart.decoder.MultipartDecoder")
 def test_onenote_api_page_html(mock_decoder):
     client = MagicMock()
     api = OneNoteAPI(client=client)
 
     mock_decoder.from_response.side_effect = [sentinel.multipart]
-    assert sentinel.multipart is api.get_page_html('PAPAPAGE')
+    assert sentinel.multipart is api.get_page_html("PAPAPAGE")
     assert client.get.call_count == 1
     assert client.get.call_args == call(
-        'https://graph.microsoft.com/v1.0/me/onenote/pages/'
-        'PAPAPAGE/content?preAuthenticated=true&includeinkML=true'
+        "https://graph.microsoft.com/v1.0/me/onenote/pages/"
+        "PAPAPAGE/content?preAuthenticated=true&includeinkML=true"
     )
 
 
@@ -117,19 +102,18 @@ def test_onenote_api_page_info_with_section():
     api = OneNoteAPI(client=client)
 
     client.get().json.side_effect = [
-        {'value': [sentinel.page]},
+        {"value": [sentinel.page]},
     ]
     client.get.reset_mock()
-    assert sentinel.page is api.get_page_info('PAPAPAGE', 'SESESECTION')
+    assert sentinel.page is api.get_page_info("PAPAPAGE", "SESESECTION")
     assert client.get.call_count == 1
     assert client.get.call_args == call(
-        'https://graph.microsoft.com/v1.0/me/onenote/sections/'
-        'SESESECTION/pages',
+        "https://graph.microsoft.com/v1.0/me/onenote/sections/SESESECTION/pages",
         params={
-            '$select': 'id,title,createdDateTime,lastModifiedDateTime',
-            'filter': "id eq 'PAPAPAGE'",
-            'pagelevel': 'true',
-        }
+            "$select": "id,title,createdDateTime,lastModifiedDateTime",
+            "filter": "id eq 'PAPAPAGE'",
+            "pagelevel": "true",
+        },
     )
 
 
@@ -138,28 +122,27 @@ def test_onenote_api_page_info_without_section():
     api = OneNoteAPI(client=client)
 
     client.get().json.side_effect = [
-        {'parentSection': {'id': 'SESESECTION'}},
-        {'value': [sentinel.page]},
+        {"parentSection": {"id": "SESESECTION"}},
+        {"value": [sentinel.page]},
     ]
     client.get.reset_mock()
-    assert sentinel.page is api.get_page_info('PAPAPAGE', None)
+    assert sentinel.page is api.get_page_info("PAPAPAGE", None)
     assert client.get.call_count == 2
     assert client.get.call_args_list == [
         call(
-            'https://graph.microsoft.com/v1.0/me/onenote/pages/PAPAPAGE',
+            "https://graph.microsoft.com/v1.0/me/onenote/pages/PAPAPAGE",
             params={
-                '$select': 'id,title,createdDateTime,lastModifiedDateTime',
-                '$expand': 'parentSection($select=id)'
-            }
+                "$select": "id,title,createdDateTime,lastModifiedDateTime",
+                "$expand": "parentSection($select=id)",
+            },
         ),
         call(
-            'https://graph.microsoft.com/v1.0/me/onenote/sections/'
-            'SESESECTION/pages',
+            "https://graph.microsoft.com/v1.0/me/onenote/sections/SESESECTION/pages",
             params={
-                '$select': 'id,title,createdDateTime,lastModifiedDateTime',
-                'filter': "id eq 'PAPAPAGE'",
-                'pagelevel': 'true',
-            }
+                "$select": "id,title,createdDateTime,lastModifiedDateTime",
+                "filter": "id eq 'PAPAPAGE'",
+                "pagelevel": "true",
+            },
         ),
     ]
 
@@ -169,11 +152,11 @@ def test_onenote_api_pages_of_section():
     api = OneNoteAPI(client=client)
 
     client.get().json.side_effect = [
-        {'value': [sentinel.page1, sentinel.page2]},
+        {"value": [sentinel.page1, sentinel.page2]},
     ]
     client.get.reset_mock()
     assert [sentinel.page1, sentinel.page2] == list(
-        api.get_pages_of_section('SESESECTION')
+        api.get_pages_of_section("SESESECTION")
     )
 
 
@@ -182,9 +165,7 @@ def test_onenote_api_notebooks():
     api = OneNoteAPI(client=client)
 
     client.get().json.side_effect = [
-        {'value': [sentinel.nb1, sentinel.nb2]},
+        {"value": [sentinel.nb1, sentinel.nb2]},
     ]
     client.get.reset_mock()
-    assert [sentinel.nb1, sentinel.nb2] == list(
-        api.get_notebooks()
-    )
+    assert [sentinel.nb1, sentinel.nb2] == list(api.get_notebooks())

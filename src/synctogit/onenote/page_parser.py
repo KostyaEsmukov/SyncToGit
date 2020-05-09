@@ -15,7 +15,7 @@ from .models import OneNoteResource
 
 logger = logging.getLogger(__name__)
 
-_page_tail_template = template_env.get_template('onenote/body_tail.j2')
+_page_tail_template = template_env.get_template("onenote/body_tail.j2")
 
 
 def _is_empty_inkml(inkml: Optional[str]):
@@ -24,7 +24,7 @@ def _is_empty_inkml(inkml: Optional[str]):
 
     root = ET.fromstring(inkml)
     # https://stackoverflow.com/q/14853243
-    tg = root.find('./{http://www.w3.org/2003/InkML}traceGroup')
+    tg = root.find("./{http://www.w3.org/2003/InkML}traceGroup")
     return not bool(list(tg))
 
 
@@ -59,25 +59,23 @@ class PageParser:
         *,
         resource_retrieval: ResourceRetrieval,
         resources_base: str
-    ) -> 'PageParser':
+    ) -> "PageParser":
         html = None
         inkml = None
         for part in multipart_data.parts:
             text = part.text
-            content_type = part.headers.get(b'content-type', b'').decode().lower()
+            content_type = part.headers.get(b"content-type", b"").decode().lower()
 
-            if 'text/html' in content_type:
+            if "text/html" in content_type:
                 if html is not None:
                     raise ValueError("Multiple html parts received")
                 html = text
-            elif 'application/inkml+xml' in content_type:
+            elif "application/inkml+xml" in content_type:
                 if inkml is not None:
                     raise ValueError("Multiple inkml parts received")
                 inkml = text
             else:
-                raise ValueError(
-                    "Unknown content-type '%s' or a part" % content_type
-                )
+                raise ValueError("Unknown content-type '%s' or a part" % content_type)
 
         if html is None:
             raise ValueError("HTML part hasn't been received")
@@ -101,14 +99,14 @@ class PageParser:
         return self._parsed.resources
 
     @cached_property
-    def _parsed(self) -> '_Parsed':
+    def _parsed(self) -> "_Parsed":
         soup = bs(self._raw_html, "html.parser")
         self._bleach_html(soup)
         resources = self._process_resources(soup)
         html = soup.prettify(formatter="html5")
 
         html = self._insert_page_tail(html)
-        html = html.replace('\r\n', '\n').encode("utf8")
+        html = html.replace("\r\n", "\n").encode("utf8")
 
         return _Parsed(html=html, resources=resources)
 
@@ -121,22 +119,16 @@ class PageParser:
     def _insert_page_tail(self, html: str):
         inkml = self._raw_inkml
 
-        tail = _page_tail_template.render(dict(
-            inkml=inkml,
-        ))
+        tail = _page_tail_template.render(dict(inkml=inkml))
 
-        if '</body>' not in html:
-            raise ValueError(
-                "HTML part doesn't contain the '</body>' tag"
-            )
+        if "</body>" not in html:
+            raise ValueError("HTML part doesn't contain the '</body>' tag")
         html = html.replace("</body>", tail + "</body>")
         return html
 
     def _process_resources(self, soup: bs):
-        return _ParseResources(
-            self._resource_retrieval,
-            self._resources_base,
-        ).parse(soup)
+        p = _ParseResources(self._resource_retrieval, self._resources_base)
+        return p.parse(soup)
 
 
 class _ParseResources:
@@ -148,10 +140,10 @@ class _ParseResources:
         self.resource_id_to_meta = {}  # type: Mapping[str, Mapping[str, str]]
 
     def parse(self, soup: bs):
-        for img_tag in soup.find_all('img'):
+        for img_tag in soup.find_all("img"):
             self._handle_img_tag(img_tag, soup)
 
-        for object_tag in soup.find_all('object'):
+        for object_tag in soup.find_all("object"):
             # Documents (pdf), videos
             self._handle_object_tag(object_tag, soup)
 
@@ -160,8 +152,8 @@ class _ParseResources:
         return {
             resource_id: OneNoteResource(
                 body=resource_id_to_body[resource_id],
-                mime=meta['mime'],
-                filename=meta['filename'],
+                mime=meta["mime"],
+                filename=meta["filename"],
             )
             for resource_id, meta in self.resource_id_to_meta.items()
         }
@@ -169,57 +161,46 @@ class _ParseResources:
     def _handle_img_tag(self, img_tag: Tag, soup: bs) -> None:
         self._handle_resource(
             img_tag,
-            src_attrs=('data-fullres-src', 'src'),
-            mime_attrs=('data-fullres-src-type', 'data-src-type'),
+            src_attrs=("data-fullres-src", "src"),
+            mime_attrs=("data-fullres-src-type", "data-src-type"),
             filename_attrs=tuple(),
-            final_src_attr='src',
-            final_mime_attr='data-src-type',
+            final_src_attr="src",
+            final_mime_attr="data-src-type",
         )
 
     def _handle_object_tag(self, object_tag: Tag, soup: bs) -> None:
         handled = self._handle_resource(
             object_tag,
-            src_attrs=('data',),
-            mime_attrs=('type',),
-            filename_attrs=('data-attachment',),
-            final_src_attr='data',
-            final_mime_attr='type',
+            src_attrs=("data",),
+            mime_attrs=("type",),
+            filename_attrs=("data-attachment",),
+            final_src_attr="data",
+            final_mime_attr="type",
         )
-        if handled.is_onenote and object_tag['type'].startswith('video'):
+        if handled.is_onenote and object_tag["type"].startswith("video"):
             # Replace `object` tag with `video`.
             video_tag = soup.new_tag(
-                'video',
+                "video",
                 controls="",
-                **{
-                    k: v
-                    for k, v in object_tag.attrs.items()
-                    if k.startswith('data-')
-                }
+                **{k: v for k, v in object_tag.attrs.items() if k.startswith("data-")}
             )
-            style = object_tag.get('style')
+            style = object_tag.get("style")
             if style:
-                video_tag['style'] = style
+                video_tag["style"] = style
 
-            video_tag.append(soup.new_tag(
-                'source',
-                type=object_tag['type'],
-                src=object_tag['data'],
-            ))
+            video_tag.append(
+                soup.new_tag("source", type=object_tag["type"], src=object_tag["data"])
+            )
 
             object_tag.replace_with(video_tag)
         else:
             # Insert an `a` link before the object.
-            a_tag = soup.new_tag(
-                'a', href=object_tag['data']
-            )
+            a_tag = soup.new_tag("a", href=object_tag["data"])
             a_tag.string = handled.a_link_text
-            if object_tag.get('style'):
+            if object_tag.get("style"):
                 # `style` looks like
                 # "position:absolute;left:48px;top:1099px".
-                a_tag['style'] = (
-                    object_tag['style'].rstrip(';')
-                    + ';margin-top:-20px;'
-                )
+                a_tag["style"] = object_tag["style"].rstrip(";") + ";margin-top:-20px;"
             object_tag.insert_before(a_tag)
 
     def _handle_resource(
@@ -231,7 +212,7 @@ class _ParseResources:
         filename_attrs: Sequence[str],
         final_src_attr: str,
         final_mime_attr: str
-    ) -> '_HandledResource':
+    ) -> "_HandledResource":
         src = self._first(tag, src_attrs)
         a_link_text = "Document at %s" % src
 
@@ -247,30 +228,19 @@ class _ParseResources:
         if original_filename:
             a_link_text = "Document %s" % original_filename
 
-        for attr in (src_attrs + mime_attrs):
+        for attr in src_attrs + mime_attrs:
             del tag[attr]
 
         tag[final_mime_attr] = mime_type
         tag[final_src_attr] = os.path.join(self._resources_base, filename)
 
-        self.resource_id_to_meta[resource_id] = dict(
-            filename=filename,
-            mime=mime_type,
-        )
+        self.resource_id_to_meta[resource_id] = dict(filename=filename, mime=mime_type)
         return _HandledResource(is_onenote=True, a_link_text=a_link_text)
 
     def _first(
-        self,
-        tag: Tag,
-        candidate_attrs: Sequence[str],
-        *,
-        empty_raises=True
+        self, tag: Tag, candidate_attrs: Sequence[str], *, empty_raises=True
     ) -> str:
-        iterator = (
-            tag[attr]
-            for attr in candidate_attrs
-            if tag.get(attr)
-        )
+        iterator = (tag[attr] for attr in candidate_attrs if tag.get(attr))
         attr_value = next(iterator, None)
         if empty_raises and attr_value is None:
             raise KeyError(
@@ -283,8 +253,8 @@ class _ParseResources:
     ) -> str:
         # resource_id looks like
         # "0-aaaaaaaaaaaaaaaaaaaaaaaaaaaaa399!1-AAAAAAAAAAAAAAA!999"
-        if original_filename and '.' in original_filename:
-            name, ext = original_filename.rsplit('.', 1)
+        if original_filename and "." in original_filename:
+            name, ext = original_filename.rsplit(".", 1)
             filename = "%s.%s.%s" % (name, resource_id, ext)
         else:
             ext = ext_from_mime_type(mime_type)
@@ -293,18 +263,22 @@ class _ParseResources:
 
 
 _Parsed = NamedTuple(
-    '_Parsed',
+    "_Parsed",
     [
-        ('html', bytes),
-        ('resources', Mapping[str, OneNoteResource]),
-    ]
+        # fmt: off
+        ("html", bytes),
+        ("resources", Mapping[str, OneNoteResource]),
+        # fmt: on
+    ],
 )
 
 
 _HandledResource = NamedTuple(
-    '_HandledResource',
+    "_HandledResource",
     [
-        ('is_onenote', bool),
-        ('a_link_text', str),
-    ]
+        # fmt: off
+        ("is_onenote", bool),
+        ("a_link_text", str),
+        # fmt: on
+    ],
 )

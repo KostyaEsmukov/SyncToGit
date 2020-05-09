@@ -7,7 +7,7 @@ from synctogit.onenote import oauth
 from synctogit.onenote.models import OneNoteResource
 from synctogit.onenote.page_parser import PageParser, ResourceRetrieval, _is_empty_inkml
 
-data_path = Path(__file__).parents[0] / 'data'
+data_path = Path(__file__).parents[0] / "data"
 
 
 class DummyResourceRetrieval(ResourceRetrieval):
@@ -20,7 +20,7 @@ class DummyResourceRetrieval(ResourceRetrieval):
         if not match:
             return None
         resource_id = match.group(1)
-        self.queue[resource_id] = ('test data|' + resource_id).encode()
+        self.queue[resource_id] = ("test data|" + resource_id).encode()
         return resource_id
 
     def retrieve_all(self) -> Mapping[str, bytes]:
@@ -28,7 +28,7 @@ class DummyResourceRetrieval(ResourceRetrieval):
 
 
 @pytest.mark.parametrize(
-    'is_empty, inkml',
+    "is_empty, inkml",
     [
         (True, None),
         (True, (data_path / "page_parser_inkml_empty.xml").read_text()),

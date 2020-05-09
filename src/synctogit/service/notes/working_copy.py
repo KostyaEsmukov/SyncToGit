@@ -18,19 +18,21 @@ logger = logging.getLogger(__name__)
 
 
 def _seq_to_path(parts: Sequence[str]) -> Path:
-    p = Path('')
+    p = Path("")
     for part in parts:
-        assert part not in ('.', '..')
+        assert part not in (".", "..")
         p = p / part
     return p
 
 
 NoteResource = NamedTuple(
-    'NoteResource',
+    "NoteResource",
     [
-        ('filename', str),
-        ('body', bytes),
-    ]
+        # fmt: off
+        ("filename", str),
+        ("body", bytes),
+        # fmt: on
+    ],
 )
 
 
@@ -40,7 +42,7 @@ class Changeset(Generic[TNoteKey, TNoteMetadata]):
         self,
         new: Mapping[TNoteKey, TNoteMetadata],
         update: Mapping[TNoteKey, TNoteMetadata],
-        delete: Mapping[TNoteKey, TNoteMetadata]
+        delete: Mapping[TNoteKey, TNoteMetadata],
     ) -> None:
         self.new = new
         self.update = update
@@ -62,7 +64,7 @@ class Changeset(Generic[TNoteKey, TNoteMetadata]):
         return not (self == other)
 
 
-TChangeset = TypeVar('TChangeset', bound=Changeset)
+TChangeset = TypeVar("TChangeset", bound=Changeset)
 
 
 class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
@@ -73,9 +75,7 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
     changeset_cls = Changeset
 
     def __init__(
-        self,
-        git_transaction: GitTransaction,
-        timezone: pytz.BaseTzInfo
+        self, git_transaction: GitTransaction, timezone: pytz.BaseTzInfo
     ) -> None:
         self.git_transaction = git_transaction
         self.repo_dir = git_transaction.repo_dir
@@ -111,16 +111,14 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
 
     @classmethod
     def get_relative_resources_url(
-        cls,
-        note_key: TNoteKey,
-        metadata: TNoteMetadata
+        cls, note_key: TNoteKey, metadata: TNoteMetadata
     ) -> str:
         """Returns a relative URL from a Note to its Resources directory.
         Intended to be used in the generated HTML pages of the notes.
         """
         ups = [".."] * (len(cls._metadata_dir(metadata)) + 1)
         path = [cls.resources_dir_name, note_key, ""]
-        return '/'.join(ups + path)
+        return "/".join(ups + path)
 
     @classmethod
     def calculate_changes(
@@ -145,16 +143,15 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
                     # Note has been renamed
                     changeset.delete[note_key] = old
                     changeset.new[note_key] = new
-                elif (
-                    force_update
-                    or cls._is_updated_note(old, new)
-                ):
+                elif force_update or cls._is_updated_note(old, new):
                     changeset.update[note_key] = new
 
-        changeset.delete.update({
-            note_key: working_copy_metadata[note_key]
-            for note_key in deleted_note_keys
-        })
+        changeset.delete.update(
+            {
+                note_key: working_copy_metadata[note_key]
+                for note_key in deleted_note_keys
+            }
+        )
         return changeset
 
     def _save_note(
@@ -162,7 +159,7 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
         note_key: TNoteKey,
         metadata: TNoteMetadata,
         html_body: bytes,
-        resources: Iterable[NoteResource]
+        resources: Iterable[NoteResource],
     ):
         note_dir = self.notes_dir / _seq_to_path(self._metadata_dir(metadata))
         resources_dir = self.resources_dir / note_key
@@ -182,8 +179,7 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
                 resource_path.write_bytes(m.body)
 
     def get_working_copy_metadata(
-        self,
-        worker_threads: int = 20,
+        self, worker_threads: int = 20,
     ) -> Mapping[TNoteKey, TNoteMetadata]:
         note_metadata_futures = []
 
@@ -197,17 +193,14 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
 
                     note_path = Path(root) / fn
                     fut = pool.submit(
-                        self._get_stored_note_metadata,
-                        self.notes_dir,
-                        note_path,
+                        self._get_stored_note_metadata, self.notes_dir, note_path,
                     )
                     note_metadata_futures.append((note_path, fut))
 
         return self._process_note_metadata_futures(note_metadata_futures)
 
     def _process_note_metadata_futures(
-        self,
-        note_metadata_futures: Sequence[concurrent.futures.Future],
+        self, note_metadata_futures: Sequence[concurrent.futures.Future],
     ) -> Mapping[TNoteKey, TNoteMetadata]:
         note_key_to_metadata = {}
         corrupted_note_keys = set()
@@ -225,16 +218,18 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
                     logger.warning(
                         "Found two notes with the same keys '%s', "
                         "removing both: %s and %s",
-                        note_key, n1, n2
+                        note_key,
+                        n1,
+                        n2,
                     )
                     self.delete_notes([n1, n2])
                     del note_key_to_metadata[note_key]
                     corrupted_note_keys.add(note_key)
                 elif note_key in corrupted_note_keys:
                     logger.warning(
-                        "Removing note with key '%s' as an another "
-                        "conflict: %s",
-                        note_key, note_metadata
+                        "Removing note with key '%s' as an another conflict: %s",
+                        note_key,
+                        note_metadata,
                     )
                     self.delete_notes([note_metadata])
                 else:
@@ -244,8 +239,7 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
         return note_key_to_metadata
 
     def _delete_non_existing_resources(
-        self,
-        metadata: Mapping[TNoteKey, TNoteMetadata],
+        self, metadata: Mapping[TNoteKey, TNoteMetadata],
     ) -> None:
         try:
             root, dirs, _ = next(os.walk(str(self.resources_dir)))
@@ -256,8 +250,8 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
         for note_key in dirs:
             if note_key not in metadata:
                 logger.warning(
-                    "Resources for a non-existing note %s "
-                    "are going to be removed.", note_key
+                    "Resources for a non-existing note %s are going to be removed.",
+                    note_key,
                 )
                 shutil.rmtree(os.path.join(root, note_key))
 

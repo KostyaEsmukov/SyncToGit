@@ -29,13 +29,13 @@ class Todoist:
     def sync(self):
         response = self.api.sync()
         if isinstance(response, Mapping):
-            if 'sync_token' in response and 'error' not in response:
+            if "sync_token" in response and "error" not in response:
                 # Successful sync
                 return
-            if 'error' in response:
-                if 'AUTH_INVALID_TOKEN' == response.get('error_tag'):
-                    raise ServiceTokenExpiredError(response.get('error'))
-            error = response.get('error') or response
+            if "error" in response:
+                if "AUTH_INVALID_TOKEN" == response.get("error_tag"):
+                    raise ServiceTokenExpiredError(response.get("error"))
+            error = response.get("error") or response
         else:
             error = response
         raise ServiceAPIError(str(error))
@@ -45,33 +45,33 @@ class Todoist:
             # All root items should go first, so they would exist when
             # a child item is processed.
             return (
-                p.data.get('parent_id') or -1,
-                p.data.get('item_order', 999999),
-                p.data.get('child_order', 999999),
+                p.data.get("parent_id") or -1,
+                p.data.get("item_order", 999999),
+                p.data.get("child_order", 999999),
             )
 
-        ordered_raw_projects = sorted(self.api.state['projects'], key=key)
+        ordered_raw_projects = sorted(self.api.state["projects"], key=key)
 
         result_id_to_project = {}
         result_ids = []
 
         for raw_project in ordered_raw_projects:
-            project_id = raw_project.data['id']
+            project_id = raw_project.data["id"]
             p = raw_project.data
-            if p.get('is_deleted') or p.get('is_archived'):
-                logger.debug('Skipping project as deleted/archived: %s', p)
+            if p.get("is_deleted") or p.get("is_archived"):
+                logger.debug("Skipping project as deleted/archived: %s", p)
                 continue
 
             project = models.TodoistProject(
-                id=int(p['id']),
-                name=str(p['name']),
-                is_favorite=bool(p.get('is_favorite', False)),
-                is_inbox=bool(p.get('inbox_project', False)),
-                color=self._map_project_color(p['color']),
+                id=int(p["id"]),
+                name=str(p["name"]),
+                is_favorite=bool(p.get("is_favorite", False)),
+                is_inbox=bool(p.get("inbox_project", False)),
+                color=self._map_project_color(p["color"]),
                 subprojects=[],
             )
 
-            parent_id = p.get('parent_id')
+            parent_id = p.get("parent_id")
             if parent_id is None:
                 # This is a root project
                 result_ids.append(project_id)
@@ -83,24 +83,21 @@ class Todoist:
                 result_id_to_project[parent_id].subprojects.append(project)
             result_id_to_project[project_id] = project
 
-        return [
-            result_id_to_project[project_id]
-            for project_id in result_ids
-        ]
+        return [result_id_to_project[project_id] for project_id in result_ids]
 
     def get_todo_items(
-        self
+        self,
     ) -> Dict[models.TodoistProjectId, Sequence[models.TodoistTodoItem]]:
         def key(i):
             # All root items should go first, so they would exist when
             # a child item is processed.
             return (
-                i.data.get('parent_id') or -1,
-                i.data.get('item_order') or -1,
-                i.data['id'],
+                i.data.get("parent_id") or -1,
+                i.data.get("item_order") or -1,
+                i.data["id"],
             )
 
-        ordered_items = sorted(self.api.state['items'], key=key)
+        ordered_items = sorted(self.api.state["items"], key=key)
 
         id_to_item = {}
         project_id_to_items = defaultdict(lambda: [])
@@ -112,36 +109,35 @@ class Todoist:
             # when they're nested under a non-checked todo item, but
             # the code below hides them. This is my personal preference
             # and perhaps it should be made configurable.
-            if i.get('is_deleted') or i.get('is_archived') or i.get('checked'):
-                logger.debug('Skipping todo item as deleted/archived/checked: %s', i)
+            if i.get("is_deleted") or i.get("is_archived") or i.get("checked"):
+                logger.debug("Skipping todo item as deleted/archived/checked: %s", i)
                 continue
 
-            project_id = i['project_id']
+            project_id = i["project_id"]
 
-            date_added = self._parse_datetime(i['date_added'])
+            date_added = self._parse_datetime(i["date_added"])
             assert date_added
 
             try:
                 due_date, due_datetime = self._parse_due_date_time(i)
             except ValueError:
                 logger.error(
-                    'Unable to parse due time, using None. Todo item: %s',
-                    i,
+                    "Unable to parse due time, using None. Todo item: %s", i,
                 )
                 due_date, due_datetime = None, None
 
             item = models.TodoistTodoItem(
-                id=int(i['id']),
-                all_day=bool(i.get('all_day', False)),
-                content=str(i['content']),
+                id=int(i["id"]),
+                all_day=bool(i.get("all_day", False)),
+                content=str(i["content"]),
                 added_datetime=date_added,
                 due_date=due_date,
                 due_datetime=due_datetime,
-                priority=models.TodoistItemPriority(i['priority']),
+                priority=models.TodoistItemPriority(i["priority"]),
                 subitems=[],
             )
 
-            parent_id = i['parent_id']
+            parent_id = i["parent_id"]
             if parent_id is None:
                 project_id_to_items[project_id].append(item)
             else:
@@ -149,7 +145,7 @@ class Todoist:
                     # It was filtered out as checked/deleted/etc.
                     continue
                 id_to_item[parent_id].subitems.append(item)
-            id_to_item[i['id']] = item
+            id_to_item[i["id"]] = item
 
         return dict(project_id_to_items)
 
@@ -161,17 +157,17 @@ class Todoist:
         due_date = None
         due_datetime = None
 
-        if item_data.get('due'):
-            due = item_data['due']
+        if item_data.get("due"):
+            due = item_data["due"]
 
-            assert due.get('timezone') is None  # This is a legacy key, I believe
+            assert due.get("timezone") is None  # This is a legacy key, I believe
             timezone = self._timezone
 
             # date -- is a datetime. In ISO format. Or just a date.
             # Live with it.
             try:
                 fmt = "%Y-%m-%d"
-                due_datetime = datetime.datetime.strptime(due['date'], fmt)
+                due_datetime = datetime.datetime.strptime(due["date"], fmt)
                 # If it didn't raise yet -- then it's indeed just a date.
                 # Drop the datetime -- we don't need it if it doesn't
                 # contain time.
@@ -179,13 +175,13 @@ class Todoist:
                 due_datetime = None
             except ValueError:
                 # It's not a date -- thus it's a full datetime.
-                due_datetime = dateutil.parser.parse(due['date'])
+                due_datetime = dateutil.parser.parse(due["date"])
                 if due_datetime.tzinfo is None:
                     due_datetime = timezone.localize(due_datetime)
                 due_datetime = due_datetime.astimezone(timezone)
                 due_date = due_datetime.date()
 
-        assert item_data.get('due_date_utc') is None  # This is a legacy key, I believe
+        assert item_data.get("due_date_utc") is None  # This is a legacy key, I believe
 
         return due_date, due_datetime
 
@@ -223,7 +219,7 @@ class Todoist:
 
     @cached_property
     def _timezone(self) -> datetime.tzinfo:
-        timezone = self.api.state['user']['tz_info']['timezone']
+        timezone = self.api.state["user"]["tz_info"]["timezone"]
         return pytz.timezone(timezone)
 
     def _parse_datetime(self, date: Optional[str]) -> Optional[datetime.datetime]:

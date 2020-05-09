@@ -1,10 +1,10 @@
-
 class ServiceError(Exception):
     pass
 
 
 class ServiceAuthError(ServiceError):
     """Error during authentication."""
+
     pass
 
 
@@ -21,8 +21,7 @@ class ServiceAPIError(ServiceError):
 
 
 class ServiceRateLimitError(ServiceAPIError):
-    def __init__(self, *args, rate_limit_duration_seconds: float,
-                 **kwargs) -> None:
+    def __init__(self, *args, rate_limit_duration_seconds: float, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.rate_limit_duration_seconds = rate_limit_duration_seconds
 

@@ -24,20 +24,21 @@ __all__ = (
     "EvernoteSync",
 )
 
-evernote_consumer_key = StrConfigItem(
-    "evernote", "consumer_key", 'kostya0shift-0653'
-)
+evernote_consumer_key = StrConfigItem("evernote", "consumer_key", "kostya0shift-0653")
 evernote_consumer_secret = StrConfigItem(
     # python -c "import base64; print(base64.b64encode('123'.encode()).decode())"
-    "evernote", "consumer_secret",
-    base64.b64decode('M2EwMWJkYmJhNDVkYTYwMg==').decode()
+    "evernote",
+    "consumer_secret",
+    base64.b64decode("M2EwMWJkYmJhNDVkYTYwMg==").decode(),
 )
 evernote_callback_url = StrConfigItem(
     # A non-existing link.
-    "evernote", "callback_url", 'https://localhost:63543/non-existing-url'
+    "evernote",
+    "callback_url",
+    "https://localhost:63543/non-existing-url",
 )
-evernote_sandbox = BoolConfigItem('evernote', 'sandbox', False)
-evernote_token = StrConfigItem('evernote', 'token')
+evernote_sandbox = BoolConfigItem("evernote", "sandbox", False)
+evernote_token = StrConfigItem("evernote", "token")
 
 notes_download_threads = IntConfigItem("internals", "notes_download_threads", 30)
 
@@ -47,16 +48,16 @@ class EvernoteAuthSession(BaseAuthSession):
         self.token = token
 
     @classmethod
-    def load_from_config(cls, config: Config) -> 'EvernoteAuthSession':
+    def load_from_config(cls, config: Config) -> "EvernoteAuthSession":
         try:
             encoded_token = evernote_token.get(config)
         except (KeyError, ValueError):
-            raise InvalidAuthSession('Evernote token is missing in config')
+            raise InvalidAuthSession("Evernote token is missing in config")
 
         try:
             token = base64.b64decode(encoded_token).decode()
         except Exception:
-            raise InvalidAuthSession('Evernote token is invalid')
+            raise InvalidAuthSession("Evernote token is invalid")
 
         return cls(token)
 
@@ -81,11 +82,8 @@ class EvernoteAuth(BaseAuth[EvernoteAuthSession]):
 
 
 class EvernoteSync(BaseSync[EvernoteAuthSession]):
-
     def run_sync(self) -> None:
-        evernote = Evernote(
-            sandbox=evernote_sandbox.get(self.config),
-        )
+        evernote = Evernote(sandbox=evernote_sandbox.get(self.config))
         evernote.auth(self.auth_session.token)
         self._sync_loop(evernote)
 
@@ -104,8 +102,7 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 push=git_push.get(self.config),
             ) as t:
                 wc = EvernoteWorkingCopy(
-                    git_transaction=t,
-                    timezone=get_timezone(self.config),
+                    git_transaction=t, timezone=get_timezone(self.config),
                 )
 
                 si = _EvernoteSyncIteration(
@@ -134,7 +131,6 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
 
 
 class _EvernoteSyncIteration(SyncIteration[NoteGuid, NoteMetadata, Note]):
-
     def __init__(
         self,
         *,
@@ -155,7 +151,7 @@ class _EvernoteSyncIteration(SyncIteration[NoteGuid, NoteMetadata, Note]):
     def get_note(self, note_key: NoteGuid, note_metadata: NoteMetadata) -> Note:
         return self.evernote.get_note(
             note_key,
-            self.working_copy.get_relative_resources_url(note_key, note_metadata)
+            self.working_copy.get_relative_resources_url(note_key, note_metadata),
         )
 
     def get_service_metadata(self) -> Mapping[NoteGuid, NoteMetadata]:
@@ -167,18 +163,15 @@ class _EvernoteSyncIteration(SyncIteration[NoteGuid, NoteMetadata, Note]):
     def update_index(
         self,
         service_metadata: Mapping[NoteGuid, NoteMetadata],
-        git_transaction: GitTransaction
+        git_transaction: GitTransaction,
     ) -> None:
         note_links = [
             index_renderer.IndexLink(
-                filesystem_path_parts=note.dir + (note.file,),
-                name_parts=note.name,
+                filesystem_path_parts=note.dir + (note.file,), name_parts=note.name,
             )
             for note in service_metadata.values()
         ]
         index_renderer.render(
             note_links,
-            templates.file_writer(
-                str(git_transaction.repo_dir / "index.html")
-            ),
+            templates.file_writer(str(git_transaction.repo_dir / "index.html")),
         )

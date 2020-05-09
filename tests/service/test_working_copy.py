@@ -11,30 +11,30 @@ from synctogit.evernote.working_copy import EvernoteChangeset, EvernoteWorkingCo
 def test_calculate_changes_removals(force_update, present_in):
     guid = str(uuid4())
     note = NoteMetadata(
-        dir=('aaa', 'bbb'),
-        file='ccc.%s.html' % guid,
-        name=('aaa', 'bbb', 'ccc'),
+        dir=("aaa", "bbb"),
+        file="ccc.%s.html" % guid,
+        name=("aaa", "bbb", "ccc"),
         update_sequence_num=42,
     )
     evernote_metadata = {}
     working_copy_metadata = {}
+    # fmt: off
     dict(
         working_copy=working_copy_metadata,
         evernote=evernote_metadata,
     )[present_in][guid] = note
+    # fmt: on
 
     new = {}
     delete = {}
+    # fmt: off
     dict(
         working_copy=delete,
         evernote=new,
     )[present_in][guid] = note
+    # fmt: on
 
-    expected_changeset = EvernoteChangeset(
-        new=new,
-        update={},
-        delete=delete,
-    )
+    expected_changeset = EvernoteChangeset(new=new, update={}, delete=delete)
 
     got_changeset = EvernoteWorkingCopy.calculate_changes(
         service_metadata=evernote_metadata,
@@ -48,29 +48,26 @@ def test_calculate_changes_removals(force_update, present_in):
 @pytest.mark.parametrize("change", ["guid", "dir", "file", "seq", None])
 def test_calculate_changes_detects_moves(force_update, change):
     guid = str(uuid4())
-    guid_git = str(uuid4()) if change == 'guid' else guid
+    guid_git = str(uuid4()) if change == "guid" else guid
 
-    dir = ('aaa', 'bbb')
-    dir_git = ('zzz', 'bbb') if change == 'dir' else dir
+    dir = ("aaa", "bbb")
+    dir_git = ("zzz", "bbb") if change == "dir" else dir
 
-    name_part = 'beast'
-    name_part_git = 'beauty' if change == 'file' else name_part
+    name_part = "beast"
+    name_part_git = "beauty" if change == "file" else name_part
 
     name = dir + (name_part,)
     name_git = dir_git + (name_part_git,)
 
-    file = '%s.%s.html' % (name_part, guid)
-    file_git = '%s.%s.html' % (name_part_git, guid)
+    file = "%s.%s.html" % (name_part, guid)
+    file_git = "%s.%s.html" % (name_part_git, guid)
 
     update_sequence_num = 6772
-    update_sequence_num_git = 7000 if change == 'seq' else update_sequence_num
+    update_sequence_num_git = 7000 if change == "seq" else update_sequence_num
 
     evernote_metadata = {
         guid: NoteMetadata(
-            dir=dir,
-            file=file,
-            name=name,
-            update_sequence_num=update_sequence_num,
+            dir=dir, file=file, name=name, update_sequence_num=update_sequence_num,
         )
     }
     working_copy_metadata = {
@@ -85,7 +82,7 @@ def test_calculate_changes_detects_moves(force_update, change):
     new = {}
     update = {}
     delete = {}
-    if change == 'seq':
+    if change == "seq":
         assert guid == guid_git
         update = {guid: evernote_metadata[guid]}
     elif change is None:
@@ -96,11 +93,7 @@ def test_calculate_changes_detects_moves(force_update, change):
         new = {guid: evernote_metadata[guid]}
         delete = {guid_git: working_copy_metadata[guid_git]}
 
-    expected_changeset = EvernoteChangeset(
-        new=new,
-        update=update,
-        delete=delete,
-    )
+    expected_changeset = EvernoteChangeset(new=new, update=update, delete=delete)
 
     got_changeset = EvernoteWorkingCopy.calculate_changes(
         service_metadata=evernote_metadata,

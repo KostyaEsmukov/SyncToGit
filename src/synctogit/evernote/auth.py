@@ -92,7 +92,8 @@ class InteractiveAuth:
                 "\n"
                 "More info:\n"
                 "%s"
-            ) % self.auth_details_url,
+            )
+            % self.auth_details_url,
             buttons=[
                 ("OAuth", "oauth"),
                 ("Dev Token", "devtoken"),
@@ -104,8 +105,10 @@ class InteractiveAuth:
 
     def _ask_devtoken(self) -> str:
         url = {
+            # fmt: off
             False: self.devtoken_prod_url,
             True: self.devtoken_sandbox_url,
+            # fmt: on
         }[self.sandbox]
         devtoken = input_dialog(
             title="Input your Developer Token",
@@ -139,7 +142,8 @@ class InteractiveAuth:
                 "%s\n"
                 "\n"
                 "If unsure, choose Bundled."
-            ) % self.auth_details_url,
+            )
+            % self.auth_details_url,
             yes_text="Bundled",
             no_text="Custom",
         )
@@ -216,7 +220,8 @@ class InteractiveAuth:
                 "%s?oauth_token=...&oauth_verifier=...\n"
                 "\n"
                 "Do you want to try again?"
-            ) % (repr(e), self.callback_url),
+            )
+            % (repr(e), self.callback_url),
             no_text="Cancel",
         )
         abort_if_falsy(result)

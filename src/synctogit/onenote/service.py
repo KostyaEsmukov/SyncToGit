@@ -25,17 +25,20 @@ microsoft_graph_client_id = StrConfigItem(
 )
 microsoft_graph_client_secret = StrConfigItem(
     # python -c "import base64; print(base64.b64encode('123'.encode()).decode())"
-    "microsoft_graph", "client_secret",
+    "microsoft_graph",
+    "client_secret",
     base64.b64decode("eXRwWVZQSTU3OCEtZmJuaVJSSzUzXV8=").decode(),
 )
 microsoft_graph_redirect_uri = StrConfigItem(
     # A non-existing link.
-    "microsoft_graph", "redirect_uri",
+    "microsoft_graph",
+    "redirect_uri",
     "https://localhost:63543/non-existing-url",
 )
 microsoft_graph_oauth_scopes = StrConfigItem(
-    "microsoft_graph", "oauth_scopes",
-    "offline_access, User.Read, Notes.Read, Notes.Read.All"
+    "microsoft_graph",
+    "oauth_scopes",
+    "offline_access, User.Read, Notes.Read, Notes.Read.All",
 )
 microsoft_graph_token = StrConfigItem("microsoft_graph", "token")
 
@@ -48,16 +51,16 @@ class MicrosoftGraphAuthSession(BaseAuthSession):
         self.token = token
 
     @classmethod
-    def load_from_config(cls, config: Config) -> 'MicrosoftGraphAuthSession':
+    def load_from_config(cls, config: Config) -> "MicrosoftGraphAuthSession":
         try:
             json_token = microsoft_graph_token.get(config)
         except (KeyError, ValueError):
-            raise InvalidAuthSession('MicrosoftGraph token is missing in config')
+            raise InvalidAuthSession("MicrosoftGraph token is missing in config")
 
         try:
             token = json.loads(json_token)
         except Exception:
-            raise InvalidAuthSession('MicrosoftGraph token is not a valid json')
+            raise InvalidAuthSession("MicrosoftGraph token is not a valid json")
 
         return cls(token)
 
@@ -70,7 +73,7 @@ class MicrosoftGraphAuthSession(BaseAuthSession):
     def save_token_if_updated(self, config: Config, new_token) -> None:
         if self.token == new_token:
             return
-        logger.info('Saving new auth token...')
+        logger.info("Saving new auth token...")
         self.token = new_token
         self.save_to_config(config)
 
@@ -111,8 +114,7 @@ class OneNoteSync(BaseSync[MicrosoftGraphAuthSession]):
                 push=git_push.get(self.config),
             ) as t:
                 wc = OneNoteWorkingCopy(
-                    git_transaction=t,
-                    timezone=get_timezone(self.config),
+                    git_transaction=t, timezone=get_timezone(self.config),
                 )
 
                 si = _OneNoteSyncIteration(
@@ -166,20 +168,22 @@ class _OneNoteSyncIteration(
     ) -> OneNotePage:
         return self.onenote.get_page(
             note_key,
-            self.working_copy.get_relative_resources_url(note_key, note_metadata)
+            self.working_copy.get_relative_resources_url(note_key, note_metadata),
         )
 
     def get_service_metadata(self) -> Mapping[OneNotePageId, OneNotePageMetadata]:
         self.onenote.sync_metadata()
         return self.onenote.metadata
 
-    def is_same_note(self, note: OneNotePage, note_metadata: OneNotePageMetadata) -> bool:
+    def is_same_note(
+        self, note: OneNotePage, note_metadata: OneNotePageMetadata
+    ) -> bool:
         return note.info.last_modified == note_metadata.last_modified
 
     def update_index(
         self,
         service_metadata: Mapping[OneNotePageId, OneNotePageMetadata],
-        git_transaction: GitTransaction
+        git_transaction: GitTransaction,
     ) -> None:
         index_renderer.render(
             notebooks=self.onenote.notebooks,

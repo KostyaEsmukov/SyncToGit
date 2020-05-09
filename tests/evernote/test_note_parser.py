@@ -9,7 +9,7 @@ from synctogit.evernote.exc import EvernoteMalformedNoteError
 vcr_dtd = vcr.VCR(cassette_library_dir=os.path.dirname(__file__))
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_simple_parse():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
@@ -33,11 +33,11 @@ def test_simple_parse():
 </html>
 """  # noqa: E501
 
-    html = note_parser.parse('.', note, title='привет')
+    html = note_parser.parse(".", note, title="привет")
     assert html.decode() == expected
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_encrypted():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
@@ -82,14 +82,14 @@ def test_encrypted():
 </html>
 """
 
-    html = note_parser.parse('.', note, title='привет')
+    html = note_parser.parse(".", note, title="привет")
     html = html.decode()
     assert html.startswith(expected_head)
     assert html.endswith(expected_tail)
-    assert html.count('evernote_decrypt') == 2
+    assert html.count("evernote_decrypt") == 2
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_malformed_note_raises():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <html>
@@ -97,16 +97,16 @@ def test_malformed_note_raises():
 </html>
 """
     with pytest.raises(EvernoteMalformedNoteError):
-        note_parser.parse('.', note, title='1')
+        note_parser.parse(".", note, title="1")
 
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
 """
     with pytest.raises(EvernoteMalformedNoteError):
-        note_parser.parse('.', note, title='1')
+        note_parser.parse(".", note, title="1")
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_todo():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
@@ -136,11 +136,11 @@ def test_todo():
 </html>
 """  # noqa: E501
 
-    html = note_parser.parse('.', note, title='привет')
+    html = note_parser.parse(".", note, title="привет")
     assert html.decode() == expected
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_html_entities_unwrapping():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
@@ -165,11 +165,11 @@ def test_html_entities_unwrapping():
 </html>
 """  # noqa: E501
 
-    html = note_parser.parse('.', note, title='привет')
+    html = note_parser.parse(".", note, title="привет")
     assert html.decode() == expected
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_image():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
@@ -197,11 +197,11 @@ def test_image():
 """  # noqa: E501
 
     src_path = "../Resource s/123/"
-    html = note_parser.parse(src_path, note, title='привет')
+    html = note_parser.parse(src_path, note, title="привет")
     assert html.decode() == expected
 
 
-@vcr_dtd.use_cassette('cassette_dtd')
+@vcr_dtd.use_cassette("cassette_dtd")
 def test_pdf():
     note = """<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
 <en-note>
@@ -228,5 +228,5 @@ def test_pdf():
 """  # noqa: E501
 
     src_path = "../Resource s/123/"
-    html = note_parser.parse(src_path, note, title='привет')
+    html = note_parser.parse(src_path, note, title="привет")
     assert html.decode() == expected

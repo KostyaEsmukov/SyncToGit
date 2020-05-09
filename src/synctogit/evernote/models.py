@@ -11,9 +11,11 @@ TagGuid = NewType("TagGuid", str)
 NotebookInfo = NamedTuple(
     "NotebookInfo",
     [
+        # fmt: off
         ("name", str),
         ("update_sequence_num", int),
         ("stack", Optional[str]),
+        # fmt: on
     ],
 )
 
@@ -46,10 +48,12 @@ NoteMetadata = NamedTuple(
 NoteResource = NamedTuple(
     "NoteResource",
     [
+        # fmt: off
         ("body", bytes),
         ("mime", str),
         ("filename", str),
-    ]
+        # fmt: on
+    ],
 )
 
 

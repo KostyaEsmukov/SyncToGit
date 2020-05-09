@@ -14,11 +14,7 @@ class InteractiveAuth:
     scopes_details_url = "https://docs.microsoft.com/en-us/graph/permissions-reference"
 
     def __init__(
-        self,
-        client_id: str,
-        client_secret: str,
-        redirect_uri: str,
-        scopes: str,
+        self, client_id: str, client_secret: str, redirect_uri: str, scopes: str,
     ) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -72,7 +68,8 @@ class InteractiveAuth:
                 "%s\n"
                 "\n"
                 "If unsure, choose Bundled."
-            ) % self.auth_details_url,
+            )
+            % self.auth_details_url,
             yes_text="Bundled",
             no_text="Custom",
         )
@@ -84,8 +81,7 @@ class InteractiveAuth:
         redirect_uri = None
         while not client_id:
             client_id = input_dialog(
-                title="Input client_id for OAuth",
-                text="Input client_id for OAuth.",
+                title="Input client_id for OAuth", text="Input client_id for OAuth.",
             )
         while not client_secret:
             client_secret = input_dialog(
@@ -115,8 +111,7 @@ class InteractiveAuth:
                 "%s\n\n"
                 "Would you like to use them, or you would prefer\n"
                 "to provide a custom set of scopes?\n"
-                "If unsure, choose Keep."
-                % self.scopes
+                "If unsure, choose Keep." % self.scopes
             ),
             yes_text="Keep",
             no_text="Change",
@@ -131,8 +126,7 @@ class InteractiveAuth:
                 "The default OAuth scopes are:\n\n"
                 "%s\n\n"
                 "The list of available scopes:\n"
-                "%s"
-                % (self.scopes, self.scopes_details_url)
+                "%s" % (self.scopes, self.scopes_details_url)
             ),
         )
         abort_if_falsy(self.scopes)
@@ -158,9 +152,9 @@ class InteractiveAuth:
 
         if state != msgraph.auth_state:
             raise RuntimeError(
-                'The `state` from the `redirect` URL does not match '
-                'the one of the `authorize` URL! '
-                'Perhaps you should try again.'
+                "The `state` from the `redirect` URL does not match "
+                "the one of the `authorize` URL! "
+                "Perhaps you should try again."
             )
 
         token = msgraph.fetch_token(
@@ -173,7 +167,7 @@ class InteractiveAuth:
     def _msgraph(self) -> requests_oauthlib.OAuth2Session:
         return requests_oauthlib.OAuth2Session(
             self.client_id,
-            scope=[s.strip() for s in self.scopes.split(',')],
+            scope=[s.strip() for s in self.scopes.split(",")],
             redirect_uri=self.redirect_uri,
         )
 
@@ -211,7 +205,8 @@ class InteractiveAuth:
                 "%s?code=...&state=...\n"
                 "\n"
                 "Do you want to try again?"
-            ) % (repr(e), self.redirect_uri),
+            )
+            % (repr(e), self.redirect_uri),
             no_text="Cancel",
         )
         abort_if_falsy(result)

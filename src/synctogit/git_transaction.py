@@ -31,8 +31,9 @@ class GitPushError(Exception):
 class GitTransaction:
     # Must be thread-safe.
 
-    def __init__(self, repo: git.Repo, *,
-                 push: bool = False, remote_name: str = 'origin') -> None:
+    def __init__(
+        self, repo: git.Repo, *, push: bool = False, remote_name: str = "origin"
+    ) -> None:
         self.git = repo
         self.push = push
         self.remote_name = remote_name
@@ -59,9 +60,7 @@ class GitTransaction:
         rmfile_silent(self.lockfile_path)
 
         if exc_type is not None:
-            logger.warning(
-                "git transaction failed: %s(%s)" % (repr(exc_type), exc_val)
-            )
+            logger.warning("git transaction failed: %s(%s)" % (repr(exc_type), exc_val))
             self._stash()
         else:
             if self.git.is_dirty(untracked_files=True):
@@ -88,11 +87,9 @@ class GitTransaction:
 
     def _stash(self):
         if self.git.is_dirty(untracked_files=True):
-            logger.warning(
-                "Git repo is dirty. Working copy is going to be be stashed."
-            )
+            logger.warning("Git repo is dirty. Working copy is going to be be stashed.")
 
-            self.git.git.stash('--include-untracked')
+            self.git.git.stash("--include-untracked")
 
     def _commit_changes(self):
         # I've had some issues with charset under Windows when using
@@ -100,7 +97,7 @@ class GitTransaction:
         self.git.git.add(["-A", "."])
         message = self.transaction_commit_message
         if not message:
-            message = "Sync at %s" % _datetime_now().strftime('%Y-%m-%d %H:%M:%S')
+            message = "Sync at %s" % _datetime_now().strftime("%Y-%m-%d %H:%M:%S")
         self.git.index.commit(message)
 
     def _push(self):

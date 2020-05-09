@@ -32,7 +32,7 @@ class OneNoteAPI:
 
     base_api_url = oauth.base_api_url
 
-    def __init__(self, client: 'OauthClient') -> None:
+    def __init__(self, client: "OauthClient") -> None:
         self._client = client
 
     def get_page_html(self, page_id: str) -> decoder.MultipartDecoder:
@@ -40,16 +40,16 @@ class OneNoteAPI:
 
         with hide_spurious_urllib3_multipart_warning():
             r = self._client.get(
-                self.base_api_url + '/pages/' + str(page_id)
-                + '/content?preAuthenticated=true&includeinkML=true'
+                self.base_api_url
+                + "/pages/"
+                + str(page_id)
+                + "/content?preAuthenticated=true&includeinkML=true"
             )
 
         multipart_data = decoder.MultipartDecoder.from_response(r)
         return multipart_data
 
-    def get_page_info(
-        self, page_id: str, section_id: Optional[str]
-    ) -> Dict[str, Any]:
+    def get_page_info(self, page_id: str, section_id: Optional[str]) -> Dict[str, Any]:
         # The code below is a fucking shitshow.
         page = None
         if not section_id:
@@ -60,39 +60,38 @@ class OneNoteAPI:
             # and returns 404 even for existing pages! Apparently they're
             # having hard times with caches invalidation.
             select_fields = [
-                'id',
-                'title',
-                'createdDateTime',
-                'lastModifiedDateTime',
+                "id",
+                "title",
+                "createdDateTime",
+                "lastModifiedDateTime",
             ]
             expand = [
                 "parentSection($select=id)",
             ]
             params = {
-                '$select': ','.join(select_fields),
-                '$expand': ','.join(expand),
+                "$select": ",".join(select_fields),
+                "$expand": ",".join(expand),
             }
             # This method might return obsolete metadata. Or it might be up to date.
             # You never know. There's *a way* to reliably (well, I hope so) retrieve
             # the up-to-date metadata, but we need to get the section_id first.
             r = self._client.get(
-                self.base_api_url + '/pages/' + str(page_id),
-                params=params
+                self.base_api_url + "/pages/" + str(page_id), params=params
             )
 
             page = r.json()
-            section_id = page['parentSection']['id']
+            section_id = page["parentSection"]["id"]
 
         select_fields = [
-            'id',
-            'title',
-            'createdDateTime',
-            'lastModifiedDateTime',
+            "id",
+            "title",
+            "createdDateTime",
+            "lastModifiedDateTime",
         ]
         params = {
-            '$select': ','.join(select_fields),
-            'filter': "id eq '%s'" % page_id,
-            'pagelevel': 'true',
+            "$select": ",".join(select_fields),
+            "filter": "id eq '%s'" % page_id,
+            "pagelevel": "true",
         }
         # This is wrong on so many levels. Let me remind you: we are just
         # trying to retrieve the fucking Page metadata. And yes, your eyes
@@ -104,10 +103,9 @@ class OneNoteAPI:
         #
         # What the fuck is wrong with this API?!
         r = self._client.get(
-            self.base_api_url + '/sections/%s/pages' % section_id,
-            params=params
+            self.base_api_url + "/sections/%s/pages" % section_id, params=params
         )
-        pages = r.json()['value']
+        pages = r.json()["value"]
         if len(pages) == 1:
             page = pages[0]
         elif page:
@@ -124,21 +122,19 @@ class OneNoteAPI:
             )
         return page
 
-    def get_pages_of_section(
-        self, section_id: str
-    ) -> Iterable[Dict[str, Any]]:
+    def get_pages_of_section(self, section_id: str) -> Iterable[Dict[str, Any]]:
         select_fields = [
-            'id',
-            'title',
-            'createdDateTime',
-            'lastModifiedDateTime',
-            'parentSection',
-            'level',
-            'order',
+            "id",
+            "title",
+            "createdDateTime",
+            "lastModifiedDateTime",
+            "parentSection",
+            "level",
+            "order",
         ]
         params = {
-            '$select': ','.join(select_fields),
-            'pagelevel': 'true',
+            "$select": ",".join(select_fields),
+            "pagelevel": "true",
         }
 
         # The `/pages` method doesn't support the `order` field and
@@ -146,39 +142,39 @@ class OneNoteAPI:
         # being returned for some pages. The /sections/%/pages method doesn't
         # have these issues.
         # url = self.base_api_url + '/pages'
-        url = self.base_api_url + '/sections/%s/pages' % section_id
+        url = self.base_api_url + "/sections/%s/pages" % section_id
         for resp_page in self._get_paginated(url, params=params):
-            for page in resp_page['value']:
+            for page in resp_page["value"]:
                 yield page
 
     def get_notebooks(self) -> Iterable[Dict[str, Any]]:
         select_fields = [
-            'id',
-            'displayName',
-            'createdDateTime',
-            'lastModifiedDateTime',
-            'isDefault',
+            "id",
+            "displayName",
+            "createdDateTime",
+            "lastModifiedDateTime",
+            "isDefault",
         ]
         section_select_fields = [
-            'id',
-            'displayName',
-            'createdDateTime',
-            'lastModifiedDateTime',
-            'isDefault',
+            "id",
+            "displayName",
+            "createdDateTime",
+            "lastModifiedDateTime",
+            "isDefault",
         ]
         # TODO sectionGroups($expand=sections)
         expand = [
-            "sections($select=%s)" % ','.join(section_select_fields),
+            "sections($select=%s)" % ",".join(section_select_fields),
         ]
         params = {
-            '$select': ','.join(select_fields),
-            '$expand': ','.join(expand),
-            '$orderby': 'createdDateTime',
+            "$select": ",".join(select_fields),
+            "$expand": ",".join(expand),
+            "$orderby": "createdDateTime",
         }
 
-        url = self.base_api_url + '/notebooks'
+        url = self.base_api_url + "/notebooks"
         for resp_page in self._get_paginated(url, params=params):
-            for notebook in resp_page['value']:
+            for notebook in resp_page["value"]:
                 yield notebook
 
     def _get_paginated(self, url, **kwargs) -> Iterable[Dict[str, Any]]:
@@ -190,21 +186,17 @@ class OneNoteAPI:
                     "page link" % next_url
                 )
             r = self._client.get(next_url, **kwargs)
-            kwargs.pop('params', 0)
+            kwargs.pop("params", 0)
             d = r.json()
             yield d
-            next_url = d.get('@odata.nextLink')
+            next_url = d.get("@odata.nextLink")
 
 
 class OauthClient:
     # Must be threadsafe
 
     def __init__(
-        self,
-        *,
-        client_id: str,
-        client_secret: str,
-        token: Dict[str, Any]
+        self, *, client_id: str, client_secret: str, token: Dict[str, Any]
     ) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -246,7 +238,7 @@ class OauthClient:
             except Exception:
                 json_body = None
 
-            headers = '\n'.join(map(str, e.response.headers.items()))
+            headers = "\n".join(map(str, e.response.headers.items()))
             if status == 429:  # Throttle
                 # Code 20166
                 # https://developer.microsoft.com/en-us/graph/docs/concepts/onenote_error_codes#codes-from-20001-to-29999  # noqa
@@ -255,7 +247,7 @@ class OauthClient:
                 # MS Graph APIs do return it, so maybe they'll consider to add
                 # it as well?
                 # https://developer.microsoft.com/en-us/graph/docs/concepts/throttling
-                s = e.response.headers.get('retry-after')
+                s = e.response.headers.get("retry-after")
                 if not s:
                     s = 5 * 60
                 s = min(s, 3600) + 10
@@ -292,7 +284,7 @@ class OauthClient:
             if self._token != initial_token:
                 # Probably because some another thread already refreshed
                 # the token.
-                logger.debug('Skipping token refresh')
+                logger.debug("Skipping token refresh")
                 return
 
             self._token = self._client.refresh_token(
@@ -306,8 +298,8 @@ class OauthClient:
         session = OAuth2Session(self.client_id, token=self._token)
         retries = Retry(1, respect_retry_after_header=False)
         a = _HTTPAdapter(max_retries=retries, pool_maxsize=100, timeout=60)
-        session.mount('http://', a)
-        session.mount('https://', a)
+        session.mount("http://", a)
+        session.mount("https://", a)
         return session
 
 
@@ -319,5 +311,5 @@ class _HTTPAdapter(requests.adapters.HTTPAdapter):
         super().__init__(*args, **kwargs)
 
     def send(self, *args, **kwargs):
-        kwargs.setdefault('timeout', self.__timeout)
+        kwargs.setdefault("timeout", self.__timeout)
         return super().send(*args, **kwargs)

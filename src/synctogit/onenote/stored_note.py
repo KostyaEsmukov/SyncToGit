@@ -13,7 +13,6 @@ from .models import OneNotePage, OneNotePageId, OneNotePageMetadata
 
 
 class OneNoteStoredNote(StoredNote):
-
     @classmethod
     def note_to_html(cls, note: OneNotePage, timezone: pytz.BaseTzInfo) -> bytes:
         note_header = OrderedDict()  # type: Mapping[str, str]
@@ -25,10 +24,7 @@ class OneNoteStoredNote(StoredNote):
             v = str(v)
             note_header[k] = v
 
-        return super()._note_to_html(
-            note_header=note_header,
-            note_html=note.html,
-        )
+        return super()._note_to_html(note_header=note_header, note_html=note.html)
 
     @classmethod
     def get_stored_note_metadata(
@@ -37,28 +33,28 @@ class OneNoteStoredNote(StoredNote):
         dir_parts = note_path.relative_to(notes_dir).parents[0].parts
         if 2 != len(dir_parts):
             raise CorruptedNoteError(
-                "Note's dir depth is expected to be exactly 2 levels",
-                note_path
+                "Note's dir depth is expected to be exactly 2 levels", note_path
             )
         file = note_path.name
 
         header_vars = cls._parse_note_header(note_path)
         try:
             name = (
+                # fmt: off
                 tuple(denormalize_filename(d) for d in dir_parts)
-                + (header_vars['title'],)
+                + (header_vars["title"],)
+                # fmt: on
             )
             note_metadata = OneNotePageMetadata(
                 dir=dir_parts,
                 name=name,
-                last_modified=cls._parse_datetime(header_vars['last_modified']),
+                last_modified=cls._parse_datetime(header_vars["last_modified"]),
                 file=file,
             )
-            return header_vars['id'], note_metadata
+            return header_vars["id"], note_metadata
         except (KeyError, ValueError) as e:
             raise CorruptedNoteError(
-                "Unable to retrieve note metadata: %s" % repr(e),
-                note_path
+                "Unable to retrieve note metadata: %s" % repr(e), note_path
             )
 
     @classmethod

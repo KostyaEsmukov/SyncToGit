@@ -10,11 +10,10 @@ class InvalidAuthSession(ValueError):
     pass
 
 
-T = TypeVar('T', bound='BaseAuthSession')
+T = TypeVar("T", bound="BaseAuthSession")
 
 
 class BaseAuthSession(abc.ABC):
-
     @classmethod
     @abc.abstractmethod
     def load_from_config(cls: Type[T], config: Config) -> T:
@@ -30,7 +29,6 @@ class BaseAuthSession(abc.ABC):
 
 
 class BaseAuth(abc.ABC, Generic[T]):
-
     @classmethod
     @abc.abstractmethod
     def interactive_auth(cls, config: Config) -> T:
@@ -38,9 +36,9 @@ class BaseAuth(abc.ABC, Generic[T]):
 
 
 class BaseSync(abc.ABC, Generic[T]):
-
-    def __init__(self, config: Config, auth_session: T, git: git.Repo,
-                 force_full_resync: bool) -> None:
+    def __init__(
+        self, config: Config, auth_session: T, git: git.Repo, force_full_resync: bool
+    ) -> None:
         self.config = config
         self.auth_session = auth_session
         self.git = git
@@ -52,10 +50,10 @@ class BaseSync(abc.ABC, Generic[T]):
 
 
 ServiceImplementation = NamedTuple(
-    'ServiceImplementation',
+    "ServiceImplementation",
     [
-        ('auth_session', Type[BaseAuthSession]),
-        ('auth', Type[BaseAuth]),
-        ('sync', Type[BaseSync]),
-    ]
+        ("auth_session", Type[BaseAuthSession]),
+        ("auth", Type[BaseAuth]),
+        ("sync", Type[BaseSync]),
+    ],
 )

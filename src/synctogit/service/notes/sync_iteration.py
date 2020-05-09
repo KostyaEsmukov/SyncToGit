@@ -41,7 +41,6 @@ class UpdateContext:
 
 
 class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
-
     def __init__(
         self,
         *,
@@ -71,7 +70,7 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
     def update_index(
         self,
         service_metadata: Mapping[TNoteKey, TNoteMetadata],
-        git_transaction: GitTransaction
+        git_transaction: GitTransaction,
     ) -> None:
         pass
 
@@ -119,23 +118,17 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
             service_metadata = b.result(timeout=3600)
             return working_copy_metadata, service_metadata
 
-    def _update_notes(
-        self,
-        changeset: Changeset,
-    ) -> UpdateContext:
+    def _update_notes(self, changeset: Changeset) -> UpdateContext:
         notes_to_update = [
             (note_key, note_metadata)
-            for op in ['new', 'update']
+            for op in ["new", "update"]
             for note_key, note_metadata in getattr(changeset, op).items()
         ]
         update_context = UpdateContext(total=len(notes_to_update))
 
-        with ThreadPoolExecutor(
-            max_workers=self.notes_download_threads,
-        ) as pool:
+        with ThreadPoolExecutor(max_workers=self.notes_download_threads) as pool:
             for note_key, note_metadata in notes_to_update:
-                pool.submit(self._update_note, note_key, note_metadata,
-                            update_context)
+                pool.submit(self._update_note, note_key, note_metadata, update_context)
         return update_context
 
     def _update_note(
@@ -148,15 +141,15 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
 
         logger.info(
             "Getting note (%d/%d) contents: %s...",
-            current, update_context.total, note_key
+            current,
+            update_context.total,
+            note_key,
         )
 
         try:
             note = self.get_note(note_key, note_metadata)
         except Exception as e:
-            logger.warning(
-                "Unable to get the note %s: %s", note_key, repr(e)
-            )
+            logger.warning("Unable to get the note %s: %s", note_key, repr(e))
             update_context.add_failed(note_key, note_metadata)
             return
 
@@ -182,8 +175,7 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
                 return
         else:
             logger.info(
-                "Skipping note (%d/%d) because it has changed "
-                "during sync: %s...",
+                "Skipping note (%d/%d) because it has changed during sync: %s...",
                 current,
                 update_context.total,
                 note_key,

@@ -23,7 +23,7 @@ __all__ = (
 )
 
 
-todoist_token = StrConfigItem('todoist', 'token')
+todoist_token = StrConfigItem("todoist", "token")
 
 
 class TodoistAuthSession(BaseAuthSession):
@@ -31,14 +31,14 @@ class TodoistAuthSession(BaseAuthSession):
         self.token = token
 
     @classmethod
-    def load_from_config(cls, config: Config) -> 'TodoistAuthSession':
+    def load_from_config(cls, config: Config) -> "TodoistAuthSession":
         try:
             token = todoist_token.get(config)
 
             if not token:
                 raise ValueError()
         except (KeyError, ValueError):
-            raise InvalidAuthSession('Todoist token is missing in config')
+            raise InvalidAuthSession("Todoist token is missing in config")
 
         return cls(token)
 
@@ -57,7 +57,6 @@ class TodoistAuth(BaseAuth[TodoistAuthSession]):
 
 
 class TodoistSync(BaseSync[TodoistAuthSession]):
-
     def run_sync(self) -> None:
         logger.info("Starting sync...")
 
@@ -70,9 +69,9 @@ class TodoistSync(BaseSync[TodoistAuthSession]):
         # XXX respect force_update (delete cache)
 
         with GitTransaction(
-                self.git,
-                remote_name=git_remote_name.get(self.config),
-                push=git_push.get(self.config),
+            self.git,
+            remote_name=git_remote_name.get(self.config),
+            push=git_push.get(self.config),
         ) as t:
             todoist.sync()
 

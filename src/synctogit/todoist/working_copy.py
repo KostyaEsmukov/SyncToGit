@@ -15,10 +15,7 @@ class TodoistWorkingCopy:
     projects_dir_name = "Projects"
 
     def __init__(
-        self,
-        git_transaction: GitTransaction,
-        *,
-        projects_renderer: ProjectsRenderer
+        self, git_transaction: GitTransaction, *, projects_renderer: ProjectsRenderer
     ) -> None:
         self.git_transaction = git_transaction
         self.repo_dir = git_transaction.repo_dir
@@ -28,7 +25,7 @@ class TodoistWorkingCopy:
     def _project_filename(self, project: TodoistProject) -> str:
         return "%s.%s.html" % (normalize_filename(project.name), project.id)
 
-    def get_changes(self, ) -> 'Changeset':
+    def get_changes(self) -> "Changeset":
         working_tree_projects = self._read_working_tree_projects()
         working_tree_index = self._read_working_tree_index()
 
@@ -50,8 +47,7 @@ class TodoistWorkingCopy:
                 _, ext = os.path.splitext(fn)
                 if ext != ".html":
                     logger.warning(
-                        "Removing an extraneous file in the Projects directory: %s",
-                        fn
+                        "Removing an extraneous file in the Projects directory: %s", fn
                     )
                     rmfile_silent(project_path)
                     continue
@@ -79,47 +75,37 @@ class TodoistWorkingCopy:
         working_tree_index,
         actual_projects,
         actual_index
-    ) -> 'Changeset':
+    ) -> "Changeset":
         is_index_obsolete = working_tree_index != actual_index
-        changeset = Changeset(
-            new={}, update={}, delete=[], index=is_index_obsolete
-        )
+        changeset = Changeset(new={}, update={}, delete=[], index=is_index_obsolete)
 
         working_tree_files = set(working_tree_projects.keys())
         actual_projects_files = set(actual_projects.keys())
 
-        changeset.delete.extend(
-            working_tree_files - actual_projects_files
-        )
+        changeset.delete.extend(working_tree_files - actual_projects_files)
 
         new_projects = [
             actual_projects[file][1]
             for file in (actual_projects_files - working_tree_files)
         ]
-        changeset.new.update((
-            (project.id, project)
-            for project in new_projects
-        ))
+        changeset.new.update(((project.id, project) for project in new_projects))
 
         update_projects = [
             actual_projects[file][1]
             for file in (actual_projects_files & working_tree_files)
             if actual_projects[file][0] != working_tree_projects[file]
         ]
-        changeset.update.update((
-            (project.id, project)
-            for project in update_projects
-        ))
+        changeset.update.update(((project.id, project) for project in update_projects))
 
         return changeset
 
-    def apply_changes(self, changeset: 'Changeset') -> None:
+    def apply_changes(self, changeset: "Changeset") -> None:
         os.makedirs(str(self.projects_dir), exist_ok=True)
 
         for fn in changeset.delete:
             rmfile_silent(self.projects_dir / fn)
 
-        for op in ('new', 'update'):
+        for op in ("new", "update"):
             id_to_project = getattr(changeset, op)
             for project in id_to_project.values():
                 fn = self._project_filename(project)
@@ -133,11 +119,11 @@ class TodoistWorkingCopy:
 
 
 Changeset = NamedTuple(
-    'Changeset',
+    "Changeset",
     [
-        ('new', Mapping[TodoistProjectId, TodoistProject]),
-        ('update', Mapping[TodoistProjectId, TodoistProject]),
-        ('delete', Sequence[str]),  # Project's HTML file name
-        ('index', bool),
-    ]
+        ("new", Mapping[TodoistProjectId, TodoistProject]),
+        ("update", Mapping[TodoistProjectId, TodoistProject]),
+        ("delete", Sequence[str]),  # Project's HTML file name
+        ("index", bool),
+    ],
 )

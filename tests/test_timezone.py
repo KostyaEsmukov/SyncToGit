@@ -16,8 +16,14 @@ def local_datetime_pair():
         if local.second <= utc.second:  # otherwise they aren't of the same minute
             y, m, d, h, mm, *_ = utc.timetuple()
             utc = datetime.datetime(
-                y, m, d, h, mm, local.second, local.microsecond,
-                tzinfo=datetime.timezone.utc
+                y,
+                m,
+                d,
+                h,
+                mm,
+                local.second,
+                local.microsecond,
+                tzinfo=datetime.timezone.utc,
             )
             break
     else:

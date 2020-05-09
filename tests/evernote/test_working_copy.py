@@ -5,17 +5,19 @@ from synctogit.evernote.working_copy import EvernoteWorkingCopy
 
 
 @pytest.mark.parametrize(
-    'dir, url',
+    "dir, url",
     [
         (
             ("Eleven", "Haircut"),
-            '../../../Resources/eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7/',
+            "../../../Resources/eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7/",
         ),
         (
+            # fmt: off
             ("Eleven",),
-            '../../Resources/eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7/',
+            "../../Resources/eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7/",
+            # fmt: on
         ),
-    ]
+    ],
 )
 def test_relative_resources_url(dir, url):
     metadata = NoteMetadata(

@@ -14,8 +14,8 @@ def temp_dir():
 @pytest.fixture
 def git_env():
     return {
-        'USERNAME': 'synctogit_test',
-        'EMAIL': 'none@none',
+        "USERNAME": "synctogit_test",
+        "EMAIL": "none@none",
     }
 
 
@@ -40,9 +40,10 @@ def call_git(git_env):
             if space_trim:
                 res = res.strip()
             else:
-                res = res.strip('\n')
+                res = res.strip("\n")
             return res
         except subprocess.CalledProcessError as e:
             print(e.stdout.decode())
             raise
+
     return _call_git

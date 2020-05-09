@@ -35,9 +35,7 @@ class EvernoteWorkingCopy(WorkingCopy[NoteGuid, NoteMetadata, EvernoteChangeset]
     def _get_stored_note_metadata(
         self, notes_dir, note_path: Path
     ) -> Tuple[NoteGuid, NoteMetadata]:
-        return EvernoteStoredNote.get_stored_note_metadata(
-            notes_dir, note_path
-        )
+        return EvernoteStoredNote.get_stored_note_metadata(notes_dir, note_path)
 
     def save_note(self, note: Note, metadata: NoteMetadata):
         super()._save_note(
@@ -45,10 +43,7 @@ class EvernoteWorkingCopy(WorkingCopy[NoteGuid, NoteMetadata, EvernoteChangeset]
             metadata=metadata,
             html_body=EvernoteStoredNote.note_to_html(note, self.timezone),
             resources=[
-                NoteResource(
-                    filename=r.filename,
-                    body=r.body,
-                )
+                NoteResource(filename=r.filename, body=r.body)
                 for r in note.resources.values()
-            ]
+            ],
         )

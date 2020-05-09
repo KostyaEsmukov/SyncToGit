@@ -41,9 +41,7 @@ class OneNoteWorkingCopy(
     def _get_stored_note_metadata(
         self, notes_dir, note_path: Path
     ) -> Tuple[OneNotePageId, OneNotePageMetadata]:
-        return OneNoteStoredNote.get_stored_note_metadata(
-            notes_dir, note_path
-        )
+        return OneNoteStoredNote.get_stored_note_metadata(notes_dir, note_path)
 
     def save_note(self, note: OneNotePage, metadata: OneNotePageMetadata):
         super()._save_note(
@@ -51,10 +49,7 @@ class OneNoteWorkingCopy(
             metadata=metadata,
             html_body=OneNoteStoredNote.note_to_html(note, self.timezone),
             resources=[
-                NoteResource(
-                    filename=r.filename,
-                    body=r.body,
-                )
+                NoteResource(filename=r.filename, body=r.body)
                 for r in note.resources.values()
-            ]
+            ],
         )

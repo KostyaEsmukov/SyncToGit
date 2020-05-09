@@ -301,11 +301,11 @@ def test_map_to_note_with_resources(evernote, evernote_user_timezone):
         active=True,
         content=(
             '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
-            '<en-note><div>1'
+            "<en-note><div>1"
             '<en-media hash="a9f6d89f06411341248f85e22ea4fd4f" type="text/plain" '
             'style="cursor:pointer;" /></div>'
-            '<div><br /></div>'
-            '</en-note>'
+            "<div><br /></div>"
+            "</en-note>"
         ),
         guid=note_guid,
         tagGuids=None,
@@ -391,7 +391,7 @@ def test_map_to_note_with_resources(evernote, evernote_user_timezone):
             '-webkit-line-break: after-white-space;">\n'
             "<div>1"
             '<a href="../../Resources/%s/a9f6d89f06411341248f85e22ea4fd4f.txt">'
-            'Document of type text/plain</a></div>'
+            "Document of type text/plain</a></div>"
             "\n"
             "<div><br />\n"
             "</div>\n"
@@ -400,10 +400,10 @@ def test_map_to_note_with_resources(evernote, evernote_user_timezone):
             "</html>\n" % note_guid
         ).encode(),
         resources={
-            'a9f6d89f06411341248f85e22ea4fd4f': models.NoteResource(
+            "a9f6d89f06411341248f85e22ea4fd4f": models.NoteResource(
                 body=resource_body,
-                mime='text/plain',
-                filename='a9f6d89f06411341248f85e22ea4fd4f.txt'
+                mime="text/plain",
+                filename="a9f6d89f06411341248f85e22ea4fd4f.txt",
             ),
         },
     )

@@ -42,18 +42,14 @@ def note_header_vars():
 
 
 def test_note_to_html_valid():
-    timezone_input = pytz.timezone('Europe/Moscow')
-    timezone_output = pytz.timezone('Asia/Novosibirsk')
+    timezone_input = pytz.timezone("Europe/Moscow")
+    timezone_output = pytz.timezone("Asia/Novosibirsk")
     note = Note(
-        title='раз два',
+        title="раз два",
         update_sequence_num=12345,
         guid="eaaaaaae-1797-4b92-ad11-f3f6e7ada8d7",
-        updated=timezone_input.localize(
-            datetime.datetime(2018, 9, 27, 1, 14, 3)
-        ),
-        created=timezone_input.localize(
-            datetime.datetime(2018, 9, 27, 1, 14, 3)
-        ),
+        updated=timezone_input.localize(datetime.datetime(2018, 9, 27, 1, 14, 3)),
+        created=timezone_input.localize(datetime.datetime(2018, 9, 27, 1, 14, 3)),
         html="<html><head></head><body>три четыре</body></html>".encode(),
         resources={},
     )
@@ -83,28 +79,30 @@ def test_get_stored_note_metadata_valid(temp_dir, note_html, note_header_vars):
     note.write_text(note_html)
 
     guid, metadata = EvernoteStoredNote.get_stored_note_metadata(notes_dir, note)
-    assert guid == note_header_vars['guid']
+    assert guid == note_header_vars["guid"]
     assert metadata == NoteMetadata(
         dir=("Eleven _2728", "Haircut"),
-        name=("Eleven ✨", "Haircut", note_header_vars['title']),
-        update_sequence_num=int(note_header_vars['updateSequenceNum']),
-        file='s1.html',
+        name=("Eleven ✨", "Haircut", note_header_vars["title"]),
+        update_sequence_num=int(note_header_vars["updateSequenceNum"]),
+        file="s1.html",
     )
 
 
 @pytest.mark.parametrize(
-    'is_valid, parts',
+    "is_valid, parts",
     [
+        # fmt: off
         (False, []),
-        (True, ['a']),
-        (True, ['a', 'b']),
-        (False, ['a', 'b', 'c']),
-    ]
+        (True, ["a"]),
+        (True, ["a", "b"]),
+        (False, ["a", "b", "c"]),
+        # fmt: on
+    ],
 )
 def test_get_stored_note_metadata_dir_parts(
     temp_dir, note_html, note_header_vars, is_valid, parts
 ):
-    notes_dir = Path(temp_dir) / 'a'
+    notes_dir = Path(temp_dir) / "a"
     note = notes_dir.joinpath(*parts) / "s1.html"
     os.makedirs(str(note.parents[0]))
     note.write_text(note_html)
@@ -116,7 +114,7 @@ def test_get_stored_note_metadata_dir_parts(
 
 
 @pytest.mark.parametrize(
-    'note_html',
+    "note_html",
     [
         (
             # Missing title
@@ -159,11 +157,9 @@ def test_get_stored_note_metadata_dir_parts(
             "<html>\n"
             "<head>\n"
         ),
-    ]
+    ],
 )
-def test_get_stored_note_metadata_invalid_vars(
-    temp_dir, note_html, note_header_vars
-):
+def test_get_stored_note_metadata_invalid_vars(temp_dir, note_html, note_header_vars):
     notes_dir = Path(temp_dir)
     note = notes_dir / "Eleven" / "Haircut" / "s1.html"
     os.makedirs(str(note.parents[0]))

@@ -29,12 +29,12 @@ _MAXLEN_TITLE_FILENAME = 30
 
 
 class OneNoteOrder(Enum):
-    name = 'name'
-    reversed_name = '-name'
-    created = 'created'
-    reversed_created = '-created'
-    last_modified = 'last_modified'
-    reversed_last_modified = '-last_modified'
+    name = "name"
+    reversed_name = "-name"
+    created = "created"
+    reversed_created = "-created"
+    last_modified = "last_modified"
+    reversed_last_modified = "-last_modified"
 
 
 class OneNoteClient:
@@ -61,9 +61,7 @@ class OneNoteClient:
         #   the MS Office version of OneNote)
 
         client = OauthClient(
-            client_id=client_id,
-            client_secret=client_secret,
-            token=token,
+            client_id=client_id, client_secret=client_secret, token=token,
         )
         self._api = OneNoteAPI(client)
 
@@ -71,9 +69,13 @@ class OneNoteClient:
         self.sections_order = sections_order
 
         self.notebooks = None  # type: Sequence[OneNoteNotebook]
-        self.section_to_pages = None  # type: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]]  # noqa
+        self.section_to_pages = (
+            None
+        )  # type: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]]  # noqa
         self.metadata = None  # type: Mapping[OneNotePageId, OneNotePageMetadata]
-        self._page_id_to_section_id = None  # type: Mapping[OneNoteSectionId, OneNotePageId]  # noqa
+        self._page_id_to_section_id = (
+            None
+        )  # type: Mapping[OneNoteSectionId, OneNotePageId]  # noqa
 
     @property
     def token(self) -> Dict[str, Any]:
@@ -83,16 +85,12 @@ class OneNoteClient:
         # XXX ensure they're converged?
         self.notebooks = self._get_notebooks()
         self.section_to_pages = self._get_pages_of_notebooks(self.notebooks)
-        self.metadata = self._metadata_from_pages(
-            self.notebooks, self.section_to_pages
-        )
+        self.metadata = self._metadata_from_pages(self.notebooks, self.section_to_pages)
         self._page_id_to_section_id = self._get_page_id_to_section_id(
             self.section_to_pages
         )
 
-    def get_page(
-        self, page_id: OneNotePageId, resources_base: str
-    ) -> OneNotePage:
+    def get_page(self, page_id: OneNotePageId, resources_base: str) -> OneNotePage:
         # XXX ensure they're converged?
         multipart_data = self._api.get_page_html(page_id)
 
@@ -113,20 +111,17 @@ class OneNoteClient:
         info = self._map_page_info(self._api.get_page_info(page_id, section_id))
         try:
             return OneNotePage(
-                info=info,
-                html=page_parser.html,
-                resources=page_parser.resources,
+                info=info, html=page_parser.html, resources=page_parser.resources,
             )
         except ValueError as e:
             raise ValueError(
-                "Unable to parse html data for page "
-                "'%s': %s" % (page_id, str(e))
+                "Unable to parse html data for page '%s': %s" % (page_id, str(e))
             )
 
     def _metadata_from_pages(
         self,
         notebooks: Sequence[OneNoteNotebook],
-        section_to_pages: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]]
+        section_to_pages: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]],
     ) -> Mapping[OneNotePageId, OneNotePageMetadata]:
         metadata = OrderedDict()
 
@@ -144,7 +139,9 @@ class OneNoteClient:
                 file = normalize_filename(
                     "%s.%s.html" % (page_info.title[:_MAXLEN_TITLE_FILENAME], page_id)
                 )
-                normalized_note_location = [normalize_filename(s) for s in note_location]
+                normalized_note_location = [
+                    normalize_filename(s) for s in note_location
+                ]
 
                 metadata[page_id] = OneNotePageMetadata(
                     dir=tuple(normalized_note_location[:-1]),
@@ -156,8 +153,7 @@ class OneNoteClient:
         return metadata
 
     def _get_page_id_to_section_id(
-        self,
-        section_to_pages: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]]
+        self, section_to_pages: Mapping[OneNoteSectionId, Sequence[OneNotePageInfo]]
     ) -> Mapping[OneNoteSectionId, OneNotePageId]:
         return {
             page_info.id: section_id
@@ -166,37 +162,43 @@ class OneNoteClient:
         }
 
     def _get_notebooks(self) -> Sequence[OneNoteNotebook]:
-        return self._sort_notebooks_sections(self.notebooks_order, [
-            OneNoteNotebook(
-                id=str(notebook['id']),
-                created=self._map_datetime(notebook['createdDateTime']),
-                last_modified=self._map_datetime(notebook['lastModifiedDateTime']),
-                name=str(notebook['displayName']),
-                is_default=bool(notebook['isDefault']),
-                sections=self._sort_notebooks_sections(self.sections_order, [
-                    OneNoteSection(
-                        id=str(section['id']),
-                        created=self._map_datetime(section['createdDateTime']),
-                        last_modified=self._map_datetime(section['lastModifiedDateTime']),
-                        name=str(section['displayName']),
-                        is_default=bool(section['isDefault']),
-                    )
-                    for section in notebook['sections']
-                ])
-            )
-            for notebook in self._api.get_notebooks()
-        ])
+        return self._sort_notebooks_sections(
+            self.notebooks_order,
+            [
+                OneNoteNotebook(
+                    id=str(notebook["id"]),
+                    created=self._map_datetime(notebook["createdDateTime"]),
+                    last_modified=self._map_datetime(notebook["lastModifiedDateTime"]),
+                    name=str(notebook["displayName"]),
+                    is_default=bool(notebook["isDefault"]),
+                    sections=self._sort_notebooks_sections(
+                        self.sections_order,
+                        [
+                            OneNoteSection(
+                                id=str(section["id"]),
+                                created=self._map_datetime(section["createdDateTime"]),
+                                last_modified=self._map_datetime(
+                                    section["lastModifiedDateTime"]
+                                ),
+                                name=str(section["displayName"]),
+                                is_default=bool(section["isDefault"]),
+                            )
+                            for section in notebook["sections"]
+                        ],
+                    ),
+                )
+                for notebook in self._api.get_notebooks()
+            ],
+        )
 
     def _map_datetime(self, dt: str) -> datetime.datetime:
         # 2018-09-22T16:42:29.61Z
         return dateutil.parser.parse(dt)
 
     def _sort_notebooks_sections(
-        self,
-        order: OneNoteOrder,
-        l: Sequence[Union[OneNoteNotebook, OneNoteSection]]
+        self, order: OneNoteOrder, l: Sequence[Union[OneNoteNotebook, OneNoteSection]]
     ):
-        reverse = order.value[0] == '-'
+        reverse = order.value[0] == "-"
 
         def key(m):
             if reverse:
@@ -223,17 +225,17 @@ class OneNoteClient:
         return {
             section_id: [
                 self._map_page_info(page)
-                for page in sorted(pages, key=lambda p: p['order'])
+                for page in sorted(pages, key=lambda p: p["order"])
             ]
             for section_id, pages in section_to_pages.items()
         }
 
     def _map_page_info(self, page: Dict[str, Any]) -> OneNotePageInfo:
         return OneNotePageInfo(
-            id=str(page['id']),
-            created=self._map_datetime(page['createdDateTime']),
-            last_modified=self._map_datetime(page['lastModifiedDateTime']),
-            title=str(page['title']) or 'Untitled Page',
+            id=str(page["id"]),
+            created=self._map_datetime(page["createdDateTime"]),
+            last_modified=self._map_datetime(page["lastModifiedDateTime"]),
+            title=str(page["title"]) or "Untitled Page",
         )
 
 
@@ -260,10 +262,7 @@ class _PageResourceRetrieval(ResourceRetrieval):
 
         with ThreadPoolExecutor(max_workers=self.max_threads) as pool:
             resource_ids, urls = keys_values
-            return dict(zip(
-                resource_ids,
-                pool.map(self._retrieve, urls),
-            ))
+            return dict(zip(resource_ids, pool.map(self._retrieve, urls)))
 
     def _retrieve(self, url: str) -> bytes:
         r = self._client.get(url)

@@ -4,7 +4,7 @@ from typing import BinaryIO, Callable
 
 from synctogit.evernote.index_renderer import IndexLink, render
 
-data_path = Path(__file__).parents[0] / 'data'
+data_path = Path(__file__).parents[0] / "data"
 
 
 SAMPLE_NOTES = [
@@ -38,18 +38,19 @@ SAMPLE_NOTES = [
 def memory_writer(buf: BinaryIO) -> Callable[[bytes], None]:
     def write(data: bytes) -> None:
         buf.write(data)
+
     return write
 
 
 def test_index_empty_notes():
-    expected = (data_path / 'index_renderer_empty.html').read_text()
+    expected = (data_path / "index_renderer_empty.html").read_text()
     buf = io.BytesIO()
     render([], memory_writer(buf))
     assert buf.getvalue().decode() == expected
 
 
 def test_index_sample_notes():
-    expected = (data_path / 'index_renderer_sample.html').read_text()
+    expected = (data_path / "index_renderer_sample.html").read_text()
     buf = io.BytesIO()
     render(SAMPLE_NOTES, memory_writer(buf))
     assert buf.getvalue().decode() == expected

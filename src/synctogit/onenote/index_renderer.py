@@ -23,22 +23,17 @@ def render(
     notes_dirs: Sequence[str] = ("Notes",)
 ) -> None:
     page_id_to_url = {
-        page_id: _page_url(
-            notes_dirs + page_metadata.dir + (page_metadata.file,)
-        )
+        page_id: _page_url(notes_dirs + page_metadata.dir + (page_metadata.file,))
         for page_id, page_metadata in service_metadata.items()
     }
 
-    t = _index_template.render(dict(
-        pages=pages,
-        notebooks=notebooks,
-        page_id_to_url=page_id_to_url,
-    ))
+    t = _index_template.render(
+        dict(pages=pages, notebooks=notebooks, page_id_to_url=page_id_to_url)
+    )
     write(t.encode())
 
 
 def _page_url(filesystem_path_parts):
-    parts = map(lambda s: urllib.parse.quote(s.encode("utf8")),
-                filesystem_path_parts)
-    url = './' + '/'.join(parts)
+    parts = map(lambda s: urllib.parse.quote(s.encode("utf8")), filesystem_path_parts)
+    url = "./" + "/".join(parts)
     return url

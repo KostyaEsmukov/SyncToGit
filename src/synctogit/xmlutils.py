@@ -37,6 +37,7 @@ class _CachingEntityResolver(EntityResolver):
     """This class caches DTD contents so they aren't
     requested for each parsed XML document.
     """
+
     # must be thread-safe.
 
     def __init__(self, *args, **kwargs):
@@ -44,26 +45,30 @@ class _CachingEntityResolver(EntityResolver):
         self._locked_map = _LockedMap()
 
     def resolveEntity(self, publicId, systemId):
-        if systemId.lower().startswith(('http://', 'https://')):
+        if systemId.lower().startswith(("http://", "https://")):
             with self._locked_map.acquire(systemId):
                 # TODO lock only for downloads??
                 data_str = self.loadRemote(systemId)
-            systemId = BytesIO(data_str.encode('ascii'))
+            systemId = BytesIO(data_str.encode("ascii"))
         return systemId
 
     @lru_cache(maxsize=32)
     def loadRemote(self, systemId) -> str:
         data = urllib.request.urlopen(systemId)
-        return data.read().decode(data.headers.get_content_charset() or 'ascii')
+        return data.read().decode(data.headers.get_content_charset() or "ascii")
 
 
 _caching_entity_resolver = _CachingEntityResolver()
 
 
-def parseString(string: str, handler: ContentHandler,
-                errorHandler=ErrorHandler(),
-                forbid_dtd=False, forbid_entities=True,
-                forbid_external=True):
+def parseString(
+    string: str,
+    handler: ContentHandler,
+    errorHandler=ErrorHandler(),
+    forbid_dtd=False,
+    forbid_entities=True,
+    forbid_external=True,
+):
     # Copied from defusedxml.sax.parseString
 
     parser = make_parser()

@@ -209,12 +209,7 @@ def test_get_projects(todoist):
     assert todoist.get_projects() == expected_projects
 
 
-@pytest.mark.parametrize(
-    'project_extra', [
-        dict(is_archived=1),
-        dict(is_deleted=1),
-    ]
-)
+@pytest.mark.parametrize("project_extra", [dict(is_archived=1), dict(is_deleted=1)])
 def test_hidden_projects(todoist, project_extra):
     project = {
         "collapsed": 0,
@@ -250,8 +245,7 @@ def test_hidden_projects(todoist, project_extra):
             None,
         ),
     ]
-    expected_projects = [
-    ]
+    expected_projects = []
 
     assert todoist.get_projects() == expected_projects
 
@@ -448,11 +442,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
 
 
 @pytest.mark.parametrize(
-    'item_extra', [
-        dict(is_archived=1),
-        dict(is_deleted=1),
-        dict(checked=1),
-    ]
+    "item_extra", [dict(is_archived=1), dict(is_deleted=1), dict(checked=1)]
 )
 def test_hidden_todo_items(todoist, item_extra):
     item = {
@@ -503,8 +493,7 @@ def test_hidden_todo_items(todoist, item_extra):
         ),
     ]
 
-    expected_items = {
-    }
+    expected_items = {}
 
     assert todoist.get_todo_items() == expected_items
 
@@ -596,9 +585,11 @@ def test_parse_due_time(
 
 @pytest.mark.parametrize(
     "todo_item",
+    # fmt: off
     [
         {"due_date_utc": "2018-09-29T16:00:00"},  # must be None
     ],
+    # fmt: on
 )
 def test_parse_due_time_raises(todoist, todo_item):
     with pytest.raises(AssertionError):

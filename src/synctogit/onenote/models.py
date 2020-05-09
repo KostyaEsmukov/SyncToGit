@@ -1,41 +1,41 @@
 import datetime
 from typing import Mapping, NamedTuple, NewType, Sequence
 
-OneNoteSectionId = NewType('OneNoteSectionId', str)
-OneNotePageId = NewType('OneNotePageId', str)
+OneNoteSectionId = NewType("OneNoteSectionId", str)
+OneNotePageId = NewType("OneNotePageId", str)
 
 
 OneNoteNotebook = NamedTuple(
-    'OneNoteNotebook',
+    "OneNoteNotebook",
     [
-        ('id', str),
-        ('name', str),
-        ('created', datetime.datetime),
-        ('last_modified', datetime.datetime),
-        ('is_default', bool),
-        ('sections', Sequence['OneNoteSection']),
-    ]
+        ("id", str),
+        ("name", str),
+        ("created", datetime.datetime),
+        ("last_modified", datetime.datetime),
+        ("is_default", bool),
+        ("sections", Sequence["OneNoteSection"]),
+    ],
 )
 
 OneNoteSection = NamedTuple(
-    'OneNoteSection',
+    "OneNoteSection",
     [
-        ('id', OneNoteSectionId),
-        ('name', str),
-        ('created', datetime.datetime),
-        ('last_modified', datetime.datetime),
-        ('is_default', bool),
-    ]
+        ("id", OneNoteSectionId),
+        ("name", str),
+        ("created", datetime.datetime),
+        ("last_modified", datetime.datetime),
+        ("is_default", bool),
+    ],
 )
 
 OneNotePageInfo = NamedTuple(
-    'OneNotePageInfo',
+    "OneNotePageInfo",
     [
-        ('id', OneNotePageId),
-        ('title', str),
-        ('created', datetime.datetime),
-        ('last_modified', datetime.datetime),
-    ]
+        ("id", OneNotePageId),
+        ("title", str),
+        ("created", datetime.datetime),
+        ("last_modified", datetime.datetime),
+    ],
 )
 
 OneNotePageMetadata = NamedTuple(
@@ -51,17 +51,19 @@ OneNotePageMetadata = NamedTuple(
 OneNoteResource = NamedTuple(
     "OneNoteResource",
     [
+        # fmt: off
         ("body", bytes),
         ("mime", str),
         ("filename", str),
-    ]
+        # fmt: on
+    ],
 )
 
 OneNotePage = NamedTuple(
-    'OneNotePage',
+    "OneNotePage",
     [
-        ('info', OneNotePageInfo),
-        ('html', bytes),
-        ('resources', Mapping[str, OneNoteResource]),  # str -- resource id
-    ]
+        ("info", OneNotePageInfo),
+        ("html", bytes),
+        ("resources", Mapping[str, OneNoteResource]),  # str -- resource id
+    ],
 )

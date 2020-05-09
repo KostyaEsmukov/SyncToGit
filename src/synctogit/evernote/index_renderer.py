@@ -7,7 +7,7 @@ _index_template = template_env.get_template("evernote/index.j2")
 
 
 def render(
-    note_links: Sequence['IndexLink'],
+    note_links: Sequence["IndexLink"],
     writer: Callable[[bytes], None],
     notes_dirs: Sequence[str] = ("Notes",),
 ) -> None:
@@ -17,23 +17,24 @@ def render(
 
 
 IndexLink = NamedTuple(
-    'IndexLink',
+    "IndexLink",
     [
-        ('filesystem_path_parts', Sequence[str]),
-        ('name_parts', Sequence[str]),
-    ]
+        # fmt: off
+        ("filesystem_path_parts", Sequence[str]),
+        ("name_parts", Sequence[str]),
+        # fmt: on
+    ],
 )
 
 
 def _all_prefix_parts(seq):
     for i in range(len(seq)):
-        yield seq[:i + 1]
+        yield seq[: i + 1]
 
 
 def _note_links_to_tree(
-    note_links: Sequence['IndexLink'],
-    notes_dirs: Sequence[str],
-) -> Sequence['_DirItem']:
+    note_links: Sequence["IndexLink"], notes_dirs: Sequence[str],
+) -> Sequence["_DirItem"]:
     dir_items = []
     name_parts_to_dir_item = {}
 
@@ -47,10 +48,7 @@ def _note_links_to_tree(
             else:
                 # A new dir item -- create it and link with the parent
                 parent_dir_item = dir_item
-                dir_item = _DirItem(
-                    name=parts[-1],
-                    items=[],
-                )
+                dir_item = _DirItem(name=parts[-1], items=[])
                 name_parts_to_dir_item[parts] = dir_item
                 if parent_dir_item:
                     # Link it with the parent
@@ -62,31 +60,32 @@ def _note_links_to_tree(
         if not dir_item:
             raise ValueError("Expected each note to be contained within some notebook")
 
-        parts = map(lambda s: urllib.parse.quote(s.encode("utf8")),
-                    notes_dirs + index_link.filesystem_path_parts)
-        url = './' + '/'.join(parts)
-
-        dir_item.items.append(
-            _NoteItem(
-                name=index_link.name_parts[-1],
-                url=url,
-            )
+        parts = map(
+            lambda s: urllib.parse.quote(s.encode("utf8")),
+            notes_dirs + index_link.filesystem_path_parts,
         )
+        url = "./" + "/".join(parts)
+
+        dir_item.items.append(_NoteItem(name=index_link.name_parts[-1], url=url))
     return dir_items
 
 
 _DirItem = NamedTuple(
-    '_DirItem',
+    "_DirItem",
     [
-        ('name', str),
-        ('items', Sequence[Union['_DirItem', '_NoteItem']]),
-    ]
+        # fmt: off
+        ("name", str),
+        ("items", Sequence[Union["_DirItem", "_NoteItem"]]),
+        # fmt: on
+    ],
 )
 
 _NoteItem = NamedTuple(
-    '_NoteItem',
+    "_NoteItem",
     [
-        ('name', str),
-        ('url', str),
-    ]
+        # fmt: off
+        ("name", str),
+        ("url", str),
+        # fmt: on
+    ],
 )

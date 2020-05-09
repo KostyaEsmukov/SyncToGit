@@ -31,8 +31,7 @@ raw_to_normalized = [
 
 
 @pytest.mark.parametrize(
-    "raw, expected",
-    raw_to_normalized,
+    "raw, expected", raw_to_normalized,
 )
 def test_normalize_filename(raw, expected):
     assert normalize_filename(raw) == expected
@@ -45,8 +44,7 @@ def test_normalize_filename_with_disallowed_chars():
 
 
 @pytest.mark.parametrize(
-    "expected, raw",
-    raw_to_normalized,
+    "expected, raw", raw_to_normalized,
 )
 def test_denormalize_filename(raw, expected):
     assert denormalize_filename(raw) == expected
@@ -66,28 +64,25 @@ def test_empty_filename_raises():
         denormalize_filename("")
 
 
-@pytest.mark.parametrize(
-    'fn', [
-        'a' * 251,
-        '💩' * 26,
-    ]
-)
+@pytest.mark.parametrize("fn", ["a" * 251, "💩" * 26])
 def test_long_filename_raises(fn):
     with pytest.raises(ValueError):
         normalize_filename(fn)
 
 
 @pytest.mark.parametrize(
-    'mime_type, expected_ext',
+    "mime_type, expected_ext",
     [
-        ('image/png', 'png'),
-        ('application/javascript', 'js'),
-        ('dsjkahdkas/uwqieyiquwe', 'uwqieyiquwe'),
-        ('text/plain', 'txt'),
-        ('application/msword', 'doc'),
-        ('application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-         'docx'),
-    ]
+        ("image/png", "png"),
+        ("application/javascript", "js"),
+        ("dsjkahdkas/uwqieyiquwe", "uwqieyiquwe"),
+        ("text/plain", "txt"),
+        ("application/msword", "doc"),
+        (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "docx",
+        ),
+    ],
 )
 def test_ext_from_mime_type(mime_type, expected_ext):
     assert expected_ext == ext_from_mime_type(mime_type)

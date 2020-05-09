@@ -23,16 +23,16 @@ class FilesystemConfigReadWriter(ConfigReadWriter):  # pragma: no cover
 
     @contextlib.contextmanager
     def reader(self) -> ContextManager[TextIO]:
-        with open(self.config_path, 'rt') as f:
+        with open(self.config_path, "rt") as f:
             yield f
 
     @contextlib.contextmanager
     def writer(self) -> ContextManager[TextIO]:
-        with open(self.config_path, 'wt') as f:
+        with open(self.config_path, "wt") as f:
             yield f
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ConfigItem(abc.ABC, Generic[T]):
@@ -41,10 +41,10 @@ class ConfigItem(abc.ABC, Generic[T]):
         self.key = key
         self.default = default
 
-    def get(self, config: 'Config') -> T:
+    def get(self, config: "Config") -> T:
         return config._get(self.section, self.key, self._conv, self.default)
 
-    def isset(self, config: 'Config') -> bool:
+    def isset(self, config: "Config") -> bool:
         try:
             config._get(self.section, self.key, self._conv)
         except KeyError:
@@ -52,14 +52,14 @@ class ConfigItem(abc.ABC, Generic[T]):
         else:
             return True
 
-    def set(self, config: 'Config', value: T) -> None:
+    def set(self, config: "Config", value: T) -> None:
         value = str(value)
         if self.section not in config.conf:
             config.conf.add_section(self.section)
         config.conf[self.section][self.key] = value
         config._write()
 
-    def unset(self, config: 'Config') -> None:
+    def unset(self, config: "Config") -> None:
         del config.conf[self.section][self.key]
         config._write()
 
@@ -81,11 +81,13 @@ class IntConfigItem(ConfigItem[int]):
 class BoolConfigItem(ConfigItem[bool]):
     def _conv(self, value: str) -> bool:
         BOOLEAN_STATES = {
-            '1': True, 'yes': True, 'true': True, 'on': True,
-            '0': False, 'no': False, 'false': False, 'off': False,
+            # fmt: off
+            "1": True, "yes": True, "true": True, "on": True,
+            "0": False, "no": False, "false": False, "off": False,
+            # fmt: on
         }
         if value.lower() not in BOOLEAN_STATES:
-            raise ValueError('Not a boolean: %s' % value)
+            raise ValueError("Not a boolean: %s" % value)
         return BOOLEAN_STATES[value.lower()]
 
 
@@ -100,14 +102,12 @@ class Config:
 
         if section not in self.conf:
             if default == DEFAULT_SENTINEL:
-                raise KeyError('Section %s is missing' % section)
+                raise KeyError("Section %s is missing" % section)
             else:
                 value = default
         elif key not in self.conf[section]:
             if default == DEFAULT_SENTINEL:
-                raise KeyError(
-                    'Key %s from section %s is missing' % (key, section)
-                )
+                raise KeyError("Key %s from section %s is missing" % (key, section))
             else:
                 value = default
         else:

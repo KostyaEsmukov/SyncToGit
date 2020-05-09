@@ -40,7 +40,9 @@ def retry_unavailable(f):
                 if i <= 1:
                     raise
                 s = _DELAY_UNAVAILABLE_SECONDS
-                logger.warning("Service unavailable: %s. Waiting %d seconds..." % (e, s))
+                logger.warning(
+                    "Service unavailable: %s. Waiting %d seconds..." % (e, s)
+                )
                 sleep(s)
         raise RuntimeError("Should not have been reached")
 

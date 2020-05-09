@@ -43,7 +43,7 @@ def test_parse_note_header_valid(temp_dir, note_html, note_header_vars):
 
 
 @pytest.mark.parametrize(
-    'note_html',
+    "note_html",
     [
         (
             # No start mark
@@ -82,7 +82,7 @@ def test_parse_note_header_valid(temp_dir, note_html, note_header_vars):
             "<html>\n"
             "<head>\n"
         ),
-    ]
+    ],
 )
 def test_parse_note_header_invalid(temp_dir, note_html):
     note = Path(temp_dir) / "test.html"
@@ -93,7 +93,7 @@ def test_parse_note_header_invalid(temp_dir, note_html):
 
 
 @pytest.mark.parametrize(
-    'note_html, expected',
+    "note_html, expected",
     [
         (
             (
@@ -104,9 +104,7 @@ def test_parse_note_header_invalid(temp_dir, note_html):
                 "<html>\n"
                 "<head>\n"
             ),
-            {
-                'title': 'contains trailing space ',
-            },
+            {"title": "contains trailing space "},
         ),
         (
             (
@@ -118,12 +116,9 @@ def test_parse_note_header_invalid(temp_dir, note_html):
                 "<html>\n"
                 "<head>\n"
             ),
-            {
-                'snake_case': 'is good',
-                'camelCase': 'is good as well',
-            },
+            {"snake_case": "is good", "camelCase": "is good as well"},
         ),
-    ]
+    ],
 )
 def test_parse_note_header_peculiar_valid_cases(temp_dir, note_html, expected):
     note = Path(temp_dir) / "test.html"
