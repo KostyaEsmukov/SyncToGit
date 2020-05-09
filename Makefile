@@ -1,12 +1,16 @@
 
+.PHONY: develop
+develop:
+	pip install -U setuptools wheel
+	pip install -e '.[dev,todoist,evernote,onenote]'
 
 .PHONY: format
 format:
-	isort -rc synctogit tests *.py
+	isort -rc src tests *.py
 
 .PHONY: lint
 lint:
-	flake8 && isort --check-only -rc synctogit tests *.py
+	flake8 && isort --check-only -rc src tests *.py
 
 .PHONY: test
 test:
