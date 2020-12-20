@@ -196,7 +196,7 @@ class OneNoteClient:
         return dateutil.parser.parse(dt)
 
     def _sort_notebooks_sections(
-        self, order: OneNoteOrder, l: Sequence[Union[OneNoteNotebook, OneNoteSection]]
+        self, order: OneNoteOrder, lst: Sequence[Union[OneNoteNotebook, OneNoteSection]]
     ):
         reverse = order.value[0] == "-"
 
@@ -206,7 +206,7 @@ class OneNoteClient:
             else:
                 return not m.is_default, getattr(m, order.value)
 
-        return sorted(l, key=key, reverse=reverse)
+        return sorted(lst, key=key, reverse=reverse)
 
     def _get_pages_of_notebooks(
         self, notebooks: Sequence[OneNoteNotebook]

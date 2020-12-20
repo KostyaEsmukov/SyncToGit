@@ -224,8 +224,8 @@ class OauthClient:
                     self._refresh_token(initial_token)
         raise ServiceTokenExpiredError("Failed to update auth token")
 
-    @contextlib.contextmanager  # noqa
-    def translate_exceptions(self):
+    @contextlib.contextmanager
+    def translate_exceptions(self):  # noqa
         try:
             yield
         except requests.HTTPError as e:
