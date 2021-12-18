@@ -30,9 +30,13 @@ class DummyResourceRetrieval(ResourceRetrieval):
 @pytest.mark.parametrize(
     "is_empty, inkml",
     [
-        (True, None),
-        (True, (data_path / "page_parser_inkml_empty.xml").read_text()),
-        (False, (data_path / "page_parser_inkml_dot.xml").read_text()),
+        pytest.param(True, None, id="None"),
+        pytest.param(
+            True, (data_path / "page_parser_inkml_empty.xml").read_text(), id="empty"
+        ),
+        pytest.param(
+            False, (data_path / "page_parser_inkml_dot.xml").read_text(), id="dot"
+        ),
     ],
 )
 def test_is_empty_inkml(is_empty, inkml):

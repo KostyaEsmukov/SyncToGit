@@ -4,6 +4,7 @@ import os
 import xml.etree.ElementTree as ET
 from typing import Mapping, NamedTuple, Optional, Sequence
 
+import bs4.formatter
 from bs4 import BeautifulSoup as bs, Comment, Tag
 from cached_property import cached_property
 from requests_toolbelt.multipart import decoder
@@ -103,7 +104,14 @@ class PageParser:
         soup = bs(self._raw_html, "html.parser")
         self._bleach_html(soup)
         resources = self._process_resources(soup)
-        html = soup.prettify(formatter="html5")
+        html = soup.prettify(
+            # formatter="html5" which keeps unicode instead of HTML-entities:
+            formatter=bs4.formatter.HTMLFormatter(
+                entity_substitution=bs4.formatter.EntitySubstitution.substitute_xml,
+                void_element_close_prefix=None,
+                empty_attributes_are_booleans=True,
+            )
+        )
 
         html = self._insert_page_tail(html)
         html = html.replace("\r\n", "\n").encode("utf8")
