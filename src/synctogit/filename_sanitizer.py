@@ -82,7 +82,9 @@ def denormalize_filename(filename: str) -> str:
 
 def ext_from_mime_type(mime_type: str) -> str:
     hardcoded_mime_type_conversions = {
-        # On macOS (at least) text/plain might resolve to `.c` or `.ksh`.
+        # Linux: resolves to `vnd.openxmlformats-officedocument.wordprocessingml.document`  # noqa
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",  # noqa
+        # macOS: resolves to `.c` or `.ksh`:
         "text/plain": "txt",
     }
     ext = hardcoded_mime_type_conversions.get(mime_type)
