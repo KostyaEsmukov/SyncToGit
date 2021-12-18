@@ -311,5 +311,6 @@ class _HTTPAdapter(requests.adapters.HTTPAdapter):
         super().__init__(*args, **kwargs)
 
     def send(self, *args, **kwargs):
-        kwargs.setdefault("timeout", self.__timeout)
+        if kwargs.get("timeout") is None:
+            kwargs["timeout"] = self.__timeout
         return super().send(*args, **kwargs)
