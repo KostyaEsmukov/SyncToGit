@@ -102,7 +102,8 @@ class EvernoteSync(BaseSync[EvernoteAuthSession]):
                 push=git_push.get(self.config),
             ) as t:
                 wc = EvernoteWorkingCopy(
-                    git_transaction=t, timezone=get_timezone(self.config),
+                    git_transaction=t,
+                    timezone=get_timezone(self.config),
                 )
 
                 si = _EvernoteSyncIteration(
@@ -167,7 +168,8 @@ class _EvernoteSyncIteration(SyncIteration[NoteGuid, NoteMetadata, Note]):
     ) -> None:
         note_links = [
             index_renderer.IndexLink(
-                filesystem_path_parts=note.dir + (note.file,), name_parts=note.name,
+                filesystem_path_parts=note.dir + (note.file,),
+                name_parts=note.name,
             )
             for note in service_metadata.values()
         ]

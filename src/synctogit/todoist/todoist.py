@@ -122,7 +122,8 @@ class Todoist:
                 due_date, due_datetime = self._parse_due_date_time(i)
             except ValueError:
                 logger.error(
-                    "Unable to parse due time, using None. Todo item: %s", i,
+                    "Unable to parse due time, using None. Todo item: %s",
+                    i,
                 )
                 due_date, due_datetime = None, None
 

@@ -30,9 +30,7 @@ raw_to_normalized = [
 ]
 
 
-@pytest.mark.parametrize(
-    "raw, expected", raw_to_normalized,
-)
+@pytest.mark.parametrize("raw, expected", raw_to_normalized)
 def test_normalize_filename(raw, expected):
     assert normalize_filename(raw) == expected
 
@@ -43,9 +41,7 @@ def test_normalize_filename_with_disallowed_chars():
     assert not (set(normalize_filename(chars)) & set(chars))
 
 
-@pytest.mark.parametrize(
-    "expected, raw", raw_to_normalized,
-)
+@pytest.mark.parametrize("expected, raw", raw_to_normalized)
 def test_denormalize_filename(raw, expected):
     assert denormalize_filename(raw) == expected
 

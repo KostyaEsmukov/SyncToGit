@@ -61,7 +61,9 @@ class OneNoteClient:
         #   the MS Office version of OneNote)
 
         client = OauthClient(
-            client_id=client_id, client_secret=client_secret, token=token,
+            client_id=client_id,
+            client_secret=client_secret,
+            token=token,
         )
         self._api = OneNoteAPI(client)
 
@@ -111,7 +113,9 @@ class OneNoteClient:
         info = self._map_page_info(self._api.get_page_info(page_id, section_id))
         try:
             return OneNotePage(
-                info=info, html=page_parser.html, resources=page_parser.resources,
+                info=info,
+                html=page_parser.html,
+                resources=page_parser.resources,
             )
         except ValueError as e:
             raise ValueError(

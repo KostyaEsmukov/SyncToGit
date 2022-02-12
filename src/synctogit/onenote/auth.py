@@ -14,7 +14,11 @@ class InteractiveAuth:
     scopes_details_url = "https://docs.microsoft.com/en-us/graph/permissions-reference"
 
     def __init__(
-        self, client_id: str, client_secret: str, redirect_uri: str, scopes: str,
+        self,
+        client_id: str,
+        client_secret: str,
+        redirect_uri: str,
+        scopes: str,
     ) -> None:
         self.client_id = client_id
         self.client_secret = client_secret
@@ -81,7 +85,8 @@ class InteractiveAuth:
         redirect_uri = None
         while not client_id:
             client_id = input_dialog(
-                title="Input client_id for OAuth", text="Input client_id for OAuth.",
+                title="Input client_id for OAuth",
+                text="Input client_id for OAuth.",
             )
         while not client_secret:
             client_secret = input_dialog(

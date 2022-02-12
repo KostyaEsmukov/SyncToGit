@@ -40,7 +40,9 @@ def git_repo_with_remote(git_repo, temp_dir, call_git):
     )
 
     return dict(
-        remote_name=remote_name, remote_git_repo=git_repo, git_repo=local_git_repo,
+        remote_name=remote_name,
+        remote_git_repo=git_repo,
+        git_repo=local_git_repo,
     )
 
 

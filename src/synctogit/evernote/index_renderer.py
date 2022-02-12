@@ -27,7 +27,8 @@ def _all_prefix_parts(seq):
 
 
 def _note_links_to_tree(
-    note_links: Sequence["IndexLink"], notes_dirs: Sequence[str],
+    note_links: Sequence["IndexLink"],
+    notes_dirs: Sequence[str],
 ) -> Sequence["_DirItem"]:
     dir_items = []
     name_parts_to_dir_item = {}

@@ -114,7 +114,8 @@ class OneNoteSync(BaseSync[MicrosoftGraphAuthSession]):
                 push=git_push.get(self.config),
             ) as t:
                 wc = OneNoteWorkingCopy(
-                    git_transaction=t, timezone=get_timezone(self.config),
+                    git_transaction=t,
+                    timezone=get_timezone(self.config),
                 )
 
                 si = _OneNoteSyncIteration(

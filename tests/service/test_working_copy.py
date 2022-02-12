@@ -67,7 +67,10 @@ def test_calculate_changes_detects_moves(force_update, change):
 
     evernote_metadata = {
         guid: NoteMetadata(
-            dir=dir, file=file, name=name, update_sequence_num=update_sequence_num,
+            dir=dir,
+            file=file,
+            name=name,
+            update_sequence_num=update_sequence_num,
         )
     }
     working_copy_metadata = {

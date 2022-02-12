@@ -175,7 +175,8 @@ class _EvernoteNoteParser(ContentHandler):
         toptype, _ = attrs["type"].split("/", 2)
 
         src = "{}{}".format(
-            self.resources_base, resource_filename(attrs["hash"], attrs["type"]),
+            self.resources_base,
+            resource_filename(attrs["hash"], attrs["type"]),
         )
         if toptype == "image":
             a = _copy_preserve(attrs, ["alt", "style", "width", "height"])
@@ -232,7 +233,11 @@ def parse(resources_base_path: str, enbody: str, title: str) -> bytes:
 
     try:
         parseString(
-            enbody, p, forbid_dtd=False, forbid_entities=False, forbid_external=False,
+            enbody,
+            p,
+            forbid_dtd=False,
+            forbid_entities=False,
+            forbid_external=False,
         )
     except SAXParseException as e:
         raise EvernoteMalformedNoteError(e)

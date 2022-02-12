@@ -47,9 +47,15 @@ tz2 = pytz.timezone("Asia/Novosibirsk")
 )
 def test_is_updated_note(d1, d2, is_updated):
     m1 = OneNotePageMetadata(
-        dir=("a", "b"), file="c", name=("a", "b", "c"), last_modified=d1,
+        dir=("a", "b"),
+        file="c",
+        name=("a", "b", "c"),
+        last_modified=d1,
     )
     m2 = OneNotePageMetadata(
-        dir=("a", "b"), file="c", name=("a", "b", "c"), last_modified=d2,
+        dir=("a", "b"),
+        file="c",
+        name=("a", "b", "c"),
+        last_modified=d2,
     )
     assert is_updated is OneNoteWorkingCopy._is_updated_note(m1, m2)

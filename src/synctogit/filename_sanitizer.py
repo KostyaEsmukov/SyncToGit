@@ -13,7 +13,8 @@ _MSDOS_FILENAME_PATTERN = regex.compile(
 )
 
 _STRIP_CHARS_FILENAME_PATTERN = regex.compile(
-    r"[^\p{L}0-9\-_\. \[\]\(\)]", flags=regex.UNICODE,
+    r"[^\p{L}0-9\-_\. \[\]\(\)]",
+    flags=regex.UNICODE,
 )
 _STRIPPED_CHAR_PATTERN = regex.compile(
     r"(%(e)s*)((?:%(e)s[0-9a-f]{4})+)" % dict(e=_escape_char)

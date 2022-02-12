@@ -81,7 +81,9 @@ class Evernote:
                 (
                     note_guid,
                     self._map_to_note_metadata(
-                        notebooks[note_info.notebook_guid], note_guid, note_info,
+                        notebooks[note_info.notebook_guid],
+                        note_guid,
+                        note_info,
                     ),
                 )
                 for note_guid, note_info in notes_metadata.items()

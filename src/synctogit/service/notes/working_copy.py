@@ -173,7 +173,8 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
                 resource_path.write_bytes(m.body)
 
     def get_working_copy_metadata(
-        self, worker_threads: int = 20,
+        self,
+        worker_threads: int = 20,
     ) -> Mapping[TNoteKey, TNoteMetadata]:
         note_metadata_futures = []
 
@@ -187,14 +188,17 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
 
                     note_path = Path(root) / fn
                     fut = pool.submit(
-                        self._get_stored_note_metadata, self.notes_dir, note_path,
+                        self._get_stored_note_metadata,
+                        self.notes_dir,
+                        note_path,
                     )
                     note_metadata_futures.append((note_path, fut))
 
         return self._process_note_metadata_futures(note_metadata_futures)
 
     def _process_note_metadata_futures(
-        self, note_metadata_futures: Sequence[concurrent.futures.Future],
+        self,
+        note_metadata_futures: Sequence[concurrent.futures.Future],
     ) -> Mapping[TNoteKey, TNoteMetadata]:
         note_key_to_metadata = {}
         corrupted_note_keys = set()
@@ -233,7 +237,8 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
         return note_key_to_metadata
 
     def _delete_non_existing_resources(
-        self, metadata: Mapping[TNoteKey, TNoteMetadata],
+        self,
+        metadata: Mapping[TNoteKey, TNoteMetadata],
     ) -> None:
         try:
             root, dirs, _ = next(os.walk(str(self.resources_dir)))
