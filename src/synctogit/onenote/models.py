@@ -5,65 +5,44 @@ OneNoteSectionId = NewType("OneNoteSectionId", str)
 OneNotePageId = NewType("OneNotePageId", str)
 
 
-OneNoteNotebook = NamedTuple(
-    "OneNoteNotebook",
-    [
-        ("id", str),
-        ("name", str),
-        ("created", datetime.datetime),
-        ("last_modified", datetime.datetime),
-        ("is_default", bool),
-        ("sections", Sequence["OneNoteSection"]),
-    ],
-)
+class OneNoteNotebook(NamedTuple):
+    id: str
+    name: str
+    created: datetime.datetime
+    last_modified: datetime.datetime
+    is_default: bool
+    sections: Sequence["OneNoteSection"]
 
-OneNoteSection = NamedTuple(
-    "OneNoteSection",
-    [
-        ("id", OneNoteSectionId),
-        ("name", str),
-        ("created", datetime.datetime),
-        ("last_modified", datetime.datetime),
-        ("is_default", bool),
-    ],
-)
 
-OneNotePageInfo = NamedTuple(
-    "OneNotePageInfo",
-    [
-        ("id", OneNotePageId),
-        ("title", str),
-        ("created", datetime.datetime),
-        ("last_modified", datetime.datetime),
-    ],
-)
+class OneNoteSection(NamedTuple):
+    id: OneNoteSectionId
+    name: str
+    created: datetime.datetime
+    last_modified: datetime.datetime
+    is_default: bool
 
-OneNotePageMetadata = NamedTuple(
-    "OneNotePageMetadata",
-    [
-        ("dir", Sequence[str]),
-        ("file", str),
-        ("name", Sequence[str]),  # dir parts + note name
-        ("last_modified", datetime.datetime),
-    ],
-)
 
-OneNoteResource = NamedTuple(
-    "OneNoteResource",
-    [
-        # fmt: off
-        ("body", bytes),
-        ("mime", str),
-        ("filename", str),
-        # fmt: on
-    ],
-)
+class OneNotePageInfo(NamedTuple):
+    id: OneNotePageId
+    title: str
+    created: datetime.datetime
+    last_modified: datetime.datetime
 
-OneNotePage = NamedTuple(
-    "OneNotePage",
-    [
-        ("info", OneNotePageInfo),
-        ("html", bytes),
-        ("resources", Mapping[str, OneNoteResource]),  # str -- resource id
-    ],
-)
+
+class OneNotePageMetadata(NamedTuple):
+    dir: Sequence[str]
+    file: str
+    name: Sequence[str]  # dir parts + note name
+    last_modified: datetime.datetime
+
+
+class OneNoteResource(NamedTuple):
+    body: bytes
+    mime: str
+    filename: str
+
+
+class OneNotePage(NamedTuple):
+    info: OneNotePageInfo
+    html: bytes
+    resources: Mapping[str, OneNoteResource]  # str -- resource id

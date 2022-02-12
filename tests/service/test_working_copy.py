@@ -59,8 +59,8 @@ def test_calculate_changes_detects_moves(force_update, change):
     name = dir + (name_part,)
     name_git = dir_git + (name_part_git,)
 
-    file = "%s.%s.html" % (name_part, guid)
-    file_git = "%s.%s.html" % (name_part_git, guid)
+    file = f"{name_part}.{guid}.html"
+    file_git = f"{name_part_git}.{guid}.html"
 
     update_sequence_num = 6772
     update_sequence_num_git = 7000 if change == "seq" else update_sequence_num

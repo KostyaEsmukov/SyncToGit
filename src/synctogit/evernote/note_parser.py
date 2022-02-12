@@ -27,7 +27,7 @@ _note_tail_template = template_env.get_template("evernote/body_tail.j2")
 
 def resource_filename(file_hash: str, mime_type: str) -> str:
     ext = ext_from_mime_type(mime_type)
-    return "%s.%s" % (file_hash, ext)
+    return f"{file_hash}.{ext}"
 
 
 class _EWrapper:
@@ -174,9 +174,8 @@ class _EvernoteNoteParser(ContentHandler):
 
         toptype, _ = attrs["type"].split("/", 2)
 
-        src = "%s%s" % (
-            self.resources_base,
-            resource_filename(attrs["hash"], attrs["type"]),
+        src = "{}{}".format(
+            self.resources_base, resource_filename(attrs["hash"], attrs["type"]),
         )
         if toptype == "image":
             a = _copy_preserve(attrs, ["alt", "style", "width", "height"])

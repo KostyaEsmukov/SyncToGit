@@ -17,7 +17,7 @@ def rmfile_silent(path: Path) -> None:
     try:
         path.unlink()
     except OSError as e:
-        logger.warn("Unable to delete %s file: %s" % (path, repr(e)))
+        logger.warn("Unable to delete %s file: %r", path, e)
 
 
 class GitSimultaneousTransaction(Exception):
@@ -60,7 +60,7 @@ class GitTransaction:
         rmfile_silent(self.lockfile_path)
 
         if exc_type is not None:
-            logger.warning("git transaction failed: %s(%s)" % (repr(exc_type), exc_val))
+            logger.warning("git transaction failed: %r", exc_val)
             self._stash()
         else:
             if self.git.is_dirty(untracked_files=True):

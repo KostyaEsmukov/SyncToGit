@@ -25,15 +25,9 @@ def _seq_to_path(parts: Sequence[str]) -> Path:
     return p
 
 
-NoteResource = NamedTuple(
-    "NoteResource",
-    [
-        # fmt: off
-        ("filename", str),
-        ("body", bytes),
-        # fmt: on
-    ],
-)
+class NoteResource(NamedTuple):
+    filename: str
+    body: bytes
 
 
 # TODO: replace with a dataclass
@@ -49,7 +43,7 @@ class Changeset(Generic[TNoteKey, TNoteMetadata]):
         self.delete = delete
 
     def __repr__(self):
-        return "%s(%s)" % (type(self).__name__, self.__dict__)
+        return f"{type(self).__name__}({self.__dict__})"
 
     def __eq__(self, other):
         if type(self) is not type(other):
@@ -126,7 +120,7 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
         *,
         service_metadata: Mapping[TNoteKey, TNoteMetadata],
         working_copy_metadata: Mapping[TNoteKey, TNoteMetadata],
-        force_update: bool
+        force_update: bool,
     ) -> TChangeset:
         changeset = cls.changeset_cls(new={}, update={}, delete={})
 

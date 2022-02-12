@@ -144,8 +144,7 @@ class OneNoteAPI:
         # url = self.base_api_url + '/pages'
         url = self.base_api_url + "/sections/%s/pages" % section_id
         for resp_page in self._get_paginated(url, params=params):
-            for page in resp_page["value"]:
-                yield page
+            yield from resp_page["value"]
 
     def get_notebooks(self) -> Iterable[Dict[str, Any]]:
         select_fields = [
@@ -174,8 +173,7 @@ class OneNoteAPI:
 
         url = self.base_api_url + "/notebooks"
         for resp_page in self._get_paginated(url, params=params):
-            for notebook in resp_page["value"]:
-                yield notebook
+            yield from resp_page["value"]
 
     def _get_paginated(self, url, **kwargs) -> Iterable[Dict[str, Any]]:
         next_url = url

@@ -46,7 +46,7 @@ class PageParser:
         html: str,
         inkml: str,
         resource_retrieval: ResourceRetrieval,
-        resources_base: str
+        resources_base: str,
     ) -> None:
         self._raw_html = html
         self._raw_inkml = inkml
@@ -59,7 +59,7 @@ class PageParser:
         multipart_data: decoder.MultipartDecoder,
         *,
         resource_retrieval: ResourceRetrieval,
-        resources_base: str
+        resources_base: str,
     ) -> "PageParser":
         html = None
         inkml = None
@@ -190,7 +190,7 @@ class _ParseResources:
             video_tag = soup.new_tag(
                 "video",
                 controls="",
-                **{k: v for k, v in object_tag.attrs.items() if k.startswith("data-")}
+                **{k: v for k, v in object_tag.attrs.items() if k.startswith("data-")},
             )
             style = object_tag.get("style")
             if style:
@@ -219,7 +219,7 @@ class _ParseResources:
         mime_attrs: Sequence[str],
         filename_attrs: Sequence[str],
         final_src_attr: str,
-        final_mime_attr: str
+        final_mime_attr: str,
     ) -> "_HandledResource":
         src = self._first(tag, src_attrs)
         a_link_text = "Document at %s" % src
@@ -252,7 +252,7 @@ class _ParseResources:
         attr_value = next(iterator, None)
         if empty_raises and attr_value is None:
             raise KeyError(
-                "None of the %r attributes are set on %s" % (candidate_attrs, tag)
+                f"None of the {candidate_attrs!r} attributes are set on {tag}"
             )
         return attr_value
 
@@ -263,30 +263,18 @@ class _ParseResources:
         # "0-aaaaaaaaaaaaaaaaaaaaaaaaaaaaa399!1-AAAAAAAAAAAAAAA!999"
         if original_filename and "." in original_filename:
             name, ext = original_filename.rsplit(".", 1)
-            filename = "%s.%s.%s" % (name, resource_id, ext)
+            filename = f"{name}.{resource_id}.{ext}"
         else:
             ext = ext_from_mime_type(mime_type)
-            filename = "%s.%s" % (resource_id, ext)
+            filename = f"{resource_id}.{ext}"
         return normalize_filename(filename)
 
 
-_Parsed = NamedTuple(
-    "_Parsed",
-    [
-        # fmt: off
-        ("html", bytes),
-        ("resources", Mapping[str, OneNoteResource]),
-        # fmt: on
-    ],
-)
+class _Parsed(NamedTuple):
+    html: bytes
+    resources: Mapping[str, OneNoteResource]
 
 
-_HandledResource = NamedTuple(
-    "_HandledResource",
-    [
-        # fmt: off
-        ("is_onenote", bool),
-        ("a_link_text", str),
-        # fmt: on
-    ],
-)
+class _HandledResource(NamedTuple):
+    is_onenote: bool
+    a_link_text: str

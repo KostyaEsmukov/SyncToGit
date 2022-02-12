@@ -94,7 +94,7 @@ class Evernote:
     def _get_notebooks(self) -> Mapping[models.NotebookGuid, models.NotebookInfo]:
         note_store = self.client.get_note_store()
         notebooks = note_store.listNotebooks()
-        return OrderedDict(((n.guid, self._map_to_notebook_info(n)) for n in notebooks))
+        return OrderedDict((n.guid, self._map_to_notebook_info(n)) for n in notebooks)
 
     @retry_ratelimited
     @translate_exceptions
@@ -121,9 +121,7 @@ class Evernote:
             )
 
             res.update(
-                OrderedDict(
-                    ((n.guid, self._map_to_note_info(n)) for n in metadata.notes)
-                )
+                OrderedDict((n.guid, self._map_to_note_info(n)) for n in metadata.notes)
             )
 
             offset = metadata.startIndex + len(metadata.notes)
@@ -186,7 +184,7 @@ class Evernote:
         normalized_note_location = [normalize_filename(s) for s in note_location]
 
         file = normalize_filename(
-            "%s.%s.html" % (note_info.title[:_MAXLEN_TITLE_FILENAME], note_guid)
+            f"{note_info.title[:_MAXLEN_TITLE_FILENAME]}.{note_guid}.html"
         )
         return models.NoteMetadata(
             dir=tuple(normalized_note_location[:-1]),

@@ -107,7 +107,7 @@ class Config:
                 value = default
         elif key not in self.conf[section]:
             if default == DEFAULT_SENTINEL:
-                raise KeyError("Key %s from section %s is missing" % (key, section))
+                raise KeyError(f"Key {key} from section {section} is missing")
             else:
                 value = default
         else:

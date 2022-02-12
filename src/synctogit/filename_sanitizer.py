@@ -33,7 +33,7 @@ def normalize_filename(filename: str) -> str:
     def escape(m):
         b = m.group(0).encode("utf-16be")
         return "".join(
-            "%s%s" % (escape_char, b[i : i + 2].hex()) for i in range(0, len(b), 2)
+            f"{escape_char}{b[i : i + 2].hex()}" for i in range(0, len(b), 2)
         )
 
     # escape all escape chars
@@ -67,7 +67,7 @@ def denormalize_filename(filename: str) -> str:
 
         hex_bytes = m.group(2).replace("_", "")
         s = bytes.fromhex(hex_bytes).decode("utf-16be")
-        return "%s%s" % (m.group(1), s)
+        return f"{m.group(1)}{s}"
 
     filename = _STRIPPED_CHAR_PATTERN.sub(sub, filename)
 

@@ -16,15 +16,9 @@ def render(
     writer(b.encode("utf8"))
 
 
-IndexLink = NamedTuple(
-    "IndexLink",
-    [
-        # fmt: off
-        ("filesystem_path_parts", Sequence[str]),
-        ("name_parts", Sequence[str]),
-        # fmt: on
-    ],
-)
+class IndexLink(NamedTuple):
+    filesystem_path_parts: Sequence[str]
+    name_parts: Sequence[str]
 
 
 def _all_prefix_parts(seq):
@@ -70,22 +64,11 @@ def _note_links_to_tree(
     return dir_items
 
 
-_DirItem = NamedTuple(
-    "_DirItem",
-    [
-        # fmt: off
-        ("name", str),
-        ("items", Sequence[Union["_DirItem", "_NoteItem"]]),
-        # fmt: on
-    ],
-)
+class _DirItem(NamedTuple):
+    name: str
+    items: Sequence[Union["_DirItem", "_NoteItem"]]
 
-_NoteItem = NamedTuple(
-    "_NoteItem",
-    [
-        # fmt: off
-        ("name", str),
-        ("url", str),
-        # fmt: on
-    ],
-)
+
+class _NoteItem(NamedTuple):
+    name: str
+    url: str

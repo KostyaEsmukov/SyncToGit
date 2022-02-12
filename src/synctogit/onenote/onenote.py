@@ -47,7 +47,7 @@ class OneNoteClient:
         client_secret: str,
         token: Dict[str, Any],
         notebooks_order: OneNoteOrder = OneNoteOrder.created,
-        sections_order: OneNoteOrder = OneNoteOrder.created
+        sections_order: OneNoteOrder = OneNoteOrder.created,
     ) -> None:
         # NB: REST API limitations:
         # - no colors
@@ -115,7 +115,7 @@ class OneNoteClient:
             )
         except ValueError as e:
             raise ValueError(
-                "Unable to parse html data for page '%s': %s" % (page_id, str(e))
+                f"Unable to parse html data for page '{page_id}': {str(e)}"
             )
 
     def _metadata_from_pages(
@@ -137,7 +137,7 @@ class OneNoteClient:
 
                 note_location = section_id_to_dir[section_id] + [page_info.title]
                 file = normalize_filename(
-                    "%s.%s.html" % (page_info.title[:_MAXLEN_TITLE_FILENAME], page_id)
+                    f"{page_info.title[:_MAXLEN_TITLE_FILENAME]}.{page_id}.html"
                 )
                 normalized_note_location = [
                     normalize_filename(s) for s in note_location

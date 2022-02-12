@@ -202,7 +202,7 @@ def test_changes_are_committed(push, commit_message, git_repo_with_remote, call_
 
     # Ensure that a new commit has been created
     git_commits = call_git(r'git log --pretty=format:"%s" -n 3', cwd=wd)
-    assert git_commits == ("%s\n%s" % (new_commit_message, initial_commit))
+    assert git_commits == (f"{new_commit_message}\n{initial_commit}")
 
     # Ensure that the working copy is clean
     git_status = call_git("git status --porcelain", cwd=wd)
@@ -213,7 +213,7 @@ def test_changes_are_committed(push, commit_message, git_repo_with_remote, call_
         r'git log --pretty=format:"%s" -n 3', cwd=remote_git_repo.working_tree_dir
     )
     if push:
-        assert git_remote_commits == "%s\n%s" % (new_commit_message, initial_commit)
+        assert git_remote_commits == f"{new_commit_message}\n{initial_commit}"
     else:
         assert git_remote_commits == initial_commit
 
@@ -241,7 +241,7 @@ def test_git_push_with_conflicts(git_repo_with_remote, call_git):
 
     # Ensure that a new commit has been created
     git_commits = call_git(r'git log --pretty=format:"%s" -n 3', cwd=wd)
-    assert git_commits == "%s\n%s" % (new_commit_message, initial_commit)
+    assert git_commits == f"{new_commit_message}\n{initial_commit}"
 
     # Ensure that the working copy is clean
     git_status = call_git("git status --porcelain", cwd=wd)

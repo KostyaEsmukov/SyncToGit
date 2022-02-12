@@ -23,7 +23,7 @@ class TodoistWorkingCopy:
         self.projects_renderer = projects_renderer
 
     def _project_filename(self, project: TodoistProject) -> str:
-        return "%s.%s.html" % (normalize_filename(project.name), project.id)
+        return f"{normalize_filename(project.name)}.{project.id}.html"
 
     def get_changes(self) -> "Changeset":
         working_tree_projects = self._read_working_tree_projects()
@@ -74,7 +74,7 @@ class TodoistWorkingCopy:
         working_tree_projects,
         working_tree_index,
         actual_projects,
-        actual_index
+        actual_index,
     ) -> "Changeset":
         is_index_obsolete = working_tree_index != actual_index
         changeset = Changeset(new={}, update={}, delete=[], index=is_index_obsolete)
@@ -88,14 +88,14 @@ class TodoistWorkingCopy:
             actual_projects[file][1]
             for file in (actual_projects_files - working_tree_files)
         ]
-        changeset.new.update(((project.id, project) for project in new_projects))
+        changeset.new.update((project.id, project) for project in new_projects)
 
         update_projects = [
             actual_projects[file][1]
             for file in (actual_projects_files & working_tree_files)
             if actual_projects[file][0] != working_tree_projects[file]
         ]
-        changeset.update.update(((project.id, project) for project in update_projects))
+        changeset.update.update((project.id, project) for project in update_projects)
 
         return changeset
 
@@ -118,12 +118,8 @@ class TodoistWorkingCopy:
             (self.repo_dir / "index.html").write_bytes(html)
 
 
-Changeset = NamedTuple(
-    "Changeset",
-    [
-        ("new", Mapping[TodoistProjectId, TodoistProject]),
-        ("update", Mapping[TodoistProjectId, TodoistProject]),
-        ("delete", Sequence[str]),  # Project's HTML file name
-        ("index", bool),
-    ],
-)
+class Changeset(NamedTuple):
+    new: Mapping[TodoistProjectId, TodoistProject]
+    update: Mapping[TodoistProjectId, TodoistProject]
+    delete: Sequence[str]  # Project's HTML file name
+    index: bool

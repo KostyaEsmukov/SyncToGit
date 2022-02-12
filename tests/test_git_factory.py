@@ -102,7 +102,7 @@ def test_git_load_existing_not_empty(
     call_git('git commit -m "The Cake is a lie"', cwd=d)
 
     if shadow_remote:
-        call_git("git remote add %s %s" % (remote_name, shadow_remote), cwd=d)
+        call_git(f"git remote add {remote_name} {shadow_remote}", cwd=d)
 
     with ExitStack() as stack:
         if shadow_remote and remote != shadow_remote:
