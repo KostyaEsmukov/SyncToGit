@@ -4,11 +4,18 @@ from typing import Callable
 
 import jinja2
 
+try:
+    # jinja2<3.1
+    from jinja2 import Markup
+except ImportError:
+    # jinja2>=3.1
+    from markupsafe import Markup
+
 
 def _include_file(name):
     # Raw file loader.
     # See: https://stackoverflow.com/a/9769454
-    return jinja2.Markup(template_loader.get_source(template_env, name)[0])
+    return Markup(template_loader.get_source(template_env, name)[0])
 
 
 template_path = str(Path(os.path.dirname(__file__)) / "templates")
