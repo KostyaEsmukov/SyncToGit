@@ -49,7 +49,8 @@ def normalize_filename(filename: str) -> str:
 
     if len(filename) > _max_filename_len:
         raise ValueError(
-            "Normalized filename length exceeds the limit of %s" % _max_filename_len
+            f"Normalized filename length exceeds the limit of {_max_filename_len}: "
+            f"{filename}"
         )
 
     return filename
