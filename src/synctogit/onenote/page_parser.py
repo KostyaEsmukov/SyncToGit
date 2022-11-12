@@ -5,7 +5,8 @@ import xml.etree.ElementTree as ET
 from typing import Mapping, NamedTuple, Optional, Sequence
 
 import bs4.formatter
-from bs4 import BeautifulSoup as bs, Comment, Tag
+from bs4 import BeautifulSoup as bs
+from bs4 import Comment, Tag
 from cached_property import cached_property
 from requests_toolbelt.multipart import decoder
 
