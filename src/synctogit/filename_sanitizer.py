@@ -88,6 +88,8 @@ def ext_from_mime_type(mime_type: str) -> str:
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",  # noqa
         # macOS: resolves to `.c` or `.ksh`:
         "text/plain": "txt",
+        # cpython 3.12 resolves to `.javascript`:
+        "application/javascript": "js",
     }
     ext = hardcoded_mime_type_conversions.get(mime_type)
     if ext:
