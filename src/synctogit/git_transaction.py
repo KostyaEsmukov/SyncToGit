@@ -60,7 +60,6 @@ class GitTransaction:
         rmfile_silent(self.lockfile_path)
 
         if exc_type is not None:
-            logger.warning("git transaction failed: %r", exc_val)
             self._stash()
         else:
             if self.git.is_dirty(untracked_files=True):
