@@ -17,6 +17,7 @@ def git_env():
         "USERNAME": "synctogit_test",
         "GIT_AUTHOR_NAME": "synctogit_test",
         "GIT_COMMITTER_NAME": "synctogit_test",
+        #
         "EMAIL": "none@none",
         "GIT_AUTHOR_EMAIL": "none@none",
         "GIT_COMMITTER_EMAIL": "none@none",

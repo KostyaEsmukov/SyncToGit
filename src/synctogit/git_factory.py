@@ -10,8 +10,13 @@ class GitError(Exception):
 
 
 # Default username and email for git.
-os.environ["USERNAME"] = "synctogit"
-os.environ["EMAIL"] = "none@none"
+os.environ.setdefault("USERNAME", "synctogit")
+os.environ.setdefault("GIT_AUTHOR_NAME", "synctogit")
+os.environ.setdefault("GIT_COMMITTER_NAME", "synctogit")
+#
+os.environ.setdefault("EMAIL", "none@none")
+os.environ.setdefault("GIT_AUTHOR_EMAIL", "none@none")
+os.environ.setdefault("GIT_COMMITTER_EMAIL", "none@none")
 
 
 gitignore_synctogit_files_prefix = ".synctogit"
