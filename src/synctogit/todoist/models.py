@@ -2,7 +2,7 @@ import datetime
 from enum import Enum
 from typing import NamedTuple, NewType, Optional, Sequence
 
-TodoistProjectId = NewType("TodoistProjectId", int)
+TodoistProjectId = NewType("TodoistProjectId", str)
 
 
 class TodoistItemPriority(Enum):
@@ -22,7 +22,7 @@ class TodoistProject(NamedTuple):
 
 
 class TodoistTodoItem(NamedTuple):
-    id: int
+    id: str
     all_day: bool
     content: str
     added_datetime: datetime.datetime

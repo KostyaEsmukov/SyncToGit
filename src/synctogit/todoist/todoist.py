@@ -1,15 +1,14 @@
 import datetime
 import os
 from collections import defaultdict
-from collections.abc import Mapping
 from logging import getLogger
 from typing import Dict, Optional, Sequence, Tuple
 
 import dateutil.parser
 import pytz
-import todoist
 from cached_property import cached_property
 
+import synctogit.todoist.client as todoist
 from synctogit.service import ServiceAPIError, ServiceTokenExpiredError
 
 from . import models
@@ -27,27 +26,20 @@ class Todoist:
         return todoist.TodoistAPI(cache=cache_dir, token=auth_token)
 
     def sync(self):
-        response = self.api.sync()
-        if isinstance(response, Mapping):
-            if "sync_token" in response and "error" not in response:
-                # Successful sync
-                return
-            if "error" in response:
-                if "AUTH_INVALID_TOKEN" == response.get("error_tag"):
-                    raise ServiceTokenExpiredError(response.get("error"))
-            error = response.get("error") or response
-        else:
-            error = response
-        raise ServiceAPIError(str(error))
+        try:
+            self.api.sync()
+        except todoist.SyncTokenExpiredError as e:
+            raise ServiceTokenExpiredError(str(e)) from e
+        except todoist.SyncError as e:
+            raise ServiceAPIError(str(e)) from e
 
     def get_projects(self) -> Sequence[models.TodoistProject]:
         def key(p):
             # All root items should go first, so they would exist when
             # a child item is processed.
             return (
-                p.data.get("parent_id") or -1,
-                p.data.get("item_order", 999999),
-                p.data.get("child_order", 999999),
+                p.get("parent_id") or "",
+                p.get("child_order", float("inf")),
             )
 
         ordered_raw_projects = sorted(self.api.state["projects"], key=key)
@@ -56,14 +48,14 @@ class Todoist:
         result_ids = []
 
         for raw_project in ordered_raw_projects:
-            project_id = raw_project.data["id"]
-            p = raw_project.data
+            project_id = raw_project["id"]
+            p = raw_project
             if p.get("is_deleted") or p.get("is_archived"):
                 logger.debug("Skipping project as deleted/archived: %s", p)
                 continue
 
             project = models.TodoistProject(
-                id=int(p["id"]),
+                id=str(p["id"]),
                 name=str(p["name"]),
                 is_favorite=bool(p.get("is_favorite", False)),
                 is_inbox=bool(p.get("inbox_project", False)),
@@ -92,9 +84,9 @@ class Todoist:
             # All root items should go first, so they would exist when
             # a child item is processed.
             return (
-                i.data.get("parent_id") or -1,
-                i.data.get("item_order") or -1,
-                i.data["id"],
+                i.get("parent_id") or "",
+                i.get("item_order") or -1,
+                i["id"],
             )
 
         ordered_items = sorted(self.api.state["items"], key=key)
@@ -103,7 +95,7 @@ class Todoist:
         project_id_to_items = defaultdict(lambda: [])
 
         for raw_item in ordered_items:
-            i = raw_item.data
+            i = raw_item
 
             # NOTE: The original Todoist doesn't hide the checked items
             # when they're nested under a non-checked todo item, but
@@ -115,7 +107,7 @@ class Todoist:
 
             project_id = i["project_id"]
 
-            date_added = self._parse_datetime(i["date_added"])
+            date_added = self._parse_datetime(i["added_at"])
             assert date_added
 
             try:
@@ -128,7 +120,7 @@ class Todoist:
                 due_date, due_datetime = None, None
 
             item = models.TodoistTodoItem(
-                id=int(i["id"]),
+                id=str(i["id"]),
                 all_day=bool(i.get("all_day", False)),
                 content=str(i["content"]),
                 added_datetime=date_added,
@@ -182,41 +174,36 @@ class Todoist:
                 due_datetime = due_datetime.astimezone(timezone)
                 due_date = due_datetime.date()
 
-        assert item_data.get("due_date_utc") is None  # This is a legacy key, I believe
-
         return due_date, due_datetime
 
     @staticmethod
-    def _map_project_color(color_index: int) -> str:
-        # Taken from the Project color palette by using a browser's Web Inspector:
-        #
-        # e = [...document.querySelectorAll('.colors .object_color')]
-        # e.map(f => `${f.dataset.index}: "${f.style.backgroundColor}"`).join(',\n')
+    def _map_project_color(color_name: str) -> str:
+        # https://developer.todoist.com/guides/#colors
         palette = {
-            30: "rgb(184, 37, 95)",
-            31: "rgb(219, 64, 53)",
-            32: "rgb(255, 153, 51)",
-            33: "rgb(250, 208, 0)",
-            34: "rgb(175, 184, 59)",
-            35: "rgb(126, 204, 73)",
-            36: "rgb(41, 148, 56)",
-            37: "rgb(106, 204, 188)",
-            38: "rgb(21, 143, 173)",
-            39: "rgb(20, 170, 245)",
-            40: "rgb(150, 195, 235)",
-            41: "rgb(64, 115, 255)",
-            42: "rgb(136, 77, 255)",
-            43: "rgb(175, 56, 235)",
-            44: "rgb(235, 150, 235)",
-            45: "rgb(224, 81, 148)",
-            46: "rgb(255, 141, 133)",
-            47: "rgb(128, 128, 128)",
-            48: "rgb(184, 184, 184)",
-            49: "rgb(204, 172, 147)",
+            "berry_red": "#b8256f",
+            "blue": "#4073ff",
+            "charcoal": "#808080",
+            "grape": "#884dff",
+            "green": "#299438",
+            "grey": "#b8b8b8",
+            "lavender": "#eb96eb",
+            "light_blue": "#96c3eb",
+            "lime_green": "#7ecc49",
+            "magenta": "#e05194",
+            "mint_green": "#6accbc",
+            "olive_green": "#afb83b",
+            "orange": "#ff9933",
+            "red": "#db4035",
+            "salmon": "#ff8d85",
+            "sky_blue": "#14aaf5",
+            "taupe": "#ccac93",
+            "teal": "#158fad",
+            "violet": "#af38eb",
+            "yellow": "#fad000",
         }
-        if color_index not in palette:
-            color_index = 48  # light gray
-        return palette[color_index]
+        if color_name not in palette:
+            color_name = "grey"
+        return palette[color_name]
 
     @cached_property
     def _timezone(self) -> datetime.tzinfo:
