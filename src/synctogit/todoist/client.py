@@ -3,6 +3,7 @@ version of the https://github.com/Doist/todoist-python/ library.
 """
 import datetime
 import functools
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -24,7 +25,7 @@ class TodoistAPI:
     def __init__(self, token, cache):
         self.token = token
         self.session = requests.Session()
-        self._cache = Cache(cache, token)
+        self._cache = Cache(cache, f"{hashlib.sha256(token.encode()).hexdigest()}.v9")
 
     @property
     def state(self):
@@ -103,7 +104,6 @@ class Cache:
         self._base.mkdir(exist_ok=True)
         try:
             state = json.loads(self._state_path.read_text())
-            self._migrate_state_v8_to_v9(state)
             self.update_state(state)
 
             self.sync_token = self._sync_path.read_text()
@@ -116,31 +116,6 @@ class Cache:
         result = json.dumps(self.state, indent=2, sort_keys=True, default=state_default)
         self._state_path.write_text(result)
         self._sync_path.write_text(self.sync_token)
-
-    def _migrate_state_v8_to_v9(self, state):
-        # https://developer.todoist.com/sync/v9/#migrating-from-v8
-        for datatype in [
-            "filters",
-            "items",
-            "labels",
-            "notes",
-            "project_notes",
-            "projects",
-            "reminders",
-            "sections",
-        ]:
-            for obj in state[datatype]:
-                for key in ("id", "project_id", "user_id", "parent_id"):
-                    if obj.get(key) is not None:
-                        obj[key] = str(obj[key])
-        for obj in state["items"]:
-            for old, new in [
-                ("date_added", "added_at"),
-                ("date_completed", "completed_at"),
-            ]:
-                if old in obj:
-                    obj[new] = obj[old]
-                    del obj[old]
 
     def update_state(self, syncdata):
         if "sync_token" in syncdata:
