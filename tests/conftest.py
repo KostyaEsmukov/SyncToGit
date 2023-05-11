@@ -4,6 +4,14 @@ import tempfile
 
 import pytest
 
+# Hack for vcrpy: https://github.com/kevin1024/vcrpy/issues/688
+import urllib3.connection as u_connection
+import urllib3.connectionpool as cpool
+
+cpool.VerifiedHTTPSConnection = u_connection.HTTPSConnection
+cpool.HTTPConnection = u_connection.HTTPConnection
+cpool.HTTPSConnection = u_connection.HTTPSConnection
+
 
 @pytest.fixture
 def temp_dir():
