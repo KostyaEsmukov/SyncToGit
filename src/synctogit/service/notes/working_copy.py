@@ -254,8 +254,8 @@ class WorkingCopy(abc.ABC, Generic[TNoteKey, TNoteMetadata, TChangeset]):
                 )
                 shutil.rmtree(os.path.join(root, note_key))
 
-    def delete_notes(self, notes: Mapping[TNoteKey, TNoteMetadata]) -> None:
-        for note in notes.values():
+    def delete_notes(self, notes: Iterable[TNoteMetadata]) -> None:
+        for note in notes:
             note_dir = self.notes_dir / _seq_to_path(self._metadata_dir(note))
             note_path = note_dir / self._metadata_file(note)
             self._delete_note(note_path)

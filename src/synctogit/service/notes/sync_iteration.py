@@ -86,7 +86,7 @@ class SyncIteration(abc.ABC, Generic[TNoteKey, TNoteMetadata, TNote]):
         )
 
         logger.info("Applying changes...")
-        self.working_copy.delete_notes(changeset.delete)
+        self.working_copy.delete_notes(changeset.delete.values())
         update_context = self._update_notes(changeset)
 
         logger.info("Updating index...")
