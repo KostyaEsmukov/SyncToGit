@@ -247,7 +247,7 @@ class OauthClient:
                 # https://developer.microsoft.com/en-us/graph/docs/concepts/throttling
                 s = e.response.headers.get("retry-after")
                 if not s:
-                    s = 11 * 60
+                    s = 5 * 60
                 s = min(s, 3600) + 10
                 raise ServiceRateLimitError(e, rate_limit_duration_seconds=s)
             elif (

@@ -44,7 +44,7 @@ microsoft_graph_oauth_scopes = StrConfigItem(
 microsoft_graph_token = StrConfigItem("microsoft_graph", "token")
 
 # XXX dedup
-notes_download_threads = IntConfigItem("internals", "notes_download_threads", 10)
+notes_download_threads = IntConfigItem("internals", "notes_download_threads", 30)
 
 
 class MicrosoftGraphAuthSession(BaseAuthSession):
