@@ -10,7 +10,7 @@ from . import oauth
 
 
 class InteractiveAuth:
-    auth_details_url = "https://docs.microsoft.com/en-us/graph/auth-overview"
+    auth_details_url = "https://learn.microsoft.com/en-us/graph/auth/"
     scopes_details_url = "https://docs.microsoft.com/en-us/graph/permissions-reference"
 
     def __init__(

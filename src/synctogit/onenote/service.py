@@ -21,13 +21,14 @@ logger = logging.getLogger(__name__)
 
 
 microsoft_graph_client_id = StrConfigItem(
-    "microsoft_graph", "client_id", "4ea93786-4643-4b6c-89d5-5e2f53cc61d5"
+    "microsoft_graph", "client_id", "cdae332d-f91d-43ba-83ac-cd0b4d04debd"
 )
 microsoft_graph_client_secret = StrConfigItem(
     # python -c "import base64; print(base64.b64encode('123'.encode()).decode())"
     "microsoft_graph",
     "client_secret",
-    base64.b64decode("eXRwWVZQSTU3OCEtZmJuaVJSSzUzXV8=").decode(),
+    # Expires: 5/10/2027
+    base64.b64decode("Snd0OFF+Z0ZqTHU1M2doTjJrU01ka0RQcXJxTFZsSy5yR0p2eWR5WQ==").decode(),
 )
 microsoft_graph_redirect_uri = StrConfigItem(
     # A non-existing link.
