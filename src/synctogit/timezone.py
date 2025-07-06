@@ -11,8 +11,7 @@ def get_timezone(config: Config) -> pytz.BaseTzInfo:
     be displayed to the user.
     """
     timezone_name = general_timezone.get(config)
-    if timezone_name:
-        timezone = pytz.timezone(timezone_name)
-    else:
-        timezone = tzlocal.get_localzone()
+    if not timezone_name:
+        timezone_name = tzlocal.get_localzone_name()
+    timezone = pytz.timezone(timezone_name)
     return timezone
