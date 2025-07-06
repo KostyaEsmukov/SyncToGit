@@ -29,6 +29,8 @@ def git_env():
         "EMAIL": "none@none",
         "GIT_AUTHOR_EMAIL": "none@none",
         "GIT_COMMITTER_EMAIL": "none@none",
+        #
+        "GIT_CONFIG_GLOBAL": "/dev/null",
     }
 
 
@@ -46,7 +48,10 @@ def call_git(git_env):
                 cwd=cwd,
                 shell=True,
                 check=True,
-                env=git_env,
+                env={
+                    **os.environ,
+                    **git_env,
+                },
                 timeout=5,
             )
             res = p.stdout.decode()

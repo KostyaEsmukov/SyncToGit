@@ -28,7 +28,9 @@ microsoft_graph_client_secret = StrConfigItem(
     "microsoft_graph",
     "client_secret",
     # Expires: 5/10/2027
-    base64.b64decode("Snd0OFF+Z0ZqTHU1M2doTjJrU01ka0RQcXJxTFZsSy5yR0p2eWR5WQ==").decode(),
+    base64.b64decode(
+        "Snd0OFF+Z0ZqTHU1M2doTjJrU01ka0RQcXJxTFZsSy5yR0p2eWR5WQ=="
+    ).decode(),
 )
 microsoft_graph_redirect_uri = StrConfigItem(
     # A non-existing link.

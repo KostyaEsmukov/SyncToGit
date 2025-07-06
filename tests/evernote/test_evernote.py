@@ -6,24 +6,35 @@ from uuid import uuid4
 import pytest
 import pytz
 import vcr
-from evernote.api.client import EvernoteClient
-from evernote.edam.notestore.ttypes import NoteMetadata
-from evernote.edam.type.ttypes import (
-    Accounting,
-    Data,
-    Note,
-    NoteAttributes,
-    Notebook,
-    NotebookRestrictions,
-    Resource,
-    ResourceAttributes,
-    User,
-)
 
-from synctogit.evernote import models
-from synctogit.evernote.evernote import Evernote
+try:
+    from evernote.api.client import EvernoteClient
+    from evernote.edam.notestore.ttypes import NoteMetadata
+    from evernote.edam.type.ttypes import (
+        Accounting,
+        Data,
+        Note,
+        NoteAttributes,
+        Notebook,
+        NotebookRestrictions,
+        Resource,
+        ResourceAttributes,
+        User,
+    )
+
+    from synctogit.evernote import models
+    from synctogit.evernote.evernote import Evernote
+
+    evernote_available = True
+except ImportError:
+    evernote_available = False
 
 vcr_dtd = vcr.VCR(cassette_library_dir=os.path.dirname(__file__))
+
+
+pytestmark = pytest.mark.skipif(
+    not evernote_available, reason="evernote should not be installed for this test"
+)
 
 
 @pytest.fixture

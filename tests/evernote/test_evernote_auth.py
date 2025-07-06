@@ -2,10 +2,20 @@ from contextlib import ExitStack
 from unittest.mock import Mock, call, patch
 
 import pytest
-from evernote.api.client import EvernoteClient
 
-import synctogit.evernote.auth
-from synctogit.evernote.auth import InteractiveAuth
+try:
+    from evernote.api.client import EvernoteClient
+
+    import synctogit.evernote.auth
+    from synctogit.evernote.auth import InteractiveAuth
+
+    evernote_available = True
+except ImportError:
+    evernote_available = False
+
+pytestmark = pytest.mark.skipif(
+    not evernote_available, reason="evernote should not be installed for this test"
+)
 
 
 @pytest.fixture
