@@ -22,10 +22,11 @@ class SyncTokenExpiredError(SyncError):
 
 
 class TodoistAPI:
-    def __init__(self, token, cache):
+    def __init__(self, token, cache, timeout=120):
         self.token = token
         self.session = requests.Session()
-        self._cache = Cache(cache, f"{hashlib.sha256(token.encode()).hexdigest()}.v9")
+        self._timeout = timeout
+        self._cache = Cache(cache, f"{hashlib.sha256(token.encode()).hexdigest()}.2.v1")
 
     @property
     def state(self):
@@ -61,9 +62,10 @@ class TodoistAPI:
         self._cache.write_cache()
 
     def _post(self, call, **kwargs):
-        url = "https://api.todoist.com/sync/v9/"
+        url = "https://api.todoist.com/api/v1/"
 
         kwargs.setdefault("headers", {})["Authorization"] = f"Bearer {self.token}"
+        kwargs.setdefault("timeout", self._timeout)
         response = self.session.post(url + call, **kwargs)
         try:
             return response.json()
@@ -83,7 +85,6 @@ class Cache:
             "collaborator_states": [],
             "collaborators": [],
             "day_orders": {},
-            "day_orders_timestamp": "",
             "filters": [],
             "items": [],
             "labels": [],
@@ -126,8 +127,6 @@ class Cache:
         # either replace the local values or update them.
         if "day_orders" in syncdata:
             self.state["day_orders"].update(syncdata["day_orders"])
-        if "day_orders_timestamp" in syncdata:
-            self.state["day_orders_timestamp"] = syncdata["day_orders_timestamp"]
         if "live_notifications_last_read_id" in syncdata:
             self.state["live_notifications_last_read_id"] = syncdata[
                 "live_notifications_last_read_id"
