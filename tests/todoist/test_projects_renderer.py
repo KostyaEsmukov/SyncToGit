@@ -33,6 +33,7 @@ def test_empty_project():
                     id=1234,
                     all_day=True,
                     content="All day Привет",
+                    description="",
                     added_datetime=timezone.localize(datetime(2018, 9, 26, 1, 42, 56)),
                     due_date=None,
                     due_datetime=None,

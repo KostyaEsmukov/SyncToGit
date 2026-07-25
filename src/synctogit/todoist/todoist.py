@@ -125,6 +125,7 @@ class Todoist:
                 id=str(i["id"]),
                 all_day=bool(i.get("all_day", False)),
                 content=str(i["content"]),
+                description=i.get("description") or "",
                 added_datetime=date_added,
                 due_date=due_date,
                 due_datetime=due_datetime,

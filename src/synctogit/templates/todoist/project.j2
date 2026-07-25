@@ -38,6 +38,11 @@ div > ul.todo-items {
     border-bottom: 1px solid #f0f0f0;
     line-height: 20px;
 }
+.todo-items .desc {
+    white-space: pre;
+    opacity: 60%;
+    margin-left: 20px;
+}
 .todo-item-sub {
     color: #aaa;
     font-size: 12px;
@@ -88,8 +93,10 @@ div > ul.todo-items > li:last-child {
         <td style="vertical-align: top;"><div class="ist-checkbox"></div></td>
 
         <td>
-            <span>{{ todo_item.content|e|urlize(nofollow=True, target="_blank") }}</span>
-            <br>
+            <div>{{ todo_item.content|e|urlize(nofollow=True, target="_blank") }}</div>
+{% if todo_item.description %}
+            <div class="desc">{{ todo_item.description|e|urlize(nofollow=True, target="_blank") }}</div>
+{% endif %}
             <span class="todo-item-sub">
                 created: {{ todo_item.added_datetime.astimezone(timezone) }}
             </span>

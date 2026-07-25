@@ -343,6 +343,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 id="1234",
                 all_day=True,
                 content="All day Привет",
+                description="",
                 added_datetime=todoist_user_timezone.localize(
                     datetime(2018, 9, 26, 1, 42, 56)
                 ),
@@ -355,6 +356,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                 id="2345",
                 all_day=False,
                 content="Root",
+                description="",
                 added_datetime=todoist_user_timezone.localize(
                     datetime(2018, 9, 26, 1, 42, 56)
                 ),
@@ -368,6 +370,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                         id="3456",
                         all_day=True,
                         content="Child",
+                        description="",
                         added_datetime=todoist_user_timezone.localize(
                             datetime(2018, 9, 26, 1, 42, 56)
                         ),
@@ -379,6 +382,7 @@ def test_get_todo_items(todoist, todoist_user_timezone):
                                 id="4567",
                                 all_day=True,
                                 content="Subchild",
+                                description="",
                                 added_datetime=todoist_user_timezone.localize(
                                     datetime(2018, 9, 26, 1, 42, 56)
                                 ),

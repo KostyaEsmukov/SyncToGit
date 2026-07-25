@@ -25,6 +25,7 @@ class TodoistTodoItem(NamedTuple):
     id: str
     all_day: bool
     content: str
+    description: str
     added_datetime: datetime.datetime
     due_date: Optional[datetime.date]
     #
