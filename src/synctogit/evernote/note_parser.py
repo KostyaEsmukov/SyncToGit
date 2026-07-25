@@ -45,7 +45,7 @@ class _EvernoteNoteParser(ContentHandler):
 
         self.resources_base = resources_base
 
-        self.hierarchy = []  # type: List[_EWrapper]
+        self.hierarchy: List[_EWrapper] = []
         self.hierarchy.append(_EWrapper(Element("html")))
 
         self._writeHead(title)

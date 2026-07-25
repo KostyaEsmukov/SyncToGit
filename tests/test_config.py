@@ -126,9 +126,7 @@ sandbox = true
     assert evernote_token.get(conf) == "new-token"
 
     # Unfortunately, configparser strips the comments :(
-    assert (
-        read_writer.text()
-        == """
+    assert read_writer.text() == """
 [git]
 repo_dir = git
 
@@ -140,14 +138,11 @@ sandbox = true
 ; comment in the end
 token = new-token
 """
-    )
 
     evernote_token.unset(conf)
     with pytest.raises(KeyError):
         evernote_token.get(conf)
-    assert (
-        read_writer.text()
-        == """
+    assert read_writer.text() == """
 [git]
 repo_dir = git
 
@@ -158,13 +153,10 @@ push = false
 sandbox = true
 ; comment in the end
 """
-    )
 
     config.IntConfigItem("newsect", "num").set(conf, 42)
     config.BoolConfigItem("newsect", "bool").set(conf, True)
-    assert (
-        read_writer.text()
-        == """
+    assert read_writer.text() == """
 [git]
 repo_dir = git
 
@@ -178,7 +170,6 @@ sandbox = true
 num = 42
 bool = True
 """
-    )
 
 
 def test_defaults():

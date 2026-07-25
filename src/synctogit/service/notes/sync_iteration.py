@@ -16,8 +16,8 @@ class UpdateContext:
     def __init__(self, total: int):
         self.started = 0
         self.total = total
-        self.updated_notes = []  # type: List[Tuple[TNoteKey, TNoteMetadata]]
-        self.failed_notes = []  # type: List[Tuple[TNoteKey, TNoteMetadata]]
+        self.updated_notes: List[Tuple[TNoteKey, TNoteMetadata]] = []
+        self.failed_notes: List[Tuple[TNoteKey, TNoteMetadata]] = []
         self.is_converged = True
         self.lock = threading.Lock()
 

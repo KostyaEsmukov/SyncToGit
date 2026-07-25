@@ -13,7 +13,7 @@ from synctogit.service.notes.stored_note import CorruptedNoteError, StoredNote
 class EvernoteStoredNote(StoredNote):
     @classmethod
     def note_to_html(cls, note: Note, timezone: pytz.BaseTzInfo) -> bytes:
-        note_header = OrderedDict()  # type: Mapping[str, str]
+        note_header: Mapping[str, str] = OrderedDict()
 
         for k in ["guid", "updateSequenceNum", "title", "created", "updated"]:
             k_ = re.sub("([A-Z]+)", r"_\1", k).lower()

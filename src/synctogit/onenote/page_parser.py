@@ -121,7 +121,7 @@ class PageParser:
 
     def _bleach_html(self, soup: bs) -> None:
         # Strip `<!-- InkNode is not supported -->` comments:
-        comments = soup.findAll(text=lambda text: isinstance(text, Comment))
+        comments = soup.find_all(string=lambda text: isinstance(text, Comment))
         for comment in comments:
             comment.extract()
 

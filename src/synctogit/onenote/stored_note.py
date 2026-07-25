@@ -15,7 +15,7 @@ from .models import OneNotePage, OneNotePageId, OneNotePageMetadata
 class OneNoteStoredNote(StoredNote):
     @classmethod
     def note_to_html(cls, note: OneNotePage, timezone: pytz.BaseTzInfo) -> bytes:
-        note_header = OrderedDict()  # type: Mapping[str, str]
+        note_header: Mapping[str, str] = OrderedDict()
 
         for k in ["id", "title", "created", "last_modified"]:
             v = getattr(note.info, k)

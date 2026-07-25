@@ -12,7 +12,7 @@ def local_datetime_pair():
         # If you have any better idea how to achieve this with
         # the std library -- let me know. But for now...
         local = datetime.datetime.now()
-        utc = datetime.datetime.utcnow()
+        utc = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
         if local.second <= utc.second:  # otherwise they aren't of the same minute
             y, m, d, h, mm, *_ = utc.timetuple()
             utc = datetime.datetime(

@@ -1,6 +1,7 @@
 """This is a simplified and updated from the now-disabled v8 api
 version of the https://github.com/Doist/todoist-python/ library.
 """
+
 import datetime
 import functools
 import hashlib
