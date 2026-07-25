@@ -90,6 +90,8 @@ def ext_from_mime_type(mime_type: str) -> str:
         "text/plain": "txt",
         # cpython 3.12 resolves to `.javascript`:
         "application/javascript": "js",
+        # GitHub CI for 3.15 resolves to `.ai`:
+        "application/pdf": "pdf",
     }
     ext = hardcoded_mime_type_conversions.get(mime_type)
     if ext:
