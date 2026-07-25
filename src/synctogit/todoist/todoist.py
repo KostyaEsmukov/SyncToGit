@@ -86,6 +86,8 @@ class Todoist:
             return (
                 i.get("parent_id") or "",
                 i.get("item_order") or -1,
+                i.get("child_order", float("inf")),
+                i.get("added_at") or "",
                 i["id"],
             )
 
